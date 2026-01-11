@@ -1,6 +1,4 @@
-const { PrismaClient } = require("@prisma/client")
-
-const prisma = new PrismaClient()
+import { db as prisma } from "../app/_lib/prisma"
 
 async function seedDatabase() {
   try {
