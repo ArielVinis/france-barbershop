@@ -17,6 +17,8 @@ model User {
   bookings      Booking[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  ratings Rating[]
 }
 
 model Account {
@@ -68,6 +70,7 @@ model Barbershop {
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   services    BarbershopService[]
+  ratings     Rating[]
 }
 
 model BarbershopService {
@@ -90,4 +93,17 @@ model Booking {
   date      DateTime
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+}
+
+// TODO: Estrelas e comentário de cada barbearia
+model Rating {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  stars        Int
+  comment      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
