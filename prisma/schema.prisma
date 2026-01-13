@@ -69,8 +69,19 @@ model Barbershop {
   imageUrl    String
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
+  barbers     Barber[]
   services    BarbershopService[]
   ratings     Rating[]
+}
+
+model Barber {
+  id           String     @id @default(uuid())
+  name         String
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  bookings     Booking[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model BarbershopService {
@@ -90,12 +101,13 @@ model Booking {
   user      User              @relation(fields: [userId], references: [id])
   serviceId String
   service   BarbershopService @relation(fields: [serviceId], references: [id])
+  barberId  String
+  barber    Barber            @relation(fields: [barberId], references: [id])
   date      DateTime
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 }
 
-// TODO: Estrelas e comentário de cada barbearia
 model Rating {
   id           String     @id @default(uuid())
   userId       String
