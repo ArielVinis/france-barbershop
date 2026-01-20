@@ -1,3 +1,4 @@
+import { slugify } from "@/app/_lib/utils"
 import { db as prisma } from "../app/_lib/prisma"
 
 async function seedDatabase() {
@@ -102,12 +103,14 @@ async function seedDatabase() {
     const barbershops = []
     for (let i = 0; i < 10; i++) {
       const name = creativeNames[i]
+      const slug = slugify(name)
       const address = addresses[i]
       const imageUrl = images[i]
 
       const barbershop = await prisma.barbershop.create({
         data: {
           name,
+          slug,
           address,
           imageUrl: imageUrl,
           phones: ["(11) 99999-9999", "(11) 99999-9999"],

@@ -63,6 +63,7 @@ model VerificationToken {
 model Barbershop {
   id          String              @id @default(uuid())
   name        String
+  slug        String              @unique
   address     String
   phones      String[]
   description String

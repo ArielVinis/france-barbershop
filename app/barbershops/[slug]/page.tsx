@@ -11,7 +11,7 @@ import { notFound } from "next/navigation"
 
 interface BarbershopPageProps {
   params: {
-    id: string
+    slug: string
   }
 }
 
@@ -19,7 +19,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
   // chamar o meu banco de dados
   const barbershop = await db.barbershop.findUnique({
     where: {
-      id: params.id,
+      slug: params.slug,
     },
     include: {
       services: true,
