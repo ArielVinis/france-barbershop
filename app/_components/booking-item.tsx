@@ -41,6 +41,7 @@ interface BookingItemProps {
           barbershop: true
         }
       }
+      barber: true
     }
   }>
 }
@@ -140,6 +141,9 @@ const BookingItem = ({ booking }: BookingItemProps) => {
               barbershop={barbershop}
               service={booking.service}
               selectedDate={booking.date}
+              barber={
+                booking.barber ? { name: booking.barber.name } : undefined
+              }
             />
           </div>
 

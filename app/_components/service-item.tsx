@@ -90,7 +90,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
   const [selectedTime, setSelectedTime] = useState<string | undefined>(
     undefined,
   )
-  const [selectedBarber, setSelectedBarber] = useState<string | undefined>(
+  const [selectedBarberId, setSelectedBarberId] = useState<string | undefined>(
     undefined,
   )
   const [dayBookings, setDayBookings] = useState<Booking[]>([])
@@ -107,6 +107,13 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
     }
     fetch()
   }, [selectedDay, service.id])
+
+  const selectedBarber = useMemo(() => {
+    if (!selectedBarberId) return undefined
+    return {
+      name: barbers.find((barber) => barber.id === selectedBarberId)!.name,
+    }
+  }, [barbers, selectedBarberId])
 
   const selectedDate = useMemo(() => {
     if (!selectedDay || !selectedTime) return
@@ -126,7 +133,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
   const handleBookingSheetOpenChange = () => {
     setSelectedDay(undefined)
     setSelectedTime(undefined)
-    setSelectedBarber(undefined)
+    setSelectedBarberId(undefined)
     setDayBookings([])
     setBookingSheetIsOpen(false)
   }
@@ -140,7 +147,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
   }
 
   const handleBarberSelect = (barberId: string) => {
-    setSelectedBarber(barberId)
+    setSelectedBarberId(barberId)
   }
 
   const handleCreateBooking = async () => {
@@ -148,7 +155,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
       if (!selectedDate) return
       await createBooking({
         serviceId: service.id,
-        barberId: selectedBarber,
+        barberId: selectedBarberId,
         date: selectedDate,
       })
       handleBookingSheetOpenChange()
@@ -248,13 +255,15 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                     />
                   </div>
 
-                  {barbers.length > 0 && (
+                  {barbers.length > 0 && selectedDay && (
                     <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">
                       {barbers.map((barber) => (
                         <Button
                           key={barber.id}
                           variant={
-                            selectedBarber === barber.id ? "default" : "outline"
+                            selectedBarberId === barber.id
+                              ? "default"
+                              : "outline"
                           }
                           className="rounded-full"
                           onClick={() => handleBarberSelect(barber.id)}
@@ -265,7 +274,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                     </div>
                   )}
 
-                  {selectedDay && (
+                  {selectedDay && selectedBarberId && (
                     <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">
                       {timeList.length > 0 ? (
                         timeList.map((time) => (
@@ -294,6 +303,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                         barbershop={barbershop}
                         service={service}
                         selectedDate={selectedDate}
+                        barber={selectedBarber!}
                       />
                     </div>
                   )}
