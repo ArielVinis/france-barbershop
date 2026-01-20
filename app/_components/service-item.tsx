@@ -217,7 +217,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                   Reservar
                 </Button>
 
-                <SheetContent className="px-0">
+                <SheetContent className="hide-scrollbar overflow-y-auto px-0">
                   <SheetHeader>
                     <SheetTitle>Fazer Reserva</SheetTitle>
                   </SheetHeader>
@@ -256,7 +256,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                   </div>
 
                   {barbers.length > 0 && selectedDay && (
-                    <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">
+                    <div className="hide-scrollbar flex gap-3 overflow-x-auto border-b border-solid p-5">
                       {barbers.map((barber) => (
                         <Button
                           key={barber.id}
@@ -275,7 +275,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                   )}
 
                   {selectedDay && selectedBarberId && (
-                    <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">
+                    <div className="hide-scrollbar flex gap-3 overflow-x-auto border-b border-solid p-5">
                       {timeList.length > 0 ? (
                         timeList.map((time) => (
                           <Button
@@ -297,13 +297,13 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                     </div>
                   )}
 
-                  {selectedDate && (
+                  {selectedDate && selectedBarberId && (
                     <div className="p-5">
                       <BookingSummary
                         barbershop={barbershop}
                         service={service}
                         selectedDate={selectedDate}
-                        barber={selectedBarber!}
+                        barber={selectedBarber}
                       />
                     </div>
                   )}
