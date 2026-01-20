@@ -1,6 +1,6 @@
 "use client"
 
-import { Barbershop, BarbershopService, Booking } from "@prisma/client"
+import { Barber, Barbershop, BarbershopService, Booking } from "@prisma/client"
 import Image from "next/image"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation"
 interface ServiceItemProps {
   service: BarbershopService
   barbershop: Pick<Barbershop, "name">
+  barbers: Pick<Barber, "id" | "name">[]
 }
 
 // TODO: criar no banco de dados as horas disponíveis
@@ -81,12 +82,15 @@ const getTimeList = ({ bookings, selectedDay }: GetTimeListProps) => {
   })
 }
 
-const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
+const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
   const { data } = useSession()
   const router = useRouter()
   const [signInDialogIsOpen, setSignInDialogIsOpen] = useState(false)
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string | undefined>(
+    undefined,
+  )
+  const [selectedBarber, setSelectedBarber] = useState<string | undefined>(
     undefined,
   )
   const [dayBookings, setDayBookings] = useState<Booking[]>([])
@@ -122,6 +126,7 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
   const handleBookingSheetOpenChange = () => {
     setSelectedDay(undefined)
     setSelectedTime(undefined)
+    setSelectedBarber(undefined)
     setDayBookings([])
     setBookingSheetIsOpen(false)
   }
@@ -134,11 +139,16 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
     setSelectedTime(time)
   }
 
+  const handleBarberSelect = (barberId: string) => {
+    setSelectedBarber(barberId)
+  }
+
   const handleCreateBooking = async () => {
     try {
       if (!selectedDate) return
       await createBooking({
         serviceId: service.id,
+        barberId: selectedBarber,
         date: selectedDate,
       })
       handleBookingSheetOpenChange()
@@ -237,6 +247,23 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                       }}
                     />
                   </div>
+
+                  {barbers.length > 0 && (
+                    <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">
+                      {barbers.map((barber) => (
+                        <Button
+                          key={barber.id}
+                          variant={
+                            selectedBarber === barber.id ? "default" : "outline"
+                          }
+                          className="rounded-full"
+                          onClick={() => handleBarberSelect(barber.id)}
+                        >
+                          {barber.name}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
 
                   {selectedDay && (
                     <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">

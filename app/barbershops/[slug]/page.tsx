@@ -23,6 +23,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
     },
     include: {
       services: true,
+      barbers: true,
     },
   })
 
@@ -95,6 +96,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
               key={service.id}
               barbershop={JSON.parse(JSON.stringify(barbershop))}
               service={JSON.parse(JSON.stringify(service))}
+              barbers={JSON.parse(JSON.stringify(barbershop.barbers))}
             />
           ))}
         </div>

@@ -3,6 +3,15 @@ import { db as prisma } from "../app/_lib/prisma"
 
 async function seedDatabase() {
   try {
+    // Limpar dados existentes (na ordem correta para respeitar foreign keys)
+    console.log("Limpando dados existentes...")
+    await prisma.booking.deleteMany()
+    await prisma.rating.deleteMany()
+    await prisma.barber.deleteMany()
+    await prisma.barbershopService.deleteMany()
+    await prisma.barbershop.deleteMany()
+    console.log("Criando novos dados...")
+
     const images = [
       "https://utfs.io/f/c97a2dc9-cf62-468b-a851-bfd2bdde775f-16p.png",
       "https://utfs.io/f/45331760-899c-4b4b-910e-e00babb6ed81-16q.png",
@@ -99,6 +108,14 @@ async function seedDatabase() {
       },
     ]
 
+    // Nomes fictícios para os barbeiros
+    const barbers = [
+      "João da Silva",
+      "Maria Oliveira",
+      "Pedro Santos",
+      "Ana Paula",
+    ]
+
     // Criar 10 barbearias com nomes e endereços fictícios
     const barbershops = []
     for (let i = 0; i < 10; i++) {
@@ -118,6 +135,19 @@ async function seedDatabase() {
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac augue ullamcorper, pharetra orci mollis, auctor tellus. Phasellus pharetra erat ac libero efficitur tempus. Donec pretium convallis iaculis. Etiam eu felis sollicitudin, cursus mi vitae, iaculis magna. Nam non erat neque. In hac habitasse platea dictumst. Pellentesque molestie accumsan tellus id laoreet.",
         },
       })
+
+      for (const barber of barbers) {
+        await prisma.barber.create({
+          data: {
+            name: barber,
+            barbershop: {
+              connect: {
+                id: barbershop.id,
+              },
+            },
+          },
+        })
+      }
 
       for (const service of services) {
         await prisma.barbershopService.create({
