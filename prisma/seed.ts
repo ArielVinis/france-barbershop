@@ -7,9 +7,11 @@ async function seedDatabase() {
     console.log("Limpando dados existentes...")
     await prisma.booking.deleteMany()
     await prisma.rating.deleteMany()
+    await prisma.barbershopSchedule.deleteMany()
     await prisma.barber.deleteMany()
     await prisma.barbershopService.deleteMany()
     await prisma.barbershop.deleteMany()
+    await prisma.user.deleteMany()
     console.log("Criando novos dados...")
 
     const images = [
@@ -68,6 +70,7 @@ async function seedDatabase() {
         name: "Corte de Cabelo",
         description: "Estilo personalizado com as últimas tendências.",
         price: 60.0,
+        durationMinutes: 60,
         imageUrl:
           "https://utfs.io/f/0ddfbd26-a424-43a0-aaf3-c3f1dc6be6d1-1kgxo7.png",
       },
@@ -75,6 +78,7 @@ async function seedDatabase() {
         name: "Barba",
         description: "Modelagem completa para destacar sua masculinidade.",
         price: 40.0,
+        durationMinutes: 30,
         imageUrl:
           "https://utfs.io/f/e6bdffb6-24a9-455b-aba3-903c2c2b5bde-1jo6tu.png",
       },
@@ -82,6 +86,7 @@ async function seedDatabase() {
         name: "Pézinho",
         description: "Acabamento perfeito para um visual renovado.",
         price: 35.0,
+        durationMinutes: 10,
         imageUrl:
           "https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
       },
@@ -89,6 +94,7 @@ async function seedDatabase() {
         name: "Sobrancelha",
         description: "Expressão acentuada com modelagem precisa.",
         price: 20.0,
+        durationMinutes: 10,
         imageUrl:
           "https://utfs.io/f/2118f76e-89e4-43e6-87c9-8f157500c333-b0ps0b.png",
       },
@@ -96,6 +102,7 @@ async function seedDatabase() {
         name: "Massagem",
         description: "Relaxe com uma massagem revigorante.",
         price: 50.0,
+        durationMinutes: 30,
         imageUrl:
           "https://utfs.io/f/c4919193-a675-4c47-9f21-ebd86d1c8e6a-4oen2a.png",
       },
@@ -103,6 +110,7 @@ async function seedDatabase() {
         name: "Hidratação",
         description: "Hidratação profunda para cabelo e barba.",
         price: 25.0,
+        durationMinutes: 30,
         imageUrl:
           "https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
       },
@@ -110,10 +118,56 @@ async function seedDatabase() {
 
     // Nomes fictícios para os barbeiros
     const barbers = [
-      "João da Silva",
-      "Maria Oliveira",
-      "Pedro Santos",
-      "Ana Paula",
+      {
+        name: "João da Silva",
+        email: "joao.silva@example.com",
+        phone: "(11) 99999-0001",
+      },
+      {
+        name: "Maria Oliveira",
+        email: "maria.oliveira@example.com",
+        phone: "(11) 99999-0002",
+      },
+      {
+        name: "Pedro Santos",
+        email: "pedro.santos@example.com",
+        phone: "(11) 99999-0003",
+      },
+      {
+        name: "Ana Paula",
+        email: "ana.paula@example.com",
+        phone: "(11) 99999-0004",
+      },
+      {
+        name: "Lucas Oliveira",
+        email: "lucas.oliveira@example.com",
+        phone: "(11) 99999-0005",
+      },
+      {
+        name: "Rafael Santos",
+        email: "rafael.santos@example.com",
+        phone: "(11) 99999-0006",
+      },
+      {
+        name: "Julia Oliveira",
+        email: "julia.oliveira@example.com",
+        phone: "(11) 99999-0007",
+      },
+      {
+        name: "Bruno Santos",
+        email: "bruno.santos@example.com",
+        phone: "(11) 99999-0008",
+      },
+      {
+        name: "Carla Oliveira",
+        email: "carla.oliveira@example.com",
+        phone: "(11) 99999-0009",
+      },
+      {
+        name: "Diego Santos",
+        email: "diego.santos@example.com",
+        phone: "(11) 99999-0010",
+      },
     ]
 
     // Criar 10 barbearias com nomes e endereços fictícios
@@ -131,20 +185,79 @@ async function seedDatabase() {
           address,
           imageUrl: imageUrl,
           phones: ["(11) 99999-9999", "(11) 99999-9999"],
-          description:
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac augue ullamcorper, pharetra orci mollis, auctor tellus. Phasellus pharetra erat ac libero efficitur tempus. Donec pretium convallis iaculis. Etiam eu felis sollicitudin, cursus mi vitae, iaculis magna. Nam non erat neque. In hac habitasse platea dictumst. Pellentesque molestie accumsan tellus id laoreet.",
+          description: `
+            Aqui fica a descrição da barbearia.
+            Nela você pode fazer o seu corte de cabelo, barba, pézinho, sobrancelha, massagem, hidratação, etc.
+            Trabalhamos com os melhores produtos do mercado, garantindo qualidade e satisfação.
+            `,
         },
       })
 
-      for (const barber of barbers) {
-        await prisma.barber.create({
+      // Criar User para o barbeiro desta barbearia (1 barbeiro por barbearia)
+      const barberData = barbers[i]
+
+      const user = await prisma.user.create({
+        data: {
+          name: barberData.name,
+          email: barberData.email,
+          phone: barberData.phone,
+          role: "BARBER",
+        },
+      })
+
+      await prisma.barber.create({
+        data: {
+          userId: user.id,
+          barbershopId: barbershop.id,
+        },
+      })
+
+      // Criar horários de funcionamento
+      // Segunda a Sexta: 08:00 às 18:00
+      // Sábado: 08:00 às 12:00
+      // Domingo: fechado (não crio schedule)
+      const weekdays = [
+        {
+          dayOfWeek: 1,
+          name: "Segunda-feira",
+          startTime: "08:00",
+          endTime: "18:00",
+        },
+        {
+          dayOfWeek: 2,
+          name: "Terça-feira",
+          startTime: "08:00",
+          endTime: "18:00",
+        },
+        {
+          dayOfWeek: 3,
+          name: "Quarta-feira",
+          startTime: "08:00",
+          endTime: "18:00",
+        },
+        {
+          dayOfWeek: 4,
+          name: "Quinta-feira",
+          startTime: "08:00",
+          endTime: "18:00",
+        },
+        {
+          dayOfWeek: 5,
+          name: "Sexta-feira",
+          startTime: "08:00",
+          endTime: "18:00",
+        },
+        { dayOfWeek: 6, name: "Sábado", startTime: "08:00", endTime: "12:00" },
+      ]
+
+      for (const weekday of weekdays) {
+        await prisma.barbershopSchedule.create({
           data: {
-            name: barber,
-            barbershop: {
-              connect: {
-                id: barbershop.id,
-              },
-            },
+            barbershopId: barbershop.id,
+            dayOfWeek: weekday.dayOfWeek,
+            startTime: weekday.startTime,
+            endTime: weekday.endTime,
+            isActive: true,
           },
         })
       }
@@ -155,12 +268,9 @@ async function seedDatabase() {
             name: service.name,
             description: service.description,
             price: service.price,
-            barbershop: {
-              connect: {
-                id: barbershop.id,
-              },
-            },
+            barbershopId: barbershop.id,
             imageUrl: service.imageUrl,
+            durationMinutes: service.durationMinutes,
           },
         })
       }

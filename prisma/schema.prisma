@@ -6,18 +6,52 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  CLIENT
+  BARBER
+  OWNER
+}
+
+enum BookingStatus {
+  CONFIRMED
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  CANCELLED
+}
+
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
+  id            String       @id @default(cuid())
+  name          String
+  email         String?      @unique
   emailVerified DateTime?
+  role          Role         @default(CLIENT)
   image         String?
+  phone         String?      @unique
   accounts      Account[]
   sessions      Session[]
   bookings      Booking[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  barber        Barber?
+  owner         Barbershop[] @relation("OwnerBarbershops")
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // TODO: Add ratings for barbers and barbershops
   ratings Rating[]
 }
 
@@ -33,11 +67,10 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
 }
@@ -47,9 +80,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -61,62 +93,89 @@ model VerificationToken {
 }
 
 model Barbershop {
-  id          String              @id @default(uuid())
+  id          String               @id @default(uuid())
   name        String
-  slug        String              @unique
+  slug        String               @unique
   address     String
   phones      String[]
   description String
   imageUrl    String
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  owners      User[]               @relation("OwnerBarbershops")
   barbers     Barber[]
   services    BarbershopService[]
   ratings     Rating[]
+  schedules   BarbershopSchedule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Barber {
   id           String     @id @default(uuid())
-  name         String
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   bookings     Booking[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BarbershopService {
-  id           String     @id @default(uuid())
-  name         String
-  description  String
-  imageUrl     String
-  price        Decimal    @db.Decimal(10, 2)
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
-  bookings     Booking[]
+  id              String     @id @default(uuid())
+  name            String
+  description     String
+  imageUrl        String
+  price           Decimal    @db.Decimal(10, 2)
+  durationMinutes Int
+  barbershopId    String
+  barbershop      Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
 }
 
 model Booking {
-  id        String            @id @default(uuid())
-  userId    String
-  user      User              @relation(fields: [userId], references: [id])
-  serviceId String
-  service   BarbershopService @relation(fields: [serviceId], references: [id])
-  barberId  String?
-  barber    Barber?           @relation(fields: [barberId], references: [id])
-  date      DateTime
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId     String
+  service       BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  barberId      String?
+  barber        Barber?           @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  date          DateTime
+  status        BookingStatus     @default(CONFIRMED)
+  observations  String?
+  paymentMethod PaymentMethod?
+  paymentStatus PaymentStatus     @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BarbershopSchedule {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
+  startTime    String // "08:00" formato HH:mm
+  endTime      String // "18:00" formato HH:mm
+  isActive     Boolean    @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([barbershopId, dayOfWeek])
 }
 
 model Rating {
   id           String     @id @default(uuid())
   userId       String
-  user         User       @relation(fields: [userId], references: [id])
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   stars        Int
   comment      String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
