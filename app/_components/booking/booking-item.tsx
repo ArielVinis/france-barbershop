@@ -41,7 +41,11 @@ interface BookingItemProps {
           barbershop: true
         }
       }
-      barber: true
+      barber: {
+        include: {
+          user: true
+        }
+      }
     }
   }>
 }
@@ -142,7 +146,9 @@ const BookingItem = ({ booking }: BookingItemProps) => {
               service={booking.service}
               selectedDate={booking.date}
               barber={
-                booking.barber ? { name: booking.barber.name } : undefined
+                booking.barber?.user
+                  ? { name: booking.barber.user.name ?? "Barbeiro" }
+                  : undefined
               }
             />
           </div>

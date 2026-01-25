@@ -1,6 +1,11 @@
 "use client"
 
-import { Barber, Barbershop, BarbershopService, Booking } from "@prisma/client"
+import {
+  Barbershop,
+  BarbershopService,
+  Booking,
+  BarbershopSchedule,
+} from "@prisma/client"
 import Image from "next/image"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
@@ -14,7 +19,7 @@ import {
 import { Calendar } from "../ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { useEffect, useMemo, useState } from "react"
-import { isPast, isToday, set } from "date-fns"
+import { set } from "date-fns"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "../ui/dialog"
@@ -23,63 +28,21 @@ import BookingSummary from "../booking/booking-summary"
 import { useRouter } from "next/navigation"
 import { getBookings } from "../../_features/bookings/_actions/get-bookings"
 import { createBooking } from "../../_features/bookings/_actions/create-booking"
+import {
+  generateTimeSlots,
+  filterAvailableTimes,
+  getDayOfWeek,
+} from "../../_lib/schedule-utils"
 
 interface ServiceItemProps {
   service: BarbershopService
-  barbershop: Pick<Barbershop, "name">
-  barbers: Pick<Barber, "id" | "name">[]
-}
-
-// TODO: criar no banco de dados as horas disponíveis
-const TIME_LIST = [
-  "08:00",
-  "08:30",
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "12:00",
-  "12:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
-  "18:00",
-]
-
-interface GetTimeListProps {
-  bookings: Booking[]
-  selectedDay: Date
-}
-
-const getTimeList = ({ bookings, selectedDay }: GetTimeListProps) => {
-  return TIME_LIST.filter((time) => {
-    const hour = Number(time.split(":")[0])
-    const minutes = Number(time.split(":")[1])
-
-    const timeIsOnThePast = isPast(set(new Date(), { hours: hour, minutes }))
-    if (timeIsOnThePast && isToday(selectedDay)) {
-      return false
+  barbershop: Pick<Barbershop, "name"> & { schedules: BarbershopSchedule[] }
+  barbers: Array<{
+    id: string
+    user: {
+      name: string
     }
-
-    const hasBookingOnCurrentTime = bookings.some(
-      (booking) =>
-        booking.date.getHours() === hour &&
-        booking.date.getMinutes() === minutes,
-    )
-    if (hasBookingOnCurrentTime) {
-      return false
-    }
-    return true
-  })
+  }>
 }
 
 const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
@@ -110,8 +73,10 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
 
   const selectedBarber = useMemo(() => {
     if (!selectedBarberId) return undefined
+    const barber = barbers.find((barber) => barber.id === selectedBarberId)
+    if (!barber) return undefined
     return {
-      name: barbers.find((barber) => barber.id === selectedBarberId)!.name,
+      name: barber.user.name,
     }
   }, [barbers, selectedBarberId])
 
@@ -173,11 +138,19 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
 
   const timeList = useMemo(() => {
     if (!selectedDay) return []
-    return getTimeList({
-      bookings: dayBookings,
-      selectedDay,
-    })
-  }, [dayBookings, selectedDay])
+
+    const dayOfWeek = getDayOfWeek(selectedDay)
+
+    const schedule = barbershop.schedules.find(
+      (s) => s.dayOfWeek === dayOfWeek && s.isActive,
+    )
+
+    if (!schedule) return []
+
+    const timeSlots = generateTimeSlots(schedule, 30)
+
+    return filterAvailableTimes(timeSlots, dayBookings, selectedDay)
+  }, [dayBookings, selectedDay, barbershop.schedules])
 
   return (
     <>
@@ -268,7 +241,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                           className="rounded-full"
                           onClick={() => handleBarberSelect(barber.id)}
                         >
-                          {barber.name}
+                          {barber.user.name}
                         </Button>
                       ))}
                     </div>
