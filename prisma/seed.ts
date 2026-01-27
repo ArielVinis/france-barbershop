@@ -184,7 +184,7 @@ async function seedDatabase() {
           slug,
           address,
           imageUrl: imageUrl,
-          phones: ["(11) 99999-9999", "(11) 99999-9999"],
+          phones: ["(11) 99999-9999", "(11) 88888-8888"],
           description: `
             Aqui fica a descrição da barbearia.
             Nela você pode fazer o seu corte de cabelo, barba, pézinho, sobrancelha, massagem, hidratação, etc.
