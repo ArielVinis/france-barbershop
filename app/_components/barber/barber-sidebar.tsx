@@ -4,7 +4,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Avatar, AvatarImage } from "@/app/_components/ui/avatar"
-import { Button } from "@/app/_components/ui/button"
 import { signOut } from "next-auth/react"
 import {
   CalendarDays,
@@ -14,7 +13,19 @@ import {
   Scissors,
   Star,
 } from "lucide-react"
-import { cn } from "@/app/_lib/utils"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@/app/_components/ui/sidebar"
 
 const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
@@ -37,104 +48,126 @@ export function BarberSidebar({ user, barbershop }: BarberSidebarProps) {
   const navItems = [
     { href: "/barber", label: "Início", icon: Scissors },
     {
-      href: "/barber/bookings",
+      href: "/barber/agendamentos",
       label: "Meus agendamentos",
       icon: CalendarDays,
     },
-    {
-      href: "/barber/settings",
-      label: "Configurar agenda",
-      icon: CalendarRange,
-    },
+    { href: "/barber/agenda", label: "Minha agenda", icon: CalendarRange },
     { href: "/barber/perfil", label: "Meu perfil", icon: User },
-    { href: "/barber/ratings", label: "Avaliações", icon: Star },
+    { href: "/barber/avaliacoes", label: "Avaliações", icon: Star },
   ]
 
   const activeSchedules = barbershop.schedules.filter((s) => s.isActive)
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-border bg-card">
-      {/* Logo */}
-      <div className="border-b border-border p-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            alt="France Barber"
-            src="/logo.png"
-            height={24}
-            width={120}
-            className="h-9 w-auto"
-          />
-        </Link>
-      </div>
+    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  alt="France Barber"
+                  src="/logo.png"
+                  height={24}
+                  width={120}
+                  className="h-6 w-auto"
+                />
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-      {/* Barbeiro: foto + nome */}
-      <div className="border-b border-border p-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold">{user.name}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {barbershop.name}
-            </p>
-          </div>
-        </div>
-      </div>
+      <SidebarSeparator />
 
-      {/* Horários configurados */}
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="data-[active=true]:bg-transparent"
+              asChild
+            >
+              <div className="flex w-full items-center gap-3">
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-sidebar-foreground">
+                    {user.name}
+                  </p>
+                  <p className="truncate text-xs text-sidebar-foreground/70">
+                    {barbershop.name}
+                  </p>
+                </div>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
       {activeSchedules.length > 0 && (
-        <div className="border-b border-border p-4">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Horários
-          </p>
-          <ul className="space-y-1.5 text-sm">
-            {activeSchedules.map((s) => (
-              <li key={s.dayOfWeek} className="flex justify-between gap-2">
-                <span>{DAY_NAMES[s.dayOfWeek]}</span>
-                <span className="text-muted-foreground">
-                  {s.startTime} – {s.endTime}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <>
+          <SidebarSeparator />
+          <SidebarGroup>
+            <SidebarGroupLabel>Horários</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <ul className="space-y-1.5 px-2 text-sm text-sidebar-foreground/80">
+                {activeSchedules.map((s) => (
+                  <li key={s.dayOfWeek} className="flex justify-between gap-2">
+                    <span>{DAY_NAMES[s.dayOfWeek]}</span>
+                    <span>
+                      {s.startTime} – {s.endTime}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </>
       )}
 
-      {/* Navegação */}
-      <nav className="flex-1 space-y-0.5 p-2">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Button
-            key={href}
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2",
-              pathname === href ||
-                (href !== "/barber" && pathname.startsWith(href))
-                ? "bg-accent text-accent-foreground"
-                : "",
-            )}
-            asChild
-          >
-            <Link href={href}>
-              <Icon size={18} />
-              {label}
-            </Link>
-          </Button>
-        ))}
-      </nav>
+      <SidebarSeparator />
 
-      {/* Sair */}
-      <div className="border-t border-border p-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          onClick={() => signOut({ callbackUrl: "/" })}
-        >
-          <LogOut size={18} />
-          Sair da conta
-        </Button>
-      </div>
-    </aside>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map(({ href, label, icon: Icon }) => {
+                const isActive =
+                  pathname === href ||
+                  (href !== "/barber" && pathname.startsWith(href))
+                return (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link href={href}>
+                        <Icon size={18} className="shrink-0" />
+                        <span>{label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="text-sidebar-foreground/80"
+            >
+              <LogOut size={18} className="shrink-0" />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   )
 }
