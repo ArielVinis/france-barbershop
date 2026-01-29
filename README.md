@@ -166,30 +166,30 @@ Acesse [http://localhost:3000](http://localhost:3000)
 
 #### Painel do Barbeiro (BARBER)
 
-- [ ] **Layout base do barbeiro**
-  - [ ] Sidebar ou topbar com foto + nome
-  - [ ] Exibição de horários configurados
+- [x] **Layout base do barbeiro**
+  - [x] Sidebar ou topbar com foto + nome
+  - [x] Exibição de horários configurados
 
-- [ ] **Meus agendamentos**
+- [x] **Meus agendamentos**
   - [ ] Lista do dia / semana
   - [ ] Status: Confirmado, Em andamento, Finalizado, Cancelado
   - [ ] Botão "Iniciar atendimento"
   - [ ] Botão "Finalizar atendimento"
   - [ ] Visualização de informações do cliente
 
-- [ ] **Minha agenda**
+- [x] **Minha agenda**
   - [ ] Definir dias de trabalho
   - [ ] Configurar horário de início e fim
   - [ ] Gerenciar pausas
   - [ ] Bloquear horários específicos
 
-- [ ] **Meu perfil**
+- [x] **Meu perfil**
   - [ ] Serviços que realiza
   - [ ] Tempo médio por serviço
   - [ ] Foto e bio
   - [ ] Ativar / desativar disponibilidade
 
-- [ ] **Avaliações**
+- [x] **Avaliações**
   - [ ] Feedback dos clientes
   - [ ] Nota média
   - [ ] Comentários recebidos
