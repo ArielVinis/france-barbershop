@@ -1,7 +1,13 @@
 "use client"
 
 import { Button } from "../ui/button"
-import { CalendarIcon, HomeIcon, LogInIcon, LogOutIcon } from "lucide-react"
+import {
+  CalendarIcon,
+  HomeIcon,
+  LogInIcon,
+  LogOutIcon,
+  Scissors,
+} from "lucide-react"
 import { SheetClose, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet"
 import { quickSearchOptions } from "../../_constants/search"
 import Link from "next/link"
@@ -65,6 +71,16 @@ const SidebarSheet = () => {
             Agendamentos
           </Link>
         </Button>
+        {(data?.user as { role?: string })?.role === "BARBER" && (
+          <SheetClose asChild>
+            <Button className="justify-start gap-2" variant="ghost" asChild>
+              <Link href="/barber">
+                <Scissors size={18} />
+                Painel do barbeiro
+              </Link>
+            </Button>
+          </SheetClose>
+        )}
       </div>
 
       <div className="flex flex-col gap-2 border-b border-solid py-5">
