@@ -4,13 +4,13 @@ Sistema de agendamento para barbearias desenvolvido com Next.js 14, TypeScript, 
 
 ## 📋 Índice
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Tecnologias](#tecnologias)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Como Rodar](#como-rodar)
-- [Funcionalidades Implementadas](#funcionalidades-implementadas)
-- [TODOs](#todos)
-- [Estrutura do Banco de Dados](#estrutura-do-banco-de-dados)
+- [Sobre o Projeto](#🎯-sobre-o-projeto)
+- [Tecnologias](#🛠-tecnologias)
+- [Estrutura do Projeto](#📁-estrutura-do-projeto)
+- [Como Rodar](#🚀-como-rodar)
+- [Funcionalidades Implementadas](#✨-funcionalidades-implementadas)
+- [TODOs](#📝-todos)
+- [Estrutura do Banco de Dados](#🗄️-estrutura-do-banco-de-dados)
 
 ## 🎯 Sobre o Projeto
 
@@ -22,7 +22,7 @@ Sistema completo de gestão e agendamento para barbearias com três perfis de us
 
 ## 🛠 Tecnologias
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Linguagem**: TypeScript
 - **ORM**: Prisma
 - **Banco de Dados**: PostgreSQL
@@ -37,12 +37,22 @@ Sistema completo de gestão e agendamento para barbearias com três perfis de us
 ```
 app/
 ├── (auth)/              # Rotas de autenticação
+│   └── api/auth/       # NextAuth [...nextauth]
 ├── (main)/              # Rotas públicas e autenticadas
-│   ├── barbershops/     # Listagem e detalhes de barbearias
-│   ├── bookings/        # Agendamentos do cliente
-│   └── page.tsx         # Home pública
+│   ├── barbershops/     # Listagem e detalhes de barbearias → /barbershops, /barbershops/[slug]
+│   ├── bookings/        # Agendamentos do cliente → /bookings
+│   └── page.tsx         # Home pública → /
+├── (barber)/            # Route group do painel do barbeiro
+│   └── barber/          # Rotas em /barber/*
+│       ├── layout.tsx   # Layout base: sidebar + proteção por role BARBER
+│       ├── page.tsx     # Dashboard → /barber
+│       ├── bookings/    # Meus agendamentos → /barber/bookings
+│       ├── perfil/      # Meu perfil → /barber/perfil
+│       ├── ratings/     # Avaliações → /barber/ratings
+│       └── settings/    # Configurações → /barber/settings
 ├── _components/         # Componentes compartilhados
 │   ├── auth/           # Componentes de autenticação
+│   ├── barber/         # Componentes do painel do barbeiro (ex: barber-sidebar)
 │   ├── barbershop/     # Componentes de barbearia
 │   ├── booking/        # Componentes de agendamento
 │   ├── common/         # Componentes comuns
@@ -50,20 +60,31 @@ app/
 │   └── ui/             # Componentes shadcn/ui
 ├── _constants/         # Constantes da aplicação
 ├── _features/          # Features organizadas por domínio
+│   ├── barber/
+│   │   └── _data/      # get-barber-by-user-id, etc.
 │   ├── bookings/
 │   │   ├── _actions/   # Server Actions
 │   │   └── _data/      # Data fetching
 │   └── barbershops/
 ├── _lib/               # Utilitários e configurações
-│   ├── auth.ts         # Configuração NextAuth
+│   ├── auth.ts         # Configuração NextAuth (session com role e barberId)
 │   ├── prisma.ts       # Cliente Prisma
 │   └── schedule-utils.ts # Utilitários de horários
+├── _providers/         # Providers (ex: auth)
 └── layout.tsx          # Layout raiz
 
 prisma/
 ├── schema.prisma       # Schema do banco de dados
 └── seed.ts             # Seed do banco de dados
 ```
+
+### Layout base do painel do barbeiro
+
+- **Rota**: `/barber` (e subrotas). Acesso apenas para usuários com `role === BARBER` e com registro em `Barber`; caso contrário, redireciona para `/`.
+- **Estrutura visual**:
+  - **Sidebar fixa** (esquerda): logo (link para home), **foto + nome do barbeiro** e nome da barbearia, bloco **Horários** (exibe os horários da barbearia por dia da semana), navegação (Início, Meus agendamentos, Configurar agenda, Meu perfil, Avaliações), botão Sair.
+  - **Área principal**: `{children}` com padding, scroll independente.
+- **Dados**: o layout busca o barbeiro por `userId` da sessão (incluindo barbearia e `schedules`) e repassa para a sidebar.
 
 ## 🚀 Como Rodar
 
@@ -147,7 +168,6 @@ Acesse [http://localhost:3000](http://localhost:3000)
 
 - [ ] **Layout base do barbeiro**
   - [ ] Sidebar ou topbar com foto + nome
-  - [ ] Status: Online / Offline
   - [ ] Exibição de horários configurados
 
 - [ ] **Meus agendamentos**
