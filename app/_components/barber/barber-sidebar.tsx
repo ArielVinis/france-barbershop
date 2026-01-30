@@ -26,6 +26,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/app/_components/ui/sidebar"
+import { PATHS } from "@/app/_constants/PATHS"
 
 const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
@@ -46,15 +47,15 @@ export function BarberSidebar({ user, barbershop }: BarberSidebarProps) {
   const pathname = usePathname()
 
   const navItems = [
-    { href: "/barber", label: "Início", icon: Scissors },
+    { href: PATHS.BARBER.HOME, label: "Início", icon: Scissors },
     {
-      href: "/barber/agendamentos",
+      href: PATHS.BARBER.BOOKINGS,
       label: "Meus agendamentos",
       icon: CalendarDays,
     },
-    { href: "/barber/agenda", label: "Minha agenda", icon: CalendarRange },
-    { href: "/barber/perfil", label: "Meu perfil", icon: User },
-    { href: "/barber/avaliacoes", label: "Avaliações", icon: Star },
+    { href: PATHS.BARBER.SETTINGS, label: "Minha agenda", icon: CalendarRange },
+    { href: PATHS.BARBER.PROFILE, label: "Meu perfil", icon: User },
+    { href: PATHS.BARBER.RATINGS, label: "Avaliações", icon: Star },
   ]
 
   const activeSchedules = barbershop.schedules.filter((s) => s.isActive)
@@ -65,13 +66,13 @@ export function BarberSidebar({ user, barbershop }: BarberSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/" className="flex items-center gap-2">
+              <Link href={PATHS.HOME} className="flex items-center gap-2">
                 <Image
                   alt="France Barber"
                   src="/logo.png"
                   height={24}
                   width={120}
-                  className="h-6 w-auto"
+                  className="h-auto w-auto"
                 />
               </Link>
             </SidebarMenuButton>
@@ -138,7 +139,7 @@ export function BarberSidebar({ user, barbershop }: BarberSidebarProps) {
               {navItems.map(({ href, label, icon: Icon }) => {
                 const isActive =
                   pathname === href ||
-                  (href !== "/barber" && pathname.startsWith(href))
+                  (href !== PATHS.BARBER.HOME && pathname.startsWith(href))
                 return (
                   <SidebarMenuItem key={href}>
                     <SidebarMenuButton asChild isActive={isActive}>
@@ -159,7 +160,7 @@ export function BarberSidebar({ user, barbershop }: BarberSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => signOut({ callbackUrl: PATHS.HOME })}
               className="text-sidebar-foreground/80"
             >
               <LogOut size={18} className="shrink-0" />
