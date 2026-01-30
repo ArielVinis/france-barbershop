@@ -97,22 +97,26 @@ prisma/
 ### Instalação
 
 1. Clone o repositório:
+
 ```bash
 git clone <url-do-repositorio>
 cd france-barbershop
 ```
 
 2. Instale as dependências:
+
 ```bash
 npm install
 ```
 
 3. Configure as variáveis de ambiente:
+
 ```bash
 cp .env.example .env
 ```
 
 Edite o `.env` com suas credenciais:
+
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/france_barbershop"
 NEXTAUTH_SECRET="seu-secret-aqui"
@@ -120,6 +124,7 @@ NEXTAUTH_URL="http://localhost:3000"
 ```
 
 4. Configure o banco de dados:
+
 ```bash
 # Criar migration
 npx prisma migrate dev
@@ -129,6 +134,7 @@ npx prisma db seed
 ```
 
 5. Inicie o servidor de desenvolvimento:
+
 ```bash
 npm run dev
 ```
@@ -170,26 +176,26 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Sidebar ou topbar com foto + nome
   - [x] Exibição de horários configurados
 
-- [x] **Meus agendamentos**
-  - [ ] Lista do dia / semana
-  - [ ] Status: Confirmado, Em andamento, Finalizado, Cancelado
-  - [ ] Botão "Iniciar atendimento"
-  - [ ] Botão "Finalizar atendimento"
-  - [ ] Visualização de informações do cliente
+- [x] **Meus agendamentos (bookings)**
+  - [x] Lista do dia / semana
+  - [x] Status: Confirmado, Em andamento, Finalizado, Cancelado
+  - [x] Botão "Iniciar atendimento"
+  - [x] Botão "Finalizar atendimento"
+  - [x] Visualização de informações do cliente
 
-- [x] **Minha agenda**
+- [x] **Minha agenda (settings)**
   - [ ] Definir dias de trabalho
   - [ ] Configurar horário de início e fim
   - [ ] Gerenciar pausas
   - [ ] Bloquear horários específicos
 
-- [x] **Meu perfil**
+- [x] **Meu perfil (perfil)**
   - [ ] Serviços que realiza
   - [ ] Tempo médio por serviço
   - [ ] Foto e bio
   - [ ] Ativar / desativar disponibilidade
 
-- [x] **Avaliações**
+- [x] **Avaliações (ratings)**
   - [ ] Feedback dos clientes
   - [ ] Nota média
   - [ ] Comentários recebidos
