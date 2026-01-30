@@ -9,7 +9,7 @@ import {
   SquareScissors,
 } from "lucide-react"
 import { SheetClose, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet"
-import { quickSearchOptions } from "../../_constants/SEARCH"
+import { quickSearchOptions } from "../../_constants/search"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { signOut, useSession } from "next-auth/react"
