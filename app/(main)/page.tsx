@@ -3,7 +3,7 @@ import { Button } from "../_components/ui/button"
 import Image from "next/image"
 import { db } from "../_lib/prisma"
 import BarbershopItem from "../_components/barbershop/barbershop-item"
-import { quickSearchOptions } from "../_constants/search"
+import { quickSearchOptions } from "../_constants/SEARCH"
 import BookingItem from "../_components/booking/booking-item"
 import Search from "../_components/common/search"
 import Link from "next/link"
@@ -36,7 +36,7 @@ const Home = async () => {
           <span className="capitalize">
             {format(new Date(), "EEEE, dd", { locale: ptBR })}
           </span>
-          <span>&nbsp;de&nbsp;</span>
+          <span> de </span>
           <span className="capitalize">
             {format(new Date(), "MMMM", { locale: ptBR })}
           </span>
