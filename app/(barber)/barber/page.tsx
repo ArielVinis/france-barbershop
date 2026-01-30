@@ -31,7 +31,7 @@ export default function BarberDashboardPage() {
               Veja e gerencie os agendamentos do dia e da semana.
             </p>
             <Button variant="outline" className="mt-4 w-full" asChild>
-              <Link href="/barber/agendamentos">Abrir</Link>
+              <Link href="/barber/bookings">Abrir</Link>
             </Button>
           </CardContent>
         </Card>

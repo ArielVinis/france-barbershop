@@ -1,12 +1,28 @@
-export default function BarberAgendamentosPage() {
+import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
+import { authOptions } from "@/app/_lib/auth"
+import { getBarberBookings } from "@/app/_features/barber/_data/get-barber-bookings"
+import { BarberBookingsClient } from "./barber-bookings-client"
+
+export default async function BarberBookingsPage() {
+  const session = await getServerSession(authOptions)
+  const user = session?.user as
+    | { id?: string; role?: string; barberId?: string | null }
+    | undefined
+  if (!user?.id || user.role !== "BARBER" || !user.barberId) {
+    redirect("/")
+  }
+
+  const today = new Date()
+  const [bookingsDay, bookingsWeek] = await Promise.all([
+    getBarberBookings(user.barberId, "day", today),
+    getBarberBookings(user.barberId, "week", today),
+  ])
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Meus agendamentos</h1>
-        <p className="text-muted-foreground">
-          Lista do dia / semana — em breve.
-        </p>
-      </div>
-    </div>
+    <BarberBookingsClient
+      bookingsDay={bookingsDay}
+      bookingsWeek={bookingsWeek}
+    />
   )
 }
