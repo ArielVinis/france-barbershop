@@ -1,5 +1,5 @@
-import { slugify } from "@/app/_lib/utils"
-import { db as prisma } from "../app/_lib/prisma"
+import { slugify } from "@/src/lib/utils"
+import { db as prisma } from "../src/lib/prisma"
 
 async function seedDatabase() {
   try {
