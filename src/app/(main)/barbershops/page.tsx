@@ -6,7 +6,7 @@ import {
   GetBarbershopsProps,
 } from "../../../features/barbershops/_data/get-barbershops"
 
-const BarbershopsPage = async ({ searchParams }: GetBarbershopsProps) => {
+const SearchBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
   const params = await searchParams
   const barbershops = await getBarbershops({ searchParams })
 
@@ -18,8 +18,7 @@ const BarbershopsPage = async ({ searchParams }: GetBarbershopsProps) => {
       </div>
       <div className="px-5">
         <h2 className="mb-3 mt-6 text-xs font-bold uppercase text-gray-400">
-          Resultados para &quot;{params?.title || params?.service}
-          &quot;
+          Resultados para {params?.title || params?.service}
         </h2>
         <div className="grid grid-cols-2 gap-4">
           {barbershops.map((barbershop) => (
@@ -31,4 +30,4 @@ const BarbershopsPage = async ({ searchParams }: GetBarbershopsProps) => {
   )
 }
 
-export default BarbershopsPage
+export default SearchBarbershops

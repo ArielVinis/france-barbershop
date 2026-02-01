@@ -15,8 +15,8 @@ const Bookings = async () => {
       <Header />
       <BookingsClient
         session={session}
-        confirmedBookings={confirmedBookings}
-        concludedBookings={concludedBookings}
+        confirmedBookings={JSON.parse(JSON.stringify(confirmedBookings))}
+        concludedBookings={JSON.parse(JSON.stringify(concludedBookings))}
       />
     </>
   )
