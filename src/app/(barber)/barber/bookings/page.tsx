@@ -14,15 +14,17 @@ export default async function BarberBookingsPage() {
   }
 
   const today = new Date()
-  const [bookingsDay, bookingsWeek] = await Promise.all([
+  const [bookingsDay, bookingsWeek, bookingsMonth] = await Promise.all([
     getBarberBookings(user.barberId, "day", today),
     getBarberBookings(user.barberId, "week", today),
+    getBarberBookings(user.barberId, "month", today),
   ])
 
   return (
     <BarberBookingsClient
       bookingsDay={JSON.parse(JSON.stringify(bookingsDay))}
       bookingsWeek={JSON.parse(JSON.stringify(bookingsWeek))}
+      bookingsMonth={JSON.parse(JSON.stringify(bookingsMonth))}
     />
   )
 }

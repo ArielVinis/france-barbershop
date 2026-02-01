@@ -1,9 +1,16 @@
 "use server"
 
-import { startOfDay, endOfDay, startOfWeek, endOfWeek } from "date-fns"
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns"
 import { db } from "@/src/lib/prisma"
 
-type Period = "day" | "week"
+type Period = "day" | "week" | "month"
 
 export async function getBarberBookings(
   barberId: string,
@@ -11,9 +18,17 @@ export async function getBarberBookings(
   date: Date,
 ) {
   const start =
-    period === "day" ? startOfDay(date) : startOfWeek(date, { weekStartsOn: 0 })
+    period === "day"
+      ? startOfDay(date)
+      : period === "week"
+        ? startOfWeek(date, { weekStartsOn: 0 })
+        : startOfMonth(date)
   const end =
-    period === "day" ? endOfDay(date) : endOfWeek(date, { weekStartsOn: 0 })
+    period === "day"
+      ? endOfDay(date)
+      : period === "week"
+        ? endOfWeek(date, { weekStartsOn: 0 })
+        : endOfMonth(date)
 
   return db.booking.findMany({
     where: {

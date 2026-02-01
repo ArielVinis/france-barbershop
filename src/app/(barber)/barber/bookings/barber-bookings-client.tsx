@@ -222,13 +222,20 @@ function BarberBookingCard({
 export function BarberBookingsClient({
   bookingsDay,
   bookingsWeek,
+  bookingsMonth,
 }: {
   bookingsDay: BookingWithRelations[]
   bookingsWeek: BookingWithRelations[]
+  bookingsMonth: BookingWithRelations[]
 }) {
   const router = useRouter()
-  const [period, setPeriod] = useState<"day" | "week">("day")
-  const bookings = period === "day" ? bookingsDay : bookingsWeek
+  const [period, setPeriod] = useState<"day" | "week" | "month">("day")
+  const bookings =
+    period === "day"
+      ? bookingsDay
+      : period === "week"
+        ? bookingsWeek
+        : bookingsMonth
 
   const refresh = () => router.refresh()
 
@@ -259,6 +266,17 @@ export function BarberBookingsClient({
           >
             Semana
           </button>
+          <button
+            type="button"
+            onClick={() => setPeriod("month")}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              period === "month"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            Mês
+          </button>
         </div>
       </div>
       {bookings.length === 0 ? (
@@ -269,7 +287,9 @@ export function BarberBookingsClient({
             <p className="text-sm text-muted-foreground">
               {period === "day"
                 ? "Você não tem agendamentos para hoje."
-                : "Você não tem agendamentos nesta semana."}
+                : period === "week"
+                  ? "Você não tem agendamentos nesta semana."
+                  : "Você não tem agendamentos nesse mês."}
             </p>
           </CardContent>
         </Card>
