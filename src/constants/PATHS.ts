@@ -1,5 +1,6 @@
 export const PATHS = Object.freeze({
   HOME: "/",
+
   BARBER: {
     HOME: "/barber",
     BOOKINGS: "/barber/bookings",
@@ -7,10 +8,12 @@ export const PATHS = Object.freeze({
     PROFILE: "/barber/profile",
     RATINGS: "/barber/ratings",
   },
+
   BARBERSHOP: {
-    HOME: "/barbershops",
-    DETAIL: "/barbershops/:slug",
+    HOME: (slug: string) => `/${slug}`,
+    SEARCH: (title: string) => `/barbershops?title=${title}`,
   },
+
   BOOKINGS: {
     HOME: "/bookings",
   },

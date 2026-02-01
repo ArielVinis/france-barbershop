@@ -5,10 +5,10 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "../ui/form"
+import { PATHS } from "@/src/constants/PATHS"
 
 const formSchema = z.object({
   title: z.string().trim().min(1, {
@@ -26,7 +26,7 @@ const Search = () => {
   const router = useRouter()
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    router.push(`/barbershops?title=${data.title}`)
+    router.push(PATHS.BARBERSHOP.SEARCH(data.title))
   }
 
   return (
@@ -39,7 +39,7 @@ const Search = () => {
             <FormItem className="w-full">
               <FormControl>
                 <Input
-                  placeholder="Faça sua busca..."
+                  placeholder="Buscar barbearia..."
                   {...field}
                   className="w-full"
                 />
