@@ -177,11 +177,14 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Exibição de horários configurados
 
 - [x] **Meus agendamentos (bookings)**
-  - [x] Lista do dia / semana
+  - [ ] Lista do dia / semana / mês
   - [x] Status: Confirmado, Em andamento, Finalizado, Cancelado
   - [x] Botão "Iniciar atendimento"
   - [x] Botão "Finalizar atendimento"
   - [x] Visualização de informações do cliente
+  - [ ] Adicionar observação
+  - [ ] Poder alterar o status do agendamento
+  - [ ] Inserir qual modo de pagamento foi realizado
 
 - [x] **Minha agenda (settings)**
   - [ ] Definir dias de trabalho
@@ -270,6 +273,8 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [ ] Animações
   - [ ] Responsividade aprimorada
   - [ ] Dark mode
+  - [ ] Calendário de Bookings
+  - [ ] Sidebar de Barber
 
 - [ ] **Testes**
   - [ ] Testes unitários

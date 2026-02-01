@@ -7,6 +7,7 @@ import {
 import Link from "next/link"
 import { Button } from "@/src/components/ui/button"
 import { CalendarDays, CalendarRange, User } from "lucide-react"
+import { PATHS } from "@/src/constants/PATHS"
 
 export default function BarberDashboardPage() {
   return (
@@ -31,14 +32,16 @@ export default function BarberDashboardPage() {
               Veja e gerencie os agendamentos do dia e da semana.
             </p>
             <Button variant="outline" className="mt-4 w-full" asChild>
-              <Link href="/barber/bookings">Abrir</Link>
+              <Link href={PATHS.BARBER.BOOKINGS}>Abrir</Link>
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Minha agenda</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Configurar agenda
+            </CardTitle>
             <CalendarRange className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -46,7 +49,7 @@ export default function BarberDashboardPage() {
               Configure dias de trabalho, horários e pausas.
             </p>
             <Button variant="outline" className="mt-4 w-full" asChild>
-              <Link href="/barber/agenda">Abrir</Link>
+              <Link href={PATHS.BARBER.SETTINGS}>Abrir</Link>
             </Button>
           </CardContent>
         </Card>
@@ -61,7 +64,7 @@ export default function BarberDashboardPage() {
               Serviços, foto, bio e disponibilidade.
             </p>
             <Button variant="outline" className="mt-4 w-full" asChild>
-              <Link href="/barber/perfil">Abrir</Link>
+              <Link href={PATHS.BARBER.PROFILE}>Abrir</Link>
             </Button>
           </CardContent>
         </Card>

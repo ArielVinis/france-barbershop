@@ -2,12 +2,7 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/src/lib/auth"
 import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
-import { BarberSidebar } from "@/src/components/barber/barber-sidebar"
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/src/components/ui/sidebar"
+import { BarberLayoutClient } from "@/src/components/barber/barber-layout-client"
 
 export default async function BarberLayout({
   children,
@@ -35,27 +30,16 @@ export default async function BarberLayout({
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-full min-h-0 flex-1 overflow-hidden">
-        <BarberSidebar
-          user={barber.user}
-          barbershop={{
-            name: barber.barbershop.name,
-            schedules: barber.barbershop.schedules,
-          }}
-        />
-        <SidebarInset>
-          <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
-            <SidebarTrigger />
-            <span className="text-sm font-medium text-muted-foreground">
-              Menu
-            </span>
-          </header>
-          <main className="flex-1 overflow-y-auto bg-background p-6">
-            {children}
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <BarberLayoutClient
+      user={barber.user}
+      barbershop={{
+        name: barber.barbershop.name,
+        slug: barber.barbershop.slug,
+        imageUrl: barber.barbershop.imageUrl ?? "/logo.png",
+        schedules: barber.barbershop.schedules,
+      }}
+    >
+      {children}
+    </BarberLayoutClient>
   )
 }

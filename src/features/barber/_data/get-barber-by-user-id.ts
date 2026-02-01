@@ -10,6 +10,7 @@ export async function getBarberByUserId(userId: string) {
           id: true,
           name: true,
           slug: true,
+          imageUrl: true,
           schedules: { orderBy: { dayOfWeek: "asc" } },
         },
       },
