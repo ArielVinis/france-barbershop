@@ -13,7 +13,12 @@ import {
   Star,
 } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-import { SheetClose, SheetContent } from "@/src/components/ui/sheet"
+import {
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/src/components/ui/sheet"
 import { Separator } from "@/src/components/ui/separator"
 import { PATHS } from "@/src/constants/PATHS"
 import { cn } from "@/src/lib/utils"
@@ -56,6 +61,9 @@ export function BarberMenuContent({
 
   return (
     <SheetContent className="flex w-[90%] flex-col overflow-y-auto p-0">
+      <SheetHeader className="sr-only">
+        <SheetTitle>Menu</SheetTitle>
+      </SheetHeader>
       <div className="flex items-center gap-3 border-b p-4 pt-5">
         <Avatar className="h-10 w-10 shrink-0">
           <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
