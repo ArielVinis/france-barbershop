@@ -1,3 +1,4 @@
+import { getServerSession } from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { AuthOptions } from "next-auth"
 import { db } from "./prisma"
@@ -32,4 +33,21 @@ export const authOptions: AuthOptions = {
     },
   },
   secret: process.env.NEXT_AUTH_SECRET,
+}
+
+export type BarberSession = { id: string; barberId: string }
+
+/**
+ * Retorna a sessão do barbeiro autenticado ou lança se não autorizado.
+ * Reutilizar em actions que exigem role BARBER e barberId.
+ */
+export async function getBarberSession(): Promise<BarberSession> {
+  const session = await getServerSession(authOptions)
+  const user = session?.user as
+    | { id?: string; role?: string; barberId?: string | null }
+    | undefined
+  if (!user?.id || user.role !== "BARBER" || !user.barberId) {
+    throw new Error("Não autorizado")
+  }
+  return { id: user.id, barberId: user.barberId }
 }

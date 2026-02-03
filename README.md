@@ -177,14 +177,14 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Exibição de horários configurados
 
 - [x] **Meus agendamentos (bookings)**
-  - [ ] Lista do dia / semana / mês
+  - [x] Lista do dia / semana / mês
   - [x] Status: Confirmado, Em andamento, Finalizado, Cancelado
   - [x] Botão "Iniciar atendimento"
   - [x] Botão "Finalizar atendimento"
   - [x] Visualização de informações do cliente
-  - [ ] Adicionar observação
-  - [ ] Poder alterar o status do agendamento
-  - [ ] Inserir qual modo de pagamento foi realizado
+  - [x] Poder adicionar observação (Optional)
+  - [x] Poder por o status do agendamento (caso o cliente informar que deseja cancelar ou para informar que o cliente não compareceu, o proprio barbeiro pode alterar o status)
+  - [x] Inserir qual modo de pagamento foi realizado para relatórios.
 
 - [x] **Minha agenda (settings)**
   - [ ] Definir dias de trabalho
