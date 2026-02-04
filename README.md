@@ -186,7 +186,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Poder por o status do agendamento (caso o cliente informar que deseja cancelar ou para informar que o cliente não compareceu, o proprio barbeiro pode alterar o status)
   - [x] Inserir qual modo de pagamento foi realizado para relatórios.
 
-- [x] **Minha agenda (settings)**
+- [x] **Configurar agenda (settings)**
   - [x] Definir dias de trabalho
   - [x] Configurar horário de início e fim de cada dia
   - [x] Gerenciar pausas

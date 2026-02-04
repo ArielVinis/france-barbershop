@@ -52,7 +52,11 @@ export function BarberMenuContent({
       label: "Meus agendamentos",
       icon: CalendarDays,
     },
-    { href: PATHS.BARBER.SETTINGS, label: "Minha agenda", icon: CalendarRange },
+    {
+      href: PATHS.BARBER.SETTINGS,
+      label: "Configurar agenda",
+      icon: CalendarRange,
+    },
     { href: PATHS.BARBER.PROFILE, label: "Meu perfil", icon: User },
     { href: PATHS.BARBER.RATINGS, label: "Avaliações", icon: Star },
   ]

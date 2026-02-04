@@ -217,7 +217,7 @@ export function BarberSettingsClient({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Minha agenda</h1>
+        <h1 className="text-2xl font-bold">Configurar agenda</h1>
         <p className="text-muted-foreground">
           Defina seus dias de trabalho, horários, pausas e bloqueios (ex.:
           férias).
