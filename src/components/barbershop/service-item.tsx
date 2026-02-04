@@ -31,18 +31,30 @@ import { createBooking } from "../../features/bookings/_actions/create-booking"
 import {
   generateTimeSlots,
   filterAvailableTimes,
+  filterTimesByBreaks,
+  filterTimesByBlockedSlots,
   getDayOfWeek,
+  type DaySchedule,
 } from "../../lib/schedule-utils"
+
+type BarberWithAgenda = {
+  id: string
+  user: { name: string }
+  schedules: Array<{
+    dayOfWeek: number
+    startTime: string
+    endTime: string
+    isActive: boolean
+  }>
+  breaks: Array<{ dayOfWeek: number; startTime: string; endTime: string }>
+  /** Datas podem vir como string após serialização (JSON) do server */
+  blockedSlots: Array<{ startAt: Date | string; endAt: Date | string }>
+}
 
 interface ServiceItemProps {
   service: BarbershopService
   barbershop: Pick<Barbershop, "name"> & { schedules: BarbershopSchedule[] }
-  barbers: Array<{
-    id: string
-    user: {
-      name: string
-    }
-  }>
+  barbers: BarberWithAgenda[]
 }
 
 const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
@@ -137,20 +149,55 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
   }
 
   const timeList = useMemo(() => {
-    if (!selectedDay) return []
+    if (!selectedDay || !selectedBarberId) return []
 
     const dayOfWeek = getDayOfWeek(selectedDay)
+    const selectedBarber = barbers.find((b) => b.id === selectedBarberId)
+    if (!selectedBarber) return []
 
-    const schedule = barbershop.schedules.find(
+    const barberSchedule = selectedBarber.schedules.find(
       (s) => s.dayOfWeek === dayOfWeek && s.isActive,
     )
+    const shopSchedule = barbershop.schedules.find(
+      (s) => s.dayOfWeek === dayOfWeek && s.isActive,
+    )
+    const schedule: DaySchedule | null =
+      selectedBarber.schedules.length > 0
+        ? (barberSchedule ?? null)
+        : (shopSchedule ?? null)
 
     if (!schedule) return []
 
-    const timeSlots = generateTimeSlots(schedule, 30)
+    let timeSlots = generateTimeSlots(schedule, 30)
 
-    return filterAvailableTimes(timeSlots, dayBookings, selectedDay)
-  }, [dayBookings, selectedDay, barbershop.schedules])
+    const breaksForDay = selectedBarber.breaks.filter(
+      (b) => b.dayOfWeek === dayOfWeek,
+    )
+    timeSlots = filterTimesByBreaks(
+      timeSlots,
+      breaksForDay.map((b) => ({ startTime: b.startTime, endTime: b.endTime })),
+    )
+
+    timeSlots = filterTimesByBlockedSlots(
+      timeSlots,
+      selectedDay,
+      selectedBarber.blockedSlots.map((s) => ({
+        startAt: new Date(s.startAt),
+        endAt: new Date(s.endAt),
+      })),
+    )
+
+    const barberBookings = dayBookings.filter(
+      (b) => b.barberId === selectedBarberId,
+    )
+    return filterAvailableTimes(timeSlots, barberBookings, selectedDay)
+  }, [
+    dayBookings,
+    selectedDay,
+    selectedBarberId,
+    barbershop.schedules,
+    barbers,
+  ])
 
   return (
     <>

@@ -187,10 +187,10 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Inserir qual modo de pagamento foi realizado para relatórios.
 
 - [x] **Minha agenda (settings)**
-  - [ ] Definir dias de trabalho
-  - [ ] Configurar horário de início e fim
-  - [ ] Gerenciar pausas
-  - [ ] Bloquear horários específicos
+  - [x] Definir dias de trabalho
+  - [x] Configurar horário de início e fim de cada dia
+  - [x] Gerenciar pausas
+  - [x] Bloquear horários específicos (exemplo: férias)
 
 - [x] **Meu perfil (perfil)**
   - [ ] Serviços que realiza

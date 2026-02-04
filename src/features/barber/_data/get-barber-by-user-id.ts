@@ -14,6 +14,9 @@ export async function getBarberByUserId(userId: string) {
           schedules: { orderBy: { dayOfWeek: "asc" } },
         },
       },
+      schedules: { orderBy: { dayOfWeek: "asc" } },
+      breaks: true,
+      blockedSlots: { orderBy: { startAt: "asc" } },
     },
   })
 }

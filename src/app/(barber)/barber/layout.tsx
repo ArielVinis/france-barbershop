@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/src/lib/auth"
+import { getBarberSession } from "@/src/lib/auth"
 import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
 import { BarberLayoutClient } from "@/src/components/barber/barber-layout-client"
 
@@ -9,25 +8,15 @@ export default async function BarberLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions)
+  const { id: userId } = await getBarberSession()
 
-  if (!session?.user) {
-    redirect("/")
-  }
-
-  const user = session.user as {
-    id?: string
-    role?: string
-    barberId?: string | null
-  }
-  if (user.role !== "BARBER" || !user.id) {
-    redirect("/")
-  }
-
-  const barber = await getBarberByUserId(user.id)
+  const barber = await getBarberByUserId(userId)
   if (!barber) {
     redirect("/")
   }
+
+  const displaySchedules =
+    barber.schedules.length > 0 ? barber.schedules : barber.barbershop.schedules
 
   return (
     <BarberLayoutClient
@@ -36,7 +25,7 @@ export default async function BarberLayout({
         name: barber.barbershop.name,
         slug: barber.barbershop.slug,
         imageUrl: barber.barbershop.imageUrl ?? "/logo.png",
-        schedules: barber.barbershop.schedules,
+        schedules: displaySchedules,
       }}
     >
       {children}

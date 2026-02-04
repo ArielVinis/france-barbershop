@@ -1,12 +1,23 @@
-export default function BarberAgendaPage() {
+import { getBarberSession } from "@/src/lib/auth"
+import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
+import { BarberSettingsClient } from "./barber-settings-client"
+
+export default async function BarberAgendaPage() {
+  const { id: userId } = await getBarberSession()
+  const barber = await getBarberByUserId(userId)
+  if (!barber) throw new Error("Barbeiro não encontrado")
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Minha agenda</h1>
-        <p className="text-muted-foreground">
-          Dias de trabalho, horários e pausas — em breve.
-        </p>
-      </div>
-    </div>
+    <BarberSettingsClient
+      initialSchedules={barber.schedules}
+      barbershopSchedules={barber.barbershop.schedules}
+      initialBreaks={barber.breaks}
+      initialBlockedSlots={barber.blockedSlots.map((s) => ({
+        id: s.id,
+        startAt: s.startAt,
+        endAt: s.endAt,
+        reason: s.reason,
+      }))}
+    />
   )
 }

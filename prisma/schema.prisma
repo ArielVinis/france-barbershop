@@ -111,12 +111,54 @@ model Barbershop {
 }
 
 model Barber {
-  id           String     @id @default(uuid())
-  userId       String     @unique
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  bookings     Booking[]
+  id             String              @id @default(uuid())
+  userId         String              @unique
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershopId   String
+  barbershop     Barbershop          @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  bookings       Booking[]
+  schedules      BarberSchedule[]
+  breaks         BarberBreak[]
+  blockedSlots   BarberBlockedSlot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BarberSchedule {
+  id        String  @id @default(uuid())
+  barberId  String
+  barber    Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  dayOfWeek Int     // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  startTime String  // "08:00" formato HH:mm
+  endTime   String  // "18:00" formato HH:mm
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([barberId, dayOfWeek])
+}
+
+model BarberBreak {
+  id        String @id @default(uuid())
+  barberId  String
+  barber    Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  dayOfWeek Int    // 0 = Domingo, ..., 6 = Sábado
+  startTime String // "12:00" formato HH:mm
+  endTime   String // "13:00" formato HH:mm
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BarberBlockedSlot {
+  id       String   @id @default(uuid())
+  barberId String
+  barber   Barber   @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  startAt  DateTime
+  endAt    DateTime
+  reason   String?  // ex: "Férias", "Consulta médica"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

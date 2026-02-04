@@ -3,6 +3,7 @@ import ServiceItem from "@/src/components/barbershop/service-item"
 import SidebarSheet from "@/src/components/layout/sidebar-sheet"
 import { Button } from "@/src/components/ui/button"
 import { Sheet, SheetTrigger } from "@/src/components/ui/sheet"
+import { PATHS } from "@/src/constants/PATHS"
 import { db } from "@/src/lib/prisma"
 import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
@@ -27,6 +28,9 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
       barbers: {
         include: {
           user: true,
+          breaks: true,
+          schedules: { orderBy: { dayOfWeek: "asc" } },
+          blockedSlots: { orderBy: { startAt: "asc" } },
         },
       },
       schedules: true,
@@ -54,7 +58,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
           className="absolute left-4 top-4"
           asChild
         >
-          <Link href="/">
+          <Link href={PATHS.HOME}>
             <ChevronLeftIcon />
           </Link>
         </Button>
