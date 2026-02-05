@@ -192,13 +192,10 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Gerenciar pausas
   - [x] Bloquear horários específicos (exemplo: férias)
 
-- [x] **Meu perfil (perfil)**
-  - [ ] Serviços que realiza
-  - [ ] Tempo médio por serviço
-  - [ ] Foto e bio
-  - [ ] Ativar / desativar disponibilidade
+- [x] **Meu perfil (perfil): Standby**
+  - [ ] Thinking
 
-- [x] **Avaliações (ratings)**
+- [x] **Avaliações (ratings): Standby**
   - [ ] Feedback dos clientes
   - [ ] Nota média
   - [ ] Comentários recebidos
@@ -206,7 +203,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
 #### Painel do Dono (OWNER)
 
 - [ ] **Dashboard inicial**
-  - [ ] Agendamentos do dia
+  - [ ] Agendamentos do dia/semana/mês
   - [ ] Faturamento
   - [ ] Barbeiros ativos
   - [ ] Serviços mais vendidos
