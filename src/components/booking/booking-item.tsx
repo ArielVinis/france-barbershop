@@ -168,8 +168,8 @@ const BookingItem = ({ booking }: BookingItemProps) => {
             </SheetClose>
             {isConfirmed && (
               <Dialog>
-                <DialogTrigger className="w-full">
-                  <Button variant="destructive" className="w-full" asChild>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" className="w-full">
                     Cancelar Reserva
                   </Button>
                 </DialogTrigger>

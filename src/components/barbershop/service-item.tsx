@@ -239,7 +239,9 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
 
                 <SheetContent className="hide-scrollbar overflow-y-auto px-0">
                   <SheetHeader>
-                    <SheetTitle>Fazer Reserva</SheetTitle>
+                    <SheetTitle className="text-center">
+                      Fazer Reserva
+                    </SheetTitle>
                   </SheetHeader>
 
                   <div className="border-b border-solid py-5">
@@ -295,7 +297,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                   )}
 
                   {selectedDay && selectedBarberId && (
-                    <div className="hide-scrollbar flex gap-3 overflow-x-auto border-b border-solid p-5">
+                    <div className="hide-scrollbar flex flex-wrap justify-center gap-3 border-b border-solid p-5">
                       {timeList.length > 0 ? (
                         timeList.map((time) => (
                           <Button

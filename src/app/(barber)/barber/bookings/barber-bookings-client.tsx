@@ -10,13 +10,16 @@ import { Button } from "@/src/components/ui/button"
 import { Avatar, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/src/components/ui/sheet"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -319,7 +322,9 @@ function BarberBookingCard({
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col gap-2 pt-4">
+          </div>
+          <SheetFooter className="mt-6">
+            <div className="flex w-full flex-col gap-2">
               {canStart && (
                 <Button
                   onClick={handleStart}
@@ -361,10 +366,15 @@ function BarberBookingCard({
                     <UserX size={18} />
                     Cliente não compareceu
                   </Button>
+                  <SheetClose asChild>
+                    <Button variant="outline" className="w-full">
+                      Voltar
+                    </Button>
+                  </SheetClose>
                 </>
               )}
             </div>
-          </div>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
 
@@ -406,17 +416,21 @@ function BarberBookingCard({
               ))}
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-row gap-3">
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setSelectedPaymentMethod("")}
+              >
+                Voltar
+              </Button>
+            </DialogClose>
             <Button
-              variant="outline"
-              onClick={() => {
-                setFinishDialogOpen(false)
-                setSelectedPaymentMethod("")
-              }}
+              onClick={handleFinishConfirm}
+              disabled={!!loading}
+              className="w-full"
             >
-              Voltar
-            </Button>
-            <Button onClick={handleFinishConfirm} disabled={!!loading}>
               {loading === "finish" ? "Finalizando…" : "Finalizar"}
             </Button>
           </DialogFooter>
@@ -432,17 +446,17 @@ function BarberBookingCard({
               agendamento. Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setCancelDialogOpen(false)}
-            >
-              Voltar
-            </Button>
+          <DialogFooter className="flex flex-row gap-3">
+            <DialogClose asChild>
+              <Button variant="outline" className="w-full">
+                Voltar
+              </Button>
+            </DialogClose>
             <Button
               variant="destructive"
               onClick={handleCancel}
               disabled={!!loading}
+              className="w-full"
             >
               {loading === "cancel" ? "Cancelando…" : "Confirmar cancelamento"}
             </Button>
@@ -459,18 +473,17 @@ function BarberBookingCard({
               horário. Útil para relatórios e histórico.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setNoShowDialogOpen(false)}
-            >
-              Voltar
-            </Button>
+          <DialogFooter className="flex flex-row gap-3">
+            <DialogClose asChild>
+              <Button variant="outline" className="w-full">
+                Voltar
+              </Button>
+            </DialogClose>
             <Button
               variant="secondary"
               onClick={handleNoShow}
               disabled={!!loading}
-              className="text-amber-600 hover:bg-amber-500/10 hover:text-amber-600"
+              className="w-full text-amber-600 hover:bg-amber-500/10 hover:text-amber-600"
             >
               {loading === "noShow" ? "Salvando…" : "Marcar não compareceu"}
             </Button>
