@@ -202,7 +202,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
 
 #### Painel do Dono (OWNER)
 
-- [ ] **Dashboard inicial**
+- [x] **Dashboard inicial**
   - [ ] Agendamentos do dia/semana/mês
   - [ ] Faturamento
   - [ ] Barbeiros ativos
@@ -210,7 +210,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [ ] Gráficos e estatísticas
 
 - [ ] **Gestão de barbeiros**
-  - [ ] Criar barbeiro
+  - [ ] Criar/Excluir barbeiro
   - [ ] Ativar / desativar barbeiro
   - [ ] Ver agenda individual
   - [ ] Ver faturamento por barbeiro

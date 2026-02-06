@@ -37,10 +37,6 @@ export const authOptions: AuthOptions = {
 
 export type BarberSession = { id: string; barberId: string }
 
-/**
- * Retorna a sessão do barbeiro autenticado ou lança se não autorizado.
- * Reutilizar em actions que exigem role BARBER e barberId.
- */
 export async function getBarberSession(): Promise<BarberSession> {
   const session = await getServerSession(authOptions)
   const user = session?.user as
@@ -50,4 +46,15 @@ export async function getBarberSession(): Promise<BarberSession> {
     throw new Error("Não autorizado")
   }
   return { id: user.id, barberId: user.barberId }
+}
+
+export type OwnerSession = { id: string }
+
+export async function getOwnerSession(): Promise<OwnerSession> {
+  const session = await getServerSession(authOptions)
+  const user = session?.user as { id?: string; role?: string } | undefined
+  if (!user?.id || user.role !== "OWNER") {
+    throw new Error("Não autorizado")
+  }
+  return { id: user.id }
 }

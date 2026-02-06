@@ -9,6 +9,10 @@ export const PATHS = Object.freeze({
     RATINGS: "/barber/ratings",
   },
 
+  OWNER: {
+    HOME: "/owner",
+  },
+
   BARBERSHOP: {
     HOME: (slug: string) => `/${slug}`,
     SEARCH: (title: string) => `/barbershops?title=${title}`,
