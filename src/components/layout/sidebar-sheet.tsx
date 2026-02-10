@@ -2,6 +2,7 @@
 
 import { Button } from "../ui/button"
 import {
+  Building2,
   CalendarIcon,
   HomeIcon,
   LogInIcon,
@@ -100,6 +101,16 @@ const SidebarSheet = () => {
                 <Link href={PATHS.BARBER.HOME}>
                   <SquareScissors size={18} />
                   Painel do barbeiro
+                </Link>
+              </Button>
+            </SheetClose>
+          )}
+          {(data?.user as { role?: string })?.role === "OWNER" && (
+            <SheetClose asChild>
+              <Button className="justify-start gap-2" variant="ghost" asChild>
+                <Link href={PATHS.OWNER.HOME}>
+                  <Building2 size={18} />
+                  Painel do proprietário
                 </Link>
               </Button>
             </SheetClose>
