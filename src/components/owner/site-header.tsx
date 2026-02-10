@@ -1,5 +1,6 @@
 import { Separator } from "@/src/components/ui/separator"
 import { SidebarTrigger } from "@/src/components/ui/sidebar"
+import { Button } from "@/src/components/ui/button"
 
 export function SiteHeader() {
   return (
@@ -11,6 +12,11 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <h1 className="text-base font-medium">Documents</h1>
+        <div className="ml-auto">
+          <Button variant="outline" size="sm">
+            GitHub
+          </Button>
+        </div>
       </div>
     </header>
   )
