@@ -76,6 +76,7 @@ const Home = async () => {
             src="/banner.png"
             fill
             className="rounded-xl object-cover"
+            loading="eager"
           />
         </div>
 

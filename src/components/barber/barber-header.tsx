@@ -30,8 +30,9 @@ export function BarberHeader({ user, barbershop }: BarberHeaderProps) {
           <Image
             alt={barbershop.name}
             src={barbershop.imageUrl ?? "/logo.png"}
-            height={100}
             width={100}
+            height={100}
+            style={{ width: "auto", height: "auto" }}
           />
         </Link>
 

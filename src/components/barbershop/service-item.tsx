@@ -210,6 +210,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
               src={service.imageUrl}
               fill
               className="rounded-lg object-cover"
+              sizes="100dvw"
             />
           </div>
           {/* DIREITA */}
