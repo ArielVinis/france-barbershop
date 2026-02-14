@@ -278,6 +278,21 @@ async function seedDatabase() {
       barbershops.push(barbershop)
     }
 
+    const ownerUser = await prisma.user.create({
+      data: {
+        name: "Dono France Barber",
+        email: "dono@francebarber.com",
+        phone: "(11) 99999-0000",
+        role: "OWNER",
+      },
+    })
+    await prisma.barbershop.update({
+      where: { id: barbershops[0].id },
+      data: {
+        owners: { connect: { id: ownerUser.id } },
+      },
+    })
+
     // Fechar a conexão com o banco de dados
     await prisma.$disconnect()
   } catch (error) {
