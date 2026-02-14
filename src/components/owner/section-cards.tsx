@@ -1,6 +1,6 @@
-import { TrendingDownIcon, TrendingUpIcon } from "lucide-react"
+"use client"
 
-import { Badge } from "@/src/components/ui/badge"
+import { DollarSign, Calendar, Users, Scissors } from "lucide-react"
 import {
   Card,
   CardDescription,
@@ -9,91 +9,115 @@ import {
   CardTitle,
 } from "@/src/components/ui/card"
 
-export function SectionCards() {
+export type DashboardStats = {
+  revenue: number
+  revenueBreakdown?: { barbershopName: string; revenue: number }[]
+  bookingsCount: number
+  activeBarbersCount: number
+  topServices: { serviceName: string; count: number }[]
+}
+
+type SectionCardsProps = {
+  stats: DashboardStats
+  periodLabel?: string
+}
+
+export function SectionCards({ stats, periodLabel }: SectionCardsProps) {
+  const periodText = periodLabel ?? "no período"
+
   return (
     <div className="*:data-[slot=card]:shadow-xs grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card sm:grid-cols-2 lg:px-6 xl:grid-cols-4">
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Total Revenue</CardDescription>
+          <CardDescription>Faturamento</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            $1,250.00
+            {Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(stats.revenue)}
           </CardTitle>
           <div className="absolute right-4 top-4">
-            <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
-              <TrendingUpIcon className="size-3" />
-              +12.5%
-            </Badge>
+            <DollarSign className="size-5 text-muted-foreground" />
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Trending up this month <TrendingUpIcon className="size-4" />
-          </div>
           <div className="text-muted-foreground">
-            Visitors for the last 6 months
+            Apenas pagamentos confirmados (PAID) {periodText}
           </div>
+          {stats.revenueBreakdown && stats.revenueBreakdown.length > 0 && (
+            <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+              {stats.revenueBreakdown.map((b) => (
+                <li key={b.barbershopName}>
+                  {b.barbershopName}:{" "}
+                  {Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(b.revenue)}
+                </li>
+              ))}
+            </ul>
+          )}
         </CardFooter>
       </Card>
+
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>New Customers</CardDescription>
+          <CardDescription>Agendamentos</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            1,234
+            {stats.bookingsCount}
           </CardTitle>
           <div className="absolute right-4 top-4">
-            <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
-              <TrendingDownIcon className="size-3" />
-              -20%
-            </Badge>
+            <Calendar className="size-5 text-muted-foreground" />
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Down 20% this period <TrendingDownIcon className="size-4" />
-          </div>
           <div className="text-muted-foreground">
-            Acquisition needs attention
+            Total de reservas {periodText}
           </div>
         </CardFooter>
       </Card>
+
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Active Accounts</CardDescription>
+          <CardDescription>Barbeiros ativos</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            45,678
+            {stats.activeBarbersCount}
           </CardTitle>
           <div className="absolute right-4 top-4">
-            <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
-              <TrendingUpIcon className="size-3" />
-              +12.5%
-            </Badge>
+            <Users className="size-5 text-muted-foreground" />
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Strong user retention <TrendingUpIcon className="size-4" />
+          <div className="text-muted-foreground">
+            Cadastrados na(s) barbearia(s)
           </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
         </CardFooter>
       </Card>
+
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Growth Rate</CardDescription>
+          <CardDescription>Serviços mais vendidos</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            4.5%
+            Top 5
           </CardTitle>
           <div className="absolute right-4 top-4">
-            <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
-              <TrendingUpIcon className="size-3" />
-              +4.5%
-            </Badge>
+            <Scissors className="size-5 text-muted-foreground" />
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Steady performance <TrendingUpIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
+          {stats.topServices.length > 0 ? (
+            <ul className="space-y-0.5 text-muted-foreground">
+              {stats.topServices.map((s, i) => (
+                <li key={s.serviceName}>
+                  {i + 1}. {s.serviceName} — {s.count} reserva(s)
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-muted-foreground">
+              Nenhum agendamento no período
+            </div>
+          )}
         </CardFooter>
       </Card>
     </div>

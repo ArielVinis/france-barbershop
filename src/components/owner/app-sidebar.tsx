@@ -1,27 +1,8 @@
 "use client"
 
-import * as React from "react"
-import {
-  ArrowUpCircleIcon,
-  BarChartIcon,
-  CameraIcon,
-  ClipboardListIcon,
-  DatabaseIcon,
-  FileCodeIcon,
-  FileIcon,
-  FileTextIcon,
-  FolderIcon,
-  HelpCircleIcon,
-  LayoutDashboardIcon,
-  ListIcon,
-  SearchIcon,
-  SettingsIcon,
-  UsersIcon,
-} from "lucide-react"
-
-import { NavDocuments } from "@/src/components/owner/nav-documents"
-import { NavMain } from "@/src/components/owner/nav-main"
-import { NavSecondary } from "@/src/components/owner/nav-secondary"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { LayoutDashboardIcon } from "lucide-react"
 import { NavUser } from "@/src/components/owner/nav-user"
 import {
   Sidebar,
@@ -32,125 +13,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/src/components/ui/sidebar"
+import { PATHS } from "@/src/constants/PATHS"
+import Image from "next/image"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: ListIcon,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: BarChartIcon,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: FolderIcon,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: UsersIcon,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: CameraIcon,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: FileTextIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: FileCodeIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: SettingsIcon,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: HelpCircleIcon,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: SearchIcon,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: DatabaseIcon,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: ClipboardListIcon,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: FileIcon,
-    },
-  ],
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  user: { name?: string | null; image?: string | null; email?: string | null }
+  barbershops: { id: string; name: string; slug: string; imageUrl?: string }[]
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
+  const pathname = usePathname()
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -160,21 +33,60 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+              <Link
+                href={PATHS.BARBERSHOP.HOME(barbershops[0]?.slug ?? PATHS.HOME)}
+              >
+                <Image
+                  src={barbershops[0].imageUrl ?? "/logo.png"}
+                  alt={barbershops[0].name}
+                  width={50}
+                  height={50}
+                  style={{ width: "auto", height: "auto" }}
+                />
+                <span className="text-base font-semibold">
+                  {barbershops[0].name ?? "France Barber"}
+                </span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname === PATHS.OWNER.HOME}>
+              <Link href={PATHS.OWNER.HOME}>
+                <LayoutDashboardIcon />
+                <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        {barbershops.length > 0 && (
+          <div className="px-2 py-2">
+            <p className="mb-1 px-2 text-xs font-medium uppercase text-muted-foreground">
+              Barbearias
+            </p>
+            <SidebarMenu>
+              {barbershops.map((b) => (
+                <SidebarMenuItem key={b.id}>
+                  <SidebarMenuButton asChild>
+                    <Link href={PATHS.BARBERSHOP.HOME(b.slug)}>{b.name}</Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </div>
+        )}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: user.name ?? "Usuário",
+            email: user.email ?? "",
+            avatar: user.image ?? "",
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   )
