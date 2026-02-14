@@ -203,11 +203,11 @@ Acesse [http://localhost:3000](http://localhost:3000)
 #### Painel do Dono (OWNER)
 
 - [x] **Dashboard inicial**
-  - [ ] Agendamentos do dia/semana/mês
-  - [ ] Faturamento
-  - [ ] Barbeiros ativos
-  - [ ] Serviços mais vendidos
-  - [ ] Gráficos e estatísticas
+  - [x] Agendamentos do dia/semana/mês
+  - [x] Faturamento
+  - [x] Barbeiros ativos
+  - [x] Serviços mais vendidos
+  - [x] Gráficos e estatísticas
 
 - [ ] **Gestão de barbeiros**
   - [ ] Criar/Excluir barbeiro
@@ -258,7 +258,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [ ] Serviços que cada barbeiro realiza (relação muitos-para-muitos)
 
 - [ ] **Sistema de bloqueios**
-  - [ ] Modelo `BlockedTimeSlot` para horários bloqueados
+  - [x] Modelo `BlockedTimeSlot` para horários bloqueados
   - [ ] Bloqueios por barbeiro
   - [ ] Bloqueios gerais da barbearia
 
