@@ -1,5 +1,8 @@
 export const PATHS = Object.freeze({
   HOME: "/",
+  NOT_AUTHENTICATED: "/not-authenticated",
+  SIGN_IN: "/api/auth/signin",
+  NOT_AUTHORIZED: "/not-authorized",
 
   BARBER: {
     HOME: "/barber",

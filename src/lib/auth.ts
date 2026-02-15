@@ -19,15 +19,10 @@ export const authOptions: AuthOptions = {
         where: { id: user.id },
         select: { role: true },
       })
-      const barber = await db.barber.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      })
       session.user = {
         ...session.user,
         id: user.id,
         role: dbUser?.role ?? "CLIENT",
-        barberId: barber?.id ?? null,
       } as any
       return session
     },
@@ -35,26 +30,16 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXT_AUTH_SECRET,
 }
 
-export type BarberSession = { id: string; barberId: string }
-
-export async function getBarberSession(): Promise<BarberSession> {
+export async function getSession(): Promise<any> {
   const session = await getServerSession(authOptions)
-  const user = session?.user as
-    | { id?: string; role?: string; barberId?: string | null }
-    | undefined
-  if (!user?.id || user.role !== "BARBER" || !user.barberId) {
-    throw new Error("Não autorizado")
+  const user = session?.user as {
+    id: string
+    role: string
+    name: string
+    email: string
+    image: string
+    phone: string
   }
-  return { id: user.id, barberId: user.barberId }
-}
 
-export type OwnerSession = { id: string }
-
-export async function getOwnerSession(): Promise<OwnerSession> {
-  const session = await getServerSession(authOptions)
-  const user = session?.user as { id?: string; role?: string } | undefined
-  if (!user?.id || user.role !== "OWNER") {
-    throw new Error("Não autorizado")
-  }
-  return { id: user.id }
+  return user
 }

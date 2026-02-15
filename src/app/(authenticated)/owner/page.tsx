@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { getOwnerSession } from "@/src/lib/auth"
+import { getSession } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { getOwnerDashboardStats } from "@/src/features/owner/_data/get-owner-dashboard-stats"
 import { getOwnerBookings } from "@/src/features/owner/_data/get-owner-bookings"
@@ -31,8 +31,8 @@ export default async function OwnerDashboardPage({
 }: {
   searchParams: Promise<{ period?: string; barbershop?: string }>
 }) {
-  const { id: userId } = await getOwnerSession()
-  const owner = await getOwnerByUserId(userId)
+  const user = await getSession()
+  const owner = await getOwnerByUserId(user.id)
   if (!owner) {
     return null
   }

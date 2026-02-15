@@ -3,8 +3,9 @@ import { Button } from "../ui/button"
 import { DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog"
 import Image from "next/image"
 
-const SignInDialog = () => {
-  const handleLoginWithGoogleClick = () => signIn("google")
+const SignInDialog = ({ callbackUrl }: { callbackUrl?: string }) => {
+  const handleLoginWithGoogleClick = () =>
+    signIn("google", callbackUrl ? { callbackUrl } : undefined)
 
   return (
     <>
