@@ -1,13 +1,13 @@
 import { db } from "@/src/lib/prisma"
+import { cache } from "react"
 
-export async function getOwnerByUserId(userId: string) {
-  const user = await db.user.findUnique({
+export const getOwnerByUserId = cache(async (userId: string) => {
+  const userPromise = db.user.findUnique({
     where: { id: userId },
     select: { name: true, image: true, email: true },
   })
-  if (!user) return null
 
-  const barbershops = await db.barbershop.findMany({
+  const barbershopsPromise = db.barbershop.findMany({
     where: {
       owners: { some: { id: userId } },
     },
@@ -15,5 +15,12 @@ export async function getOwnerByUserId(userId: string) {
     select: { id: true, name: true, slug: true },
   })
 
+  const [user, barbershops] = await Promise.all([
+    userPromise,
+    barbershopsPromise,
+  ])
+
+  if (!user) return null
+
   return { user, barbershops }
-}
+})
