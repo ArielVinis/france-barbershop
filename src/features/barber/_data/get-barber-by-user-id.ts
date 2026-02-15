@@ -1,7 +1,8 @@
 import { db } from "@/src/lib/prisma"
+import { cache } from "react"
 
-export async function getBarberByUserId(userId: string) {
-  return db.barber.findUnique({
+export const getBarberByUserId = cache(async (userId: string) => {
+  const barber = await db.barber.findUnique({
     where: { userId },
     include: {
       user: { select: { name: true, image: true, email: true } },
@@ -19,4 +20,8 @@ export async function getBarberByUserId(userId: string) {
       blockedSlots: { orderBy: { startAt: "asc" } },
     },
   })
-}
+
+  if (!barber) return null
+
+  return barber
+})
