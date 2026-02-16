@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getBarberSession } from "@/src/lib/auth"
+import { getSession } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 import { BookingStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
 
@@ -16,7 +16,7 @@ export async function updateBookingStatus(
   status: BookingStatus,
   options?: UpdateBookingStatusOptions,
 ) {
-  const { barberId } = await getBarberSession()
+  const { id: barberId } = await getSession()
 
   const booking = await db.booking.findFirst({
     where: { id: bookingId, barberId },

@@ -1,10 +1,10 @@
-import BarbershopItem from "../../../components/barbershop/barbershop-item"
-import Header from "../../../components/layout/header"
-import Search from "../../../components/common/search"
+import BarbershopItem from "@/src/components/barbershop/barbershop-item"
+import Header from "@/src/components/layout/header"
+import Search from "@/src/components/common/search"
 import {
   getBarbershops,
   GetBarbershopsProps,
-} from "../../../features/barbershops/_data/get-barbershops"
+} from "@/src/features/barbershops/_data/get-barbershops"
 
 const SearchBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
   const params = await searchParams

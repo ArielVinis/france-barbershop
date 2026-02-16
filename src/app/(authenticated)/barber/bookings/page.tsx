@@ -1,10 +1,9 @@
-import { getBarberSession } from "@/src/lib/auth"
+import { getSession } from "@/src/lib/auth"
 import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookings"
 import { BarberBookingsClient } from "./barber-bookings-client"
 
 export default async function BarberBookingsPage() {
-  const { barberId } = await getBarberSession()
-  if (!barberId) throw new Error("Barbeiro não encontrado")
+  const { id: barberId } = await getSession()
 
   const today = new Date()
   const [bookingsDay, bookingsWeek, bookingsMonth] = await Promise.all([

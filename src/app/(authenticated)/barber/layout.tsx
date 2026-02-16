@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getBarberSession } from "@/src/lib/auth"
+import { getSession } from "@/src/lib/auth"
 import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
 import { BarberLayoutClient } from "@/src/components/barber/barber-layout-client"
 
@@ -8,7 +8,7 @@ export default async function BarberLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { id: userId } = await getBarberSession()
+  const { id: userId } = await getSession()
 
   const barber = await getBarberByUserId(userId)
   if (!barber) {

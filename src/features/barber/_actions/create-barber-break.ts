@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getBarberSession } from "@/src/lib/auth"
+import { getSession } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 const TIME_REGEX = /^([01]?\d|2[0-3]):([0-5]\d)$/
@@ -13,7 +13,7 @@ export type CreateBarberBreakInput = {
 }
 
 export async function createBarberBreak(input: CreateBarberBreakInput) {
-  const { barberId } = await getBarberSession()
+  const { id: barberId } = await getSession()
 
   if (input.dayOfWeek < 0 || input.dayOfWeek > 6) {
     throw new Error("Dia da semana inválido (0-6)")

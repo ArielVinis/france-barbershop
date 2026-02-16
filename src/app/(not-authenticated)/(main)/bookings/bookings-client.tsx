@@ -1,10 +1,10 @@
 "use client"
 
 import { Session } from "next-auth"
-import BookingItem from "../../../components/booking/booking-item"
+import BookingItem from "@/src/components/booking/booking-item"
 
 interface BookingsClientProps {
-  session: Session | null
+  session: Session
   confirmedBookings: any[]
   concludedBookings: any[]
 }

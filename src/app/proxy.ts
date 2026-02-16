@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getSession } from "./lib/auth"
-import { PATHS } from "./constants/PATHS"
+import { getSession } from "@/src/lib/auth"
+import { PATHS } from "@/src/constants/PATHS"
 
 export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname

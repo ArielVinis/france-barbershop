@@ -1,11 +1,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getBarberSession } from "@/src/lib/auth"
+import { getSession } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 export async function deleteBarberBlockedSlot(slotId: string) {
-  const { barberId } = await getBarberSession()
+  const { id: barberId } = await getSession()
 
   const slot = await db.barberBlockedSlot.findFirst({
     where: { id: slotId, barberId },

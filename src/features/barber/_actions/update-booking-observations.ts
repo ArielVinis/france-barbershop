@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getBarberSession } from "@/src/lib/auth"
+import { getSession } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 const MAX_OBSERVATIONS_LENGTH = 500
@@ -10,7 +10,7 @@ export async function updateBookingObservations(
   bookingId: string,
   observations: string | null,
 ) {
-  const { barberId } = await getBarberSession()
+  const { id: barberId } = await getSession()
 
   const booking = await db.booking.findFirst({
     where: { id: bookingId, barberId },
