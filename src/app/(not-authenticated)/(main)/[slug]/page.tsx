@@ -26,6 +26,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
     include: {
       services: true,
       barbers: {
+        where: { isActive: true },
         include: {
           user: true,
           breaks: true,

@@ -39,8 +39,9 @@ export default async function OwnerDashboardPage({
 
   if (owner.barbershops.length === 0) {
     return (
-      <SidebarProvider>
+      <SidebarProvider className="h-full !min-h-0">
         <AppSidebar
+          className="h-full !min-h-0"
           variant="inset"
           user={owner.user}
           barbershops={owner.barbershops}
@@ -118,7 +119,7 @@ export default async function OwnerDashboardPage({
   const periodLabel = PERIOD_LABELS[period]
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-full !min-h-0">
       <AppSidebar
         variant="inset"
         user={owner.user}

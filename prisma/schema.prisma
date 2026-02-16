@@ -117,6 +117,7 @@ model Barber {
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   barbershopId   String
   barbershop     Barbershop          @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  isActive       Boolean             @default(true)
   bookings       Booking[]
   schedules      BarberSchedule[]
   breaks         BarberBreak[]

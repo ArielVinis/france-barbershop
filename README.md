@@ -209,18 +209,16 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Serviços mais vendidos
   - [x] Gráficos e estatísticas
 
-- [ ] **Gestão de barbeiros**
-  - [ ] Criar/Excluir barbeiro
-  - [ ] Ativar / desativar barbeiro
-  - [ ] Ver agenda individual
-  - [ ] Ver faturamento por barbeiro
+- [x] **Gestão de barbeiros**
+  - [x] Criar/Excluir barbeiro
+  - [x] Ativar / desativar barbeiro (para ele aparecer ou não para agendamento em sua barbearia)
+  - [x] Ver agenda individual
 
 - [ ] **Gestão de serviços**
-  - [ ] Criar serviço
+  - [ ] Criar serviço que a barbearia tem
   - [ ] Editar serviço
   - [ ] Definir preço
   - [ ] Configurar tempo médio
-  - [ ] Vincular serviços a barbeiros
 
 - [ ] **Agenda geral**
   - [ ] Visão da barbearia inteira

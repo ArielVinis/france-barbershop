@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboardIcon } from "lucide-react"
+import { LayoutDashboardIcon, ScissorsIcon } from "lucide-react"
 import { NavUser } from "@/src/components/owner/nav-user"
 import {
   Sidebar,
@@ -58,6 +58,17 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
               <Link href={PATHS.OWNER.HOME}>
                 <LayoutDashboardIcon />
                 <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === PATHS.OWNER.BARBERS}
+            >
+              <Link href={PATHS.OWNER.BARBERS}>
+                <ScissorsIcon />
+                <span>Barbeiros</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

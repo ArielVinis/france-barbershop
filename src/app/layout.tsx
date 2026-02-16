@@ -1,11 +1,8 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
 import Footer from "../components/layout/footer"
 import AuthProvider from "../providers/auth"
-
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "France Barber",
@@ -20,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={inter.className}>
+      <body>
         <AuthProvider>
           <div className="flex h-full flex-col">
             <div className="flex-1">{children}</div>
