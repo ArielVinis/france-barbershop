@@ -214,11 +214,11 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Ativar / desativar barbeiro (para ele aparecer ou não para agendamento em sua barbearia)
   - [x] Ver agenda individual
 
-- [ ] **Gestão de serviços**
-  - [ ] Criar serviço que a barbearia tem
-  - [ ] Editar serviço
-  - [ ] Definir preço
-  - [ ] Configurar tempo médio
+- [x] **Gestão de serviços**
+  - [x] Criar serviço que a barbearia realiza
+  - [x] Editar serviço
+  - [x] Definir preço
+  - [x] Configurar tempo médio
 
 - [ ] **Agenda geral**
   - [ ] Visão da barbearia inteira
