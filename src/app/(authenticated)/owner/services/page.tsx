@@ -1,9 +1,9 @@
 import { getSession } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
-import { OwnerBarbersTable } from "./used/owner-barbers-table"
+import { getOwnerServices } from "@/src/features/owner/_data/get-owner-services"
+import { OwnerServicesTable } from "./used/owner-services-table"
 
-export default async function OwnerBarbersPage({
+export default async function OwnerServicesPage({
   searchParams,
 }: {
   searchParams: Promise<{ barbershop?: string }>
@@ -19,7 +19,7 @@ export default async function OwnerBarbersPage({
           Nenhuma barbearia vinculada
         </h1>
         <p className="text-sm text-muted-foreground">
-          Vincule uma barbearia para gerenciar barbeiros.
+          Vincule uma barbearia para gerenciar serviços.
         </p>
       </div>
     )
@@ -32,14 +32,14 @@ export default async function OwnerBarbersPage({
       ? params.barbershop
       : undefined
 
-  const barbers = await getOwnerBarbers(user.id, barbershopId)
+  const services = await getOwnerServices(user.id, barbershopId)
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <OwnerBarbersTable
-            barbers={barbers}
+          <OwnerServicesTable
+            services={services}
             barbershops={owner.barbershops.map((b) => ({
               id: b.id,
               name: b.name,
