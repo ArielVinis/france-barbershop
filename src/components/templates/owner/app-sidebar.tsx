@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboardIcon, ScissorsIcon } from "lucide-react"
-import { NavUser } from "@/src/components/owner/nav-user"
+import { LayoutDashboardIcon, ScissorsIcon, WrenchIcon } from "lucide-react"
+import { NavUser } from "@/src/components/templates/owner/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -69,6 +69,17 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
               <Link href={PATHS.OWNER.BARBERS}>
                 <ScissorsIcon />
                 <span>Barbeiros</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === PATHS.OWNER.SERVICES}
+            >
+              <Link href={PATHS.OWNER.SERVICES}>
+                <WrenchIcon />
+                <span>Serviços</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
