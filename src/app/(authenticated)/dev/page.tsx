@@ -3,13 +3,13 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 import Header from "@/src/components/layout/header"
-import { DevOwnerForm } from "./dev-owner-form"
+import { DevOwnerForm } from "./owner/dev-owner-form"
 
 /**
  * Página de desenvolvimento: vincular o usuário logado como OWNER a uma barbearia.
  * Só renderiza quando NODE_ENV === "development".
  */
-export default async function DevOwnerPage() {
+export default async function DevPage() {
   if (process.env.NODE_ENV !== "development") {
     redirect("/")
   }
