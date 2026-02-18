@@ -1,6 +1,6 @@
 import { getSession } from "@/src/lib/auth"
 import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
-import { BarberSettingsClient } from "./barber-settings-client"
+import { BarberSettingsClient } from "./used/barber-settings-client"
 
 export default async function BarberAgendaPage() {
   const { id: userId } = await getSession()

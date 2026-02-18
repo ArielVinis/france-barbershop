@@ -1,30 +1,25 @@
-import { redirect } from "next/navigation"
 import { getSession } from "@/src/lib/auth"
-import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
-import { BarberLayoutClient } from "@/src/components/barber/barber-layout-client"
+import { BarberLayoutClient } from "@/src/components/templates/barber/barber-layout-client"
 
 export default async function BarberLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { id: userId } = await getSession()
-
-  const barber = await getBarberByUserId(userId)
-  if (!barber) {
-    redirect("/")
-  }
+  const { id: barberId } = await getSession()
 
   const displaySchedules =
-    barber.schedules.length > 0 ? barber.schedules : barber.barbershop.schedules
+    barberId.schedules.length > 0
+      ? barberId.schedules
+      : barberId.barbershop.schedules
 
   return (
     <BarberLayoutClient
-      user={barber.user}
+      user={barberId.user}
       barbershop={{
-        name: barber.barbershop.name,
-        slug: barber.barbershop.slug,
-        imageUrl: barber.barbershop.imageUrl ?? "/logo.png",
+        name: barberId.barbershop.name,
+        slug: barberId.barbershop.slug,
+        imageUrl: barberId.barbershop.imageUrl ?? "/logo.png",
         schedules: displaySchedules,
       }}
     >
