@@ -1,9 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { LayoutDashboardIcon, ScissorsIcon, WrenchIcon } from "lucide-react"
-import { NavUser } from "@/src/components/templates/owner/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +12,10 @@ import {
 } from "@/src/components/ui/sidebar"
 import { PATHS } from "@/src/constants/PATHS"
 import Image from "next/image"
+import { sidebarItems } from "@/src/resources/sidebar-items"
+import { NavMain } from "./nav-main"
+import { NavSection } from "./nav-section"
+import { NavUser } from "./nav-user"
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: { name?: string | null; image?: string | null; email?: string | null }
@@ -22,8 +23,6 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 }
 
 export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
-  const pathname = usePathname()
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -33,9 +32,7 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link
-                href={PATHS.BARBERSHOP.HOME(barbershops[0]?.slug ?? PATHS.HOME)}
-              >
+              <Link href={PATHS.HOME}>
                 <Image
                   src={barbershops[0].imageUrl ?? "/logo.png"}
                   alt={barbershops[0].name}
@@ -52,38 +49,15 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === PATHS.OWNER.HOME}>
-              <Link href={PATHS.OWNER.HOME}>
-                <LayoutDashboardIcon />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === PATHS.OWNER.BARBERS}
-            >
-              <Link href={PATHS.OWNER.BARBERS}>
-                <ScissorsIcon />
-                <span>Barbeiros</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === PATHS.OWNER.SERVICES}
-            >
-              <Link href={PATHS.OWNER.SERVICES}>
-                <WrenchIcon />
-                <span>Serviços</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavMain items={sidebarItems.navMain} />
+        {sidebarItems.sections.map((section: any) => (
+          <NavSection
+            key={section.title}
+            title={section.name}
+            items={section.items}
+          />
+        ))}
+
         {barbershops.length > 0 && (
           <div className="px-2 py-2">
             <p className="mb-1 px-2 text-xs font-medium uppercase text-muted-foreground">
@@ -106,7 +80,7 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
           user={{
             name: user.name ?? "Usuário",
             email: user.email ?? "",
-            avatar: user.image ?? "",
+            image: user.image ?? "",
           }}
         />
       </SidebarFooter>
