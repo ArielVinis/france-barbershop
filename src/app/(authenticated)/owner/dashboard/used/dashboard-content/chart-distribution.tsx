@@ -58,6 +58,7 @@ export function ChartDistribution({
         <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
           {byService.length > 0 ? (
             <ChartContainer
+              id="chart-distribution-service"
               config={serviceConfig}
               className="aspect-auto h-[220px] w-full"
             >
@@ -108,6 +109,7 @@ export function ChartDistribution({
         <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
           {byBarber.length > 0 ? (
             <ChartContainer
+              id="chart-distribution-barber"
               config={barberConfig}
               className="aspect-auto h-[220px] w-full"
             >
