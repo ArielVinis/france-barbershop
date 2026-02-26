@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 import Header from "@/src/components/layout/header"
 import { DevOwnerForm } from "./owner/dev-owner-form"
@@ -14,15 +13,7 @@ export default async function DevPage() {
     redirect("/")
   }
 
-  const session = await getServerSession(authOptions)
-  const user = session?.user as
-    | {
-        id?: string
-        name?: string | null
-        email?: string | null
-        role?: string
-      }
-    | undefined
+  const user = await getCurrentUser()
 
   const barbershops = await db.barbershop.findMany({
     orderBy: { name: "asc" },

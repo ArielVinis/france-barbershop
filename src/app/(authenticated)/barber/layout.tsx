@@ -1,4 +1,4 @@
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { BarberLayoutClient } from "@/src/components/templates/barber/barber-layout-client"
 
 export default async function BarberLayout({
@@ -6,7 +6,7 @@ export default async function BarberLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { id: barberId } = await getSession()
+  const { id: barberId } = (await getCurrentUser()) ?? {}
 
   const displaySchedules =
     barberId.schedules.length > 0

@@ -1,9 +1,9 @@
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
 import { BarberSettingsClient } from "./used/barber-settings-client"
 
 export default async function BarberAgendaPage() {
-  const { id: userId } = await getSession()
+  const { id: userId } = (await getCurrentUser()) ?? {}
   const barber = await getBarberByUserId(userId)
   if (!barber) throw new Error("Barbeiro não encontrado")
 
