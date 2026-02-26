@@ -4,7 +4,7 @@ import { Session } from "next-auth"
 import BookingItem from "@/src/components/booking/booking-item"
 
 interface BookingsClientProps {
-  session: Session
+  session: Session | null
   confirmedBookings: any[]
   concludedBookings: any[]
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { PATHS } from "@/src/constants/PATHS"
 
 export async function proxy(req: NextRequest) {
@@ -8,7 +8,7 @@ export async function proxy(req: NextRequest) {
 
   // /owner/* - requer role OWNER (matcher já exclui /dev/owner)
   if (pathname === PATHS.OWNER.HOME) {
-    const user = await getSession()
+    const user = await getCurrentUser()
     if (!user?.id) {
       const notAuth = new URL(PATHS.NOT_AUTHENTICATED, req.url)
       notAuth.searchParams.set("callbackUrl", pathname)
@@ -21,7 +21,7 @@ export async function proxy(req: NextRequest) {
 
   // /barber/* - requer role BARBER
   if (pathname === PATHS.BARBER.HOME) {
-    const user = await getSession()
+    const user = await getCurrentUser()
     if (!user?.id) {
       const notAuth = new URL(PATHS.NOT_AUTHENTICATED, req.url)
       notAuth.searchParams.set("callbackUrl", pathname)
