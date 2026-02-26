@@ -220,11 +220,11 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Definir preço
   - [x] Configurar tempo médio
 
-- [ ] **Agenda geral**
-  - [ ] Visão da barbearia inteira
-  - [ ] Filtro por barbeiro
-  - [ ] Cancelar agendamentos
-  - [ ] Realocar agendamentos
+- [x] **Agenda geral**
+  - [x] Visão da barbearia inteira
+  - [x] Filtro por barbeiro
+  - [x] Cancelar agendamentos
+  - [x] Realocar agendamentos
 
 - [ ] **Gestão de horários**
   - [ ] Configurar horários de funcionamento por dia
