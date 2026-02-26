@@ -1,7 +1,7 @@
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { AppSidebar } from "@/src/components/templates/owner/app-sidebar"
 import { SiteHeader } from "@/src/components/templates/SiteHeader/site-header"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 
 export default async function OwnerLayout({
@@ -9,7 +9,7 @@ export default async function OwnerLayout({
 }: {
   children: React.ReactNode
 }) {
-  const user = await getSession()
+  const user = await getCurrentUser()
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
 

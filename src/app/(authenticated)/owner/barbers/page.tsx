@@ -1,4 +1,4 @@
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
 import { OwnerBarbersTable } from "./used/owner-barbers-table"
@@ -8,7 +8,7 @@ export default async function OwnerBarbersPage({
 }: {
   searchParams: Promise<{ barbershop?: string }>
 }) {
-  const user = await getSession()
+  const user = await getCurrentUser()
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
 

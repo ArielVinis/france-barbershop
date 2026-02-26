@@ -1,10 +1,12 @@
+import Link from "next/link"
 import { Suspense } from "react"
 import { SectionCards } from "./dashboard-content/section-cards"
 import { DashboardFilters } from "./dashboard-filters"
 import { ChartRevenue } from "./dashboard-content/chart-revenue"
 import { ChartBookings } from "./dashboard-content/chart-bookings"
 import { ChartDistribution } from "./dashboard-content/chart-distribution"
-import { OwnerBookingsTable } from "./dashboard-content/owner-bookings-table"
+import { PATHS } from "@/src/constants/PATHS"
+import { Button } from "@/src/components/ui/button"
 
 type DashboardStats = {
   revenue: number
@@ -29,37 +31,28 @@ type ChartDistributionData = Awaited<
     typeof import("@/src/features/owner/_data/get-owner-chart-data").getOwnerChartDataDistribution
   >
 >
-type BookingsData = Awaited<
-  ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-bookings").getOwnerBookings
-  >
->
 
 type DashboardContentProps = {
   barbershops: { id: string; name: string }[]
-  barbers: { id: string; name: string; barbershopId: string }[]
   stats: DashboardStats
   periodLabel: string
   chartRevenue: ChartRevenueData
   chartBookings: ChartBookingsData
   chartDistribution: ChartDistributionData
-  bookings: BookingsData
 }
 
 export function DashboardContent({
   barbershops,
-  barbers,
   stats,
   periodLabel,
   chartRevenue,
   chartBookings,
   chartDistribution,
-  bookings,
 }: DashboardContentProps) {
   return (
     <>
       <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
-        <DashboardFilters barbershops={barbershops} barbers={barbers} />
+        <DashboardFilters barbershops={barbershops} />
       </Suspense>
       <SectionCards stats={stats} periodLabel={periodLabel} />
       <div className="grid gap-4 px-4 lg:grid-cols-2 lg:px-6">
@@ -74,11 +67,11 @@ export function DashboardContent({
         />
       </div>
       <div className="px-4 lg:px-6">
-        <h2 className="mb-1 text-lg font-semibold">Agenda geral</h2>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Visão da barbearia inteira. Filtre por período, barbearia e barbeiro.
-        </p>
-        <OwnerBookingsTable bookings={bookings} barbers={barbers} />
+        <Link href={PATHS.OWNER.SCHEDULE}>
+          <Button variant="outline">
+            Ver agendamentos (calendário e tabela)
+          </Button>
+        </Link>
       </div>
     </>
   )

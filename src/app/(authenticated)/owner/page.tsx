@@ -1,9 +1,7 @@
 import Link from "next/link"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
 import { getOwnerDashboardStats } from "@/src/features/owner/_data/get-owner-dashboard-stats"
-import { getOwnerBookings } from "@/src/features/owner/_data/get-owner-bookings"
 import {
   getOwnerChartDataRevenue,
   getOwnerChartDataBookings,
@@ -21,17 +19,12 @@ const PERIOD_LABELS: Record<OwnerBookingsPeriod, string> = {
 export default async function OwnerDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    period?: string
-    barbershop?: string
-    barber?: string
-  }>
+  searchParams: Promise<{ period?: string; barbershop?: string }>
 }) {
-  const user = await getSession()
+  const user = await getCurrentUser()
+  if (!user) return null
   const owner = await getOwnerByUserId(user.id)
-  if (!owner) {
-    return null
-  }
+  if (!owner) return null
 
   if (owner.barbershops.length === 0) {
     return (
@@ -68,24 +61,13 @@ export default async function OwnerDashboardPage({
     owner.barbershops.some((b) => b.id === params.barbershop)
       ? params.barbershop
       : null
-  const barbers = await getOwnerBarbers(user.id, barbershopId ?? undefined)
-  const barberId =
-    params.barber && barbers.some((b) => b.id === params.barber)
-      ? params.barber
-      : null
 
   const barbershopIds = owner.barbershops.map((b) => b.id)
   const date = new Date()
 
-  const [stats, bookings, chartRevenue, chartBookings, chartDistribution] =
+  const [stats, chartRevenue, chartBookings, chartDistribution] =
     await Promise.all([
       getOwnerDashboardStats(barbershopIds, { period, barbershopId, date }),
-      getOwnerBookings(barbershopIds, {
-        period,
-        barbershopId,
-        barberId,
-        date,
-      }),
       getOwnerChartDataRevenue(barbershopIds, { period, barbershopId, date }),
       getOwnerChartDataBookings(barbershopIds, { period, barbershopId, date }),
       getOwnerChartDataDistribution(barbershopIds, {
@@ -111,11 +93,6 @@ export default async function OwnerDashboardPage({
 
   const periodLabel = PERIOD_LABELS[period]
   const barbershops = owner.barbershops.map((b) => ({ id: b.id, name: b.name }))
-  const barbersForFilter = barbers.map((b) => ({
-    id: b.id,
-    name: b.user.name ?? "Barbeiro",
-    barbershopId: b.barbershop.id,
-  }))
 
   return (
     <div className="flex flex-1 flex-col">
@@ -123,13 +100,11 @@ export default async function OwnerDashboardPage({
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <DashboardContent
             barbershops={barbershops}
-            barbers={barbersForFilter}
             stats={dashboardStats}
             periodLabel={periodLabel}
             chartRevenue={chartRevenue}
             chartBookings={chartBookings}
             chartDistribution={chartDistribution}
-            bookings={bookings}
           />
         </div>
       </div>
