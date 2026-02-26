@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 export interface CreateServiceOwnerInput {
@@ -14,7 +14,7 @@ export interface CreateServiceOwnerInput {
 }
 
 export async function createServiceOwner(input: CreateServiceOwnerInput) {
-  const user = await getSession()
+  const user = await getCurrentUser()
   if (!user?.id) throw new Error("Não autorizado")
 
   const barbershop = await db.barbershop.findFirst({

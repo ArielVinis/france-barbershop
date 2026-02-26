@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 export type BarberScheduleInput = {
@@ -34,7 +34,7 @@ function validateSchedule(input: BarberScheduleInput): string | null {
 }
 
 export async function upsertBarberSchedules(inputs: BarberScheduleInput[]) {
-  const { id: barberId } = await getSession()
+  const { id: barberId } = (await getCurrentUser()) ?? {}
 
   for (const input of inputs) {
     if (input.isActive) {

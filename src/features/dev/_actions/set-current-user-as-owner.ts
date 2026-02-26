@@ -1,8 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 /**
@@ -14,8 +13,7 @@ export async function setCurrentUserAsOwner(barbershopId: string) {
     throw new Error("Disponível apenas em desenvolvimento")
   }
 
-  const session = await getServerSession(authOptions)
-  const user = session?.user as { id?: string } | undefined
+  const user = await getCurrentUser()
   if (!user?.id) {
     throw new Error("Faça login para continuar")
   }

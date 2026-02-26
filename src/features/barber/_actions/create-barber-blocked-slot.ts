@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 export type CreateBarberBlockedSlotInput = {
@@ -13,7 +13,7 @@ export type CreateBarberBlockedSlotInput = {
 export async function createBarberBlockedSlot(
   input: CreateBarberBlockedSlotInput,
 ) {
-  const { id: barberId } = await getSession()
+  const { id: barberId } = (await getCurrentUser()) ?? {}
 
   const start = new Date(input.startAt)
   const end = new Date(input.endAt)

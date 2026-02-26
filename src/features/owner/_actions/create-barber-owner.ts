@@ -1,14 +1,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 export async function createBarberOwner(
   barbershopId: string,
   userEmail: string,
 ) {
-  const user = await getSession()
+  const user = await getCurrentUser()
   if (!user?.id) throw new Error("Não autorizado")
 
   const ownerBarbershop = await db.barbershop.findFirst({

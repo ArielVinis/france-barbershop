@@ -1,14 +1,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 /**
  * Remove o vínculo barbeiro–barbearia. O usuário continua existindo (role pode ficar BARBER).
  */
 export async function deleteBarberOwner(barberId: string) {
-  const user = await getSession()
+  const user = await getCurrentUser()
   if (!user?.id) throw new Error("Não autorizado")
 
   const barber = await db.barber.findFirst({

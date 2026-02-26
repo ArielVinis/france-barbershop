@@ -1,11 +1,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
 
 export async function deleteBarberBreak(breakId: string) {
-  const { id: barberId } = await getSession()
+  const { id: barberId } = (await getCurrentUser()) ?? {}
 
   const barberBreak = await db.barberBreak.findFirst({
     where: { id: breakId, barberId },
