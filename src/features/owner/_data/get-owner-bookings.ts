@@ -15,17 +15,18 @@ export type OwnerBookingsPeriod = "day" | "week" | "month"
 /**
  * Lista agendamentos das barbearias do dono.
  * @param barbershopIds - IDs das barbearias do dono (todas ou uma só)
- * @param options - barbershopId opcional para filtrar uma barbearia; period e date para o intervalo
+ * @param options - barbershopId e barberId opcionais para filtrar; period e date para o intervalo
  */
 export async function getOwnerBookings(
   barbershopIds: string[],
   options: {
     barbershopId?: string | null
+    barberId?: string | null
     period: OwnerBookingsPeriod
     date: Date
   },
 ) {
-  const { period, date, barbershopId } = options
+  const { period, date, barbershopId, barberId } = options
   const shopIds =
     barbershopId && barbershopIds.includes(barbershopId)
       ? [barbershopId]
@@ -48,6 +49,7 @@ export async function getOwnerBookings(
   return db.booking.findMany({
     where: {
       service: { barbershopId: { in: shopIds } },
+      ...(barberId ? { barberId } : {}),
       date: { gte: start, lte: end },
     },
     include: {
