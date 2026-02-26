@@ -19,23 +19,46 @@ const PERIOD_OPTIONS: { value: PeriodValue; label: string }[] = [
 ]
 
 type BarbershopOption = { id: string; name: string }
+type BarberOption = { id: string; name: string; barbershopId: string }
 
 type DashboardFiltersProps = {
   barbershops: BarbershopOption[]
+  barbers: BarberOption[]
 }
 
-export function DashboardFilters({ barbershops }: DashboardFiltersProps) {
+export function DashboardFilters({
+  barbershops,
+  barbers,
+}: DashboardFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const period = (searchParams.get("period") as PeriodValue) ?? "week"
   const barbershopId = searchParams.get("barbershop") ?? "all"
+  const barberId = searchParams.get("barber") ?? "all"
 
-  const setParams = (updates: { period?: string; barbershop?: string }) => {
+  const setParams = (updates: {
+    period?: string
+    barbershop?: string
+    barber?: string
+  }) => {
     const next = new URLSearchParams(searchParams.toString())
     if (updates.period != null) next.set("period", updates.period)
-    if (updates.barbershop != null) next.set("barbershop", updates.barbershop)
+    if (updates.barbershop != null) {
+      next.set("barbershop", updates.barbershop)
+      if (updates.barbershop === "all") next.delete("barber")
+    }
+    if (updates.barber != null) next.set("barber", updates.barber)
     router.push(`/owner?${next.toString()}`)
   }
+
+  const barbersFiltered =
+    barbershopId === "all"
+      ? barbers
+      : barbers.filter((b) => b.barbershopId === barbershopId)
+  const barberValue =
+    barberId !== "all" && barbersFiltered.some((b) => b.id === barberId)
+      ? barberId
+      : "all"
 
   return (
     <div className="flex flex-wrap items-end gap-4 px-4 lg:px-6">
@@ -58,7 +81,7 @@ export function DashboardFilters({ barbershops }: DashboardFiltersProps) {
         <Label className="text-xs text-muted-foreground">Barbearia</Label>
         <Select
           value={barbershopId}
-          onValueChange={(v) => setParams({ barbershop: v })}
+          onValueChange={(v) => setParams({ barbershop: v, barber: "all" })}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue />
@@ -66,6 +89,25 @@ export function DashboardFilters({ barbershops }: DashboardFiltersProps) {
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
             {barbershops.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs text-muted-foreground">Barbeiro</Label>
+        <Select
+          value={barberValue}
+          onValueChange={(v) => setParams({ barber: v })}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {barbersFiltered.map((b) => (
               <SelectItem key={b.id} value={b.id}>
                 {b.name}
               </SelectItem>

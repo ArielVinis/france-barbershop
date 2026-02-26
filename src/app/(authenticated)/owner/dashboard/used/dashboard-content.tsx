@@ -37,6 +37,7 @@ type BookingsData = Awaited<
 
 type DashboardContentProps = {
   barbershops: { id: string; name: string }[]
+  barbers: { id: string; name: string; barbershopId: string }[]
   stats: DashboardStats
   periodLabel: string
   chartRevenue: ChartRevenueData
@@ -47,6 +48,7 @@ type DashboardContentProps = {
 
 export function DashboardContent({
   barbershops,
+  barbers,
   stats,
   periodLabel,
   chartRevenue,
@@ -57,7 +59,7 @@ export function DashboardContent({
   return (
     <>
       <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
-        <DashboardFilters barbershops={barbershops} />
+        <DashboardFilters barbershops={barbershops} barbers={barbers} />
       </Suspense>
       <SectionCards stats={stats} periodLabel={periodLabel} />
       <div className="grid gap-4 px-4 lg:grid-cols-2 lg:px-6">
@@ -72,8 +74,11 @@ export function DashboardContent({
         />
       </div>
       <div className="px-4 lg:px-6">
-        <h2 className="mb-3 text-lg font-semibold">Agendamentos</h2>
-        <OwnerBookingsTable bookings={bookings} />
+        <h2 className="mb-1 text-lg font-semibold">Agenda geral</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Visão da barbearia inteira. Filtre por período, barbearia e barbeiro.
+        </p>
+        <OwnerBookingsTable bookings={bookings} barbers={barbers} />
       </div>
     </>
   )
