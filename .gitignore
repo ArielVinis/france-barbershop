@@ -41,3 +41,4 @@ next-env.d.ts
 .env
 .postgres-data
 package-lock.json
+.cursor
