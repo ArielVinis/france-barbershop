@@ -1,5 +1,10 @@
 import { PATHS } from "@/src/constants/PATHS"
-import { LayoutDashboardIcon, UserPlusIcon, WrenchIcon } from "lucide-react"
+import {
+  LayoutDashboardIcon,
+  UserPlusIcon,
+  WrenchIcon,
+  CalendarDaysIcon,
+} from "lucide-react"
 
 export const sidebarItems = {
   //   user: {
@@ -12,6 +17,11 @@ export const sidebarItems = {
       name: "Dashboard",
       url: PATHS.OWNER.HOME,
       icon: LayoutDashboardIcon,
+    },
+    {
+      name: "Agendamentos",
+      url: PATHS.OWNER.SCHEDULE,
+      icon: CalendarDaysIcon,
     },
     {
       name: "Barbeiros",
