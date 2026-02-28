@@ -13,10 +13,7 @@ export async function setCurrentUserAsOwner(barbershopId: string) {
     throw new Error("Disponível apenas em desenvolvimento")
   }
 
-  const user = await getCurrentUser()
-  if (!user?.id) {
-    throw new Error("Faça login para continuar")
-  }
+  const user = await getCurrentUser("Faça login para continuar")
 
   const barbershop = await db.barbershop.findUnique({
     where: { id: barbershopId },
