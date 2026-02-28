@@ -24,32 +24,30 @@ export const authOptions: AuthOptions = {
         ...session.user,
         id: user.id,
         role: dbUser?.role ?? "CLIENT",
-      } as any
+      }
       return session
     },
   },
   secret: process.env.NEXT_AUTH_SECRET,
 }
 
-/** Usuário autenticado (session.user) com id e role. */
 export type AuthUser = NonNullable<Session["user"]>
 
-/**
- * Retorna a sessão completa no servidor (Session | null).
- * Deduplicado por requisição via cache(): várias chamadas na mesma request
- * executam getServerSession só uma vez.
- * Use em: páginas que repassam a sessão ao cliente; data fetchers que usam session.user.
- */
 export const getSession = cache(async (): Promise<Session | null> => {
   return getServerSession(authOptions)
 })
 
 /**
- * Retorna apenas o usuário atual no servidor (AuthUser | null).
- * Reutiliza a sessão em cache quando getSession() já foi chamado na mesma request.
- * Use em: Server Actions, layouts e páginas que só precisam de user.id, user.role, etc.
+ * Retorna o usuário atual no servidor. Nunca retorna null: lança erro se não autenticado.
+ * Reutiliza a sessão em cache (getSession) na mesma request.
+ *
+ * @param message - Mensagem de erro quando não autenticado (default: "Não autorizado")
  */
-export async function getCurrentUser(): Promise<AuthUser | null> {
+export async function getCurrentUser(
+  message = "Não autorizado",
+): Promise<AuthUser> {
   const session = await getSession()
-  return session?.user ?? null
+  const user = session?.user ?? null
+  if (!user?.id) throw new Error(message)
+  return user
 }
