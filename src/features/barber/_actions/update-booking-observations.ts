@@ -10,7 +10,7 @@ export async function updateBookingObservations(
   bookingId: string,
   observations: string | null,
 ) {
-  const { id: barberId } = (await getCurrentUser()) ?? {}
+  const { id: barberId } = await getCurrentUser()
 
   const booking = await db.booking.findFirst({
     where: { id: bookingId, barberId },

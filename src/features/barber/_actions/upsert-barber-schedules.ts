@@ -34,7 +34,7 @@ function validateSchedule(input: BarberScheduleInput): string | null {
 }
 
 export async function upsertBarberSchedules(inputs: BarberScheduleInput[]) {
-  const { id: barberId } = (await getCurrentUser()) ?? {}
+  const { id: barberId } = await getCurrentUser()
 
   for (const input of inputs) {
     if (input.isActive) {

@@ -13,7 +13,7 @@ export type CreateBarberBreakInput = {
 }
 
 export async function createBarberBreak(input: CreateBarberBreakInput) {
-  const { id: barberId } = (await getCurrentUser()) ?? {}
+  const { id: barberId } = await getCurrentUser()
 
   if (input.dayOfWeek < 0 || input.dayOfWeek > 6) {
     throw new Error("Dia da semana inválido (0-6)")

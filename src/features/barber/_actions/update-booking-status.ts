@@ -16,7 +16,7 @@ export async function updateBookingStatus(
   status: BookingStatus,
   options?: UpdateBookingStatusOptions,
 ) {
-  const { id: barberId } = (await getCurrentUser()) ?? {}
+  const { id: barberId } = await getCurrentUser()
 
   const booking = await db.booking.findFirst({
     where: { id: bookingId, barberId },

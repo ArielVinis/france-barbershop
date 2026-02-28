@@ -13,7 +13,7 @@ export type CreateBarberBlockedSlotInput = {
 export async function createBarberBlockedSlot(
   input: CreateBarberBlockedSlotInput,
 ) {
-  const { id: barberId } = (await getCurrentUser()) ?? {}
+  const { id: barberId } = await getCurrentUser()
 
   const start = new Date(input.startAt)
   const end = new Date(input.endAt)
