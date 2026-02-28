@@ -3,13 +3,13 @@ import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookin
 import { BarberBookingsClient } from "./used/barber-bookings-client"
 
 export default async function BarberBookingsPage() {
-  const { id: barberId } = (await getCurrentUser()) ?? {}
-
+  const user = await getCurrentUser()
   const today = new Date()
+
   const [bookingsDay, bookingsWeek, bookingsMonth] = await Promise.all([
-    getBarberBookings(barberId, "day", today),
-    getBarberBookings(barberId, "week", today),
-    getBarberBookings(barberId, "month", today),
+    getBarberBookings(user.id, "day", today),
+    getBarberBookings(user.id, "week", today),
+    getBarberBookings(user.id, "month", today),
   ])
 
   return (

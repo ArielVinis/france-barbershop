@@ -20,7 +20,6 @@ export default async function OwnerSchedulePage({
   }>
 }) {
   const user = await getCurrentUser()
-  if (!user) return null
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
 

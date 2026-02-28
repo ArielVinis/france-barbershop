@@ -22,7 +22,6 @@ export default async function OwnerDashboardPage({
   searchParams: Promise<{ period?: string; barbershop?: string }>
 }) {
   const user = await getCurrentUser()
-  if (!user) return null
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
 
