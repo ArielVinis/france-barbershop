@@ -8,27 +8,31 @@ export async function proxy(req: NextRequest) {
 
   // /owner/* - requer role OWNER (matcher já exclui /dev/owner)
   if (pathname === PATHS.OWNER.HOME) {
-    const user = await getCurrentUser()
-    if (!user?.id) {
-      const notAuth = new URL(PATHS.NOT_AUTHENTICATED, req.url)
-      notAuth.searchParams.set("callbackUrl", pathname)
-      return NextResponse.redirect(notAuth)
-    }
-    if (user?.role !== "OWNER") {
-      return NextResponse.redirect(new URL(PATHS.NOT_AUTHORIZED, req.url))
+    try {
+      const user = await getCurrentUser()
+      const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
+      if (user.role !== "OWNER") {
+        return NextResponse.redirect(notAuthorized)
+      }
+    } catch {
+      const notAuthenticated = new URL(PATHS.NOT_AUTHENTICATED, req.url)
+      notAuthenticated.searchParams.set("callbackUrl", pathname)
+      return NextResponse.redirect(notAuthenticated)
     }
   }
 
   // /barber/* - requer role BARBER
   if (pathname === PATHS.BARBER.HOME) {
-    const user = await getCurrentUser()
-    if (!user?.id) {
-      const notAuth = new URL(PATHS.NOT_AUTHENTICATED, req.url)
-      notAuth.searchParams.set("callbackUrl", pathname)
-      return NextResponse.redirect(notAuth)
-    }
-    if (user?.role !== "BARBER") {
-      return NextResponse.redirect(new URL(PATHS.NOT_AUTHORIZED, req.url))
+    try {
+      const user = await getCurrentUser()
+      const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
+      if (user.role !== "BARBER") {
+        return NextResponse.redirect(notAuthorized)
+      }
+    } catch {
+      const notAuthenticated = new URL(PATHS.NOT_AUTHENTICATED, req.url)
+      notAuthenticated.searchParams.set("callbackUrl", pathname)
+      return NextResponse.redirect(notAuthenticated)
     }
   }
 
