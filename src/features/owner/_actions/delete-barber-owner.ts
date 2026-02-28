@@ -9,7 +9,6 @@ import { db } from "@/src/lib/prisma"
  */
 export async function deleteBarberOwner(barberId: string) {
   const user = await getCurrentUser()
-  if (!user?.id) throw new Error("Não autorizado")
 
   const barber = await db.barber.findFirst({
     where: {

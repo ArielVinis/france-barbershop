@@ -15,7 +15,6 @@ export interface UpdateServiceOwnerInput {
 
 export async function updateServiceOwner(input: UpdateServiceOwnerInput) {
   const user = await getCurrentUser()
-  if (!user?.id) throw new Error("Não autorizado")
 
   const service = await db.barbershopService.findFirst({
     where: {

@@ -2,12 +2,12 @@ import { db } from "@/src/lib/prisma"
 import { cache } from "react"
 
 export const getBarberForOwner = cache(
-  async (barberId: string, ownerUserId: string) => {
+  async (barberId: string, ownerId: string) => {
     const barber = await db.barber.findFirst({
       where: {
         id: barberId,
         barbershop: {
-          owners: { some: { id: ownerUserId } },
+          owners: { some: { id: ownerId } },
         },
       },
       include: {

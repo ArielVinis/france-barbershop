@@ -15,7 +15,6 @@ export interface CreateServiceOwnerInput {
 
 export async function createServiceOwner(input: CreateServiceOwnerInput) {
   const user = await getCurrentUser()
-  if (!user?.id) throw new Error("Não autorizado")
 
   const barbershop = await db.barbershop.findFirst({
     where: {

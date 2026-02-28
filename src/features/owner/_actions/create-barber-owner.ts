@@ -9,7 +9,6 @@ export async function createBarberOwner(
   userEmail: string,
 ) {
   const user = await getCurrentUser()
-  if (!user?.id) throw new Error("Não autorizado")
 
   const ownerBarbershop = await db.barbershop.findFirst({
     where: {
