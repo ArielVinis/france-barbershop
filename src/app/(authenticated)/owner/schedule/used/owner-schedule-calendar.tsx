@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import { PATHS } from "@/src/constants/PATHS"
 import type { CalendarEvent } from "@/src/lib/booking-calendar-utils"
+import "./owner-schedule-calendar.css"
 
 const locales = { "pt-BR": ptBR }
 const localizer = dateFnsLocalizer({
@@ -39,7 +40,7 @@ export function OwnerScheduleCalendar({
   )
 
   return (
-    <div className="h-[500px] rounded-lg border bg-card px-4 py-4 lg:px-6">
+    <div className="owner-schedule-calendar h-[80dvh] rounded-lg border bg-card px-4 py-4 lg:px-6">
       <Calendar
         localizer={localizer}
         events={events}
