@@ -104,8 +104,10 @@ model Barbershop {
   owners      User[]               @relation("OwnerBarbershops")
   barbers     Barber[]
   services    BarbershopService[]
-  ratings     Rating[]
-  schedules   BarbershopSchedule[]
+  ratings       Rating[]
+  schedules     BarbershopSchedule[]
+  breaks        BarbershopBreak[]
+  blockedSlots  BarbershopBlockedSlot[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -209,6 +211,30 @@ model BarbershopSchedule {
   updatedAt DateTime @updatedAt
 
   @@unique([barbershopId, dayOfWeek])
+}
+
+model BarbershopBreak {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int // 0 = Domingo, …, 6 = Sábado
+  startTime    String // "12:00" formato HH:mm
+  endTime      String // "13:00" formato HH:mm
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BarbershopBlockedSlot {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  startAt      DateTime
+  endAt        DateTime
+  reason       String? // ex.: Feriado, Reforma
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Rating {
