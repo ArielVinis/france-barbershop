@@ -53,7 +53,11 @@ type BarberWithAgenda = {
 
 interface ServiceItemProps {
   service: BarbershopService
-  barbershop: Pick<Barbershop, "name"> & { schedules: BarbershopSchedule[] }
+  barbershop: Pick<Barbershop, "name"> & {
+    schedules: BarbershopSchedule[]
+    breaks?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>
+    blockedSlots?: Array<{ startAt: Date | string; endAt: Date | string }>
+  }
   barbers: BarberWithAgenda[]
 }
 
@@ -170,12 +174,32 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
 
     let timeSlots = generateTimeSlots(schedule, 30)
 
+    const shopBreaksForDay = (barbershop.breaks ?? []).filter(
+      (b) => b.dayOfWeek === dayOfWeek,
+    )
+    timeSlots = filterTimesByBreaks(
+      timeSlots,
+      shopBreaksForDay.map((b) => ({
+        startTime: b.startTime,
+        endTime: b.endTime,
+      })),
+    )
+
     const breaksForDay = selectedBarber.breaks.filter(
       (b) => b.dayOfWeek === dayOfWeek,
     )
     timeSlots = filterTimesByBreaks(
       timeSlots,
       breaksForDay.map((b) => ({ startTime: b.startTime, endTime: b.endTime })),
+    )
+
+    timeSlots = filterTimesByBlockedSlots(
+      timeSlots,
+      selectedDay,
+      (barbershop.blockedSlots ?? []).map((s) => ({
+        startAt: new Date(s.startAt),
+        endAt: new Date(s.endAt),
+      })),
     )
 
     timeSlots = filterTimesByBlockedSlots(
@@ -196,6 +220,8 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
     selectedDay,
     selectedBarberId,
     barbershop.schedules,
+    barbershop.breaks,
+    barbershop.blockedSlots,
     barbers,
   ])
 
