@@ -226,11 +226,11 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Cancelar agendamentos
   - [x] Realocar agendamentos
 
-- [ ] **Gestão de horários**
-  - [ ] Configurar horários de funcionamento por dia
-  - [ ] Criar pausas (ex: almoço)
-  - [ ] Bloquear horários específicos
-  - [ ] Feriados e dias especiais
+- [x] **Gestão de horários**
+  - [x] Configurar horários de funcionamento por dia
+  - [x] Criar pausas (ex: almoço)
+  - [x] Bloquear horários específicos
+  - [x] Feriados e dias especiais
 
 ### 🟡 Média Prioridade
 
@@ -302,6 +302,8 @@ Acesse [http://localhost:3000](http://localhost:3000)
 - **BarbershopService**: Serviços oferecidos
 - **Booking**: Agendamentos
 - **BarbershopSchedule**: Horários de funcionamento por dia
+- **BarbershopBreak**: Pausas recorrentes da barbearia (ex.: almoço)
+- **BarbershopBlockedSlot**: Bloqueios por período (feriados, dias especiais)
 - **Rating**: Avaliações de barbearias
 
 ### Relacionamentos
@@ -310,7 +312,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
 - Um `User` pode ser `Owner` de múltiplas `Barbershop` (N:M)
 - Um `Barber` pertence a uma `Barbershop` (N:1)
 - Um `Booking` tem um `User` (cliente), um `Service` e opcionalmente um `Barber`
-- Uma `Barbershop` tem múltiplos `BarbershopSchedule` (um por dia da semana)
+- Uma `Barbershop` tem múltiplos `BarbershopSchedule` (um por dia da semana), `BarbershopBreak` e `BarbershopBlockedSlot`
 
 ### Enums
 
