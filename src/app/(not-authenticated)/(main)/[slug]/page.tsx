@@ -35,6 +35,8 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
         },
       },
       schedules: true,
+      breaks: true,
+      blockedSlots: true,
     },
   })
 
