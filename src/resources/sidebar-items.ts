@@ -4,6 +4,7 @@ import {
   UserPlusIcon,
   WrenchIcon,
   CalendarDaysIcon,
+  ClockIcon,
 } from "lucide-react"
 
 export const sidebarItems = {
@@ -32,6 +33,11 @@ export const sidebarItems = {
       name: "Serviços",
       url: PATHS.OWNER.SERVICES,
       icon: WrenchIcon,
+    },
+    {
+      name: "Horários de trabalho",
+      url: PATHS.OWNER.WORKED_HOURS,
+      icon: ClockIcon,
     },
   ],
   sections: [

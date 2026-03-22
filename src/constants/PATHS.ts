@@ -19,6 +19,7 @@ export const PATHS = Object.freeze({
       `/owner/barbers/${barberId}/schedule`,
     SERVICES: "/owner/services",
     SCHEDULE: "/owner/schedule",
+    WORKED_HOURS: "/owner/worked-hours",
   },
 
   BARBERSHOP: {
