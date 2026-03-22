@@ -45,8 +45,8 @@ import {
   SelectValue,
 } from "@/src/components/ui/select"
 import { Input } from "@/src/components/ui/input"
-import { updateBookingStatusOwner } from "@/src/features/owner/_actions/update-booking-status-owner"
-import { rescheduleBookingOwner } from "@/src/features/owner/_actions/reschedule-booking-owner"
+import { updateBookingStatusOwner } from "@/src/app/(authenticated)/owner/_features/_actions/update-booking-status-owner"
+import { rescheduleBookingOwner } from "@/src/app/(authenticated)/owner/_features/_actions/reschedule-booking-owner"
 
 const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: "Confirmado",
@@ -65,7 +65,7 @@ const PAYMENT_LABEL: Record<string, string> = {
 
 type BookingRow = Awaited<
   ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-bookings").getOwnerBookings
+    typeof import("@/src/app/(authenticated)/owner/_features/_data/get-owner-bookings").getOwnerBookings
   >
 >[number]
 

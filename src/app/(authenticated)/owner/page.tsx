@@ -1,13 +1,13 @@
 import Link from "next/link"
 import { getCurrentUser } from "@/src/lib/auth"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getOwnerDashboardStats } from "@/src/features/owner/_data/get-owner-dashboard-stats"
+import { getOwnerByUserId } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-by-user-id"
+import { getOwnerDashboardStats } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-dashboard-stats"
 import {
   getOwnerChartDataRevenue,
   getOwnerChartDataBookings,
   getOwnerChartDataDistribution,
-} from "@/src/features/owner/_data/get-owner-chart-data"
-import type { OwnerBookingsPeriod } from "@/src/features/owner/_data/get-owner-bookings"
+} from "@/src/app/(authenticated)/owner/_features/_data/get-owner-chart-data"
+import type { OwnerBookingsPeriod } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-bookings"
 import { DashboardContent } from "@/src/app/(authenticated)/owner/dashboard/used/dashboard-content"
 
 const PERIOD_LABELS: Record<OwnerBookingsPeriod, string> = {

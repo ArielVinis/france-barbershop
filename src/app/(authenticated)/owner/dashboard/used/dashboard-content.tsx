@@ -18,17 +18,17 @@ type DashboardStats = {
 
 type ChartRevenueData = Awaited<
   ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-chart-data").getOwnerChartDataRevenue
+    typeof import("@/src/app/(authenticated)/owner/_features/_data/get-owner-chart-data").getOwnerChartDataRevenue
   >
 >
 type ChartBookingsData = Awaited<
   ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-chart-data").getOwnerChartDataBookings
+    typeof import("@/src/app/(authenticated)/owner/_features/_data/get-owner-chart-data").getOwnerChartDataBookings
   >
 >
 type ChartDistributionData = Awaited<
   ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-chart-data").getOwnerChartDataDistribution
+    typeof import("@/src/app/(authenticated)/owner/_features/_data/get-owner-chart-data").getOwnerChartDataDistribution
   >
 >
 

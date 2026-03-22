@@ -37,8 +37,8 @@ import {
   UserX,
 } from "lucide-react"
 import { toast } from "sonner"
-import { updateBookingStatus } from "@/src/features/barber/_actions/update-booking-status"
-import { updateBookingObservations } from "@/src/features/barber/_actions/update-booking-observations"
+import { updateBookingStatus } from "@/src/app/(authenticated)/barber/_features/_actions/update-booking-status"
+import { updateBookingObservations } from "@/src/app/(authenticated)/barber/_features/_actions/update-booking-observations"
 import type { PaymentMethod } from "@prisma/client"
 
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
@@ -69,7 +69,7 @@ const STATUS_VARIANT: Record<
 
 type BookingWithRelations = Awaited<
   ReturnType<
-    typeof import("@/src/features/barber/_data/get-barber-bookings").getBarberBookings
+    typeof import("@/src/app/(authenticated)/barber/_features/_data/get-barber-bookings").getBarberBookings
   >
 >[number]
 

@@ -18,11 +18,11 @@ import {
 import {
   upsertBarberSchedules,
   type BarberScheduleInput,
-} from "@/src/features/barber/_actions/upsert-barber-schedules"
-import { createBarberBreak } from "@/src/features/barber/_actions/create-barber-break"
-import { deleteBarberBreak } from "@/src/features/barber/_actions/delete-barber-break"
-import { createBarberBlockedSlot } from "@/src/features/barber/_actions/create-barber-blocked-slot"
-import { deleteBarberBlockedSlot } from "@/src/features/barber/_actions/delete-barber-blocked-slot"
+} from "@/src/app/(authenticated)/barber/_features/_actions/upsert-barber-schedules"
+import { createBarberBreak } from "@/src/app/(authenticated)/barber/_features/_actions/create-barber-break"
+import { deleteBarberBreak } from "@/src/app/(authenticated)/barber/_features/_actions/delete-barber-break"
+import { createBarberBlockedSlot } from "@/src/app/(authenticated)/barber/_features/_actions/create-barber-blocked-slot"
+import { deleteBarberBlockedSlot } from "@/src/app/(authenticated)/barber/_features/_actions/delete-barber-blocked-slot"
 
 const DAY_NAMES = [
   "Domingo",

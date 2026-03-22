@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/src/lib/auth"
-import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
+import { getBarberByUserId } from "@/src/app/(authenticated)/barber/_features/_data/get-barber-by-user-id"
 import { BarberSettingsClient } from "./used/barber-settings-client"
 
 export default async function BarberAgendaPage() {

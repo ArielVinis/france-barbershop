@@ -13,9 +13,9 @@ import {
 import { PATHS } from "@/src/constants/PATHS"
 import Image from "next/image"
 import { sidebarItems } from "@/src/resources/sidebar-items"
-import { NavMain } from "./nav-main"
-import { NavSection } from "./nav-section"
-import { NavUser } from "./nav-user"
+import { NavMain } from "@/src/app/(authenticated)/owner/_components/nav-main"
+import { NavSection } from "@/src/app/(authenticated)/owner/_components/nav-section"
+import { NavUser } from "@/src/app/(authenticated)/owner/_components/nav-user"
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: { name?: string | null; image?: string | null; email?: string | null }

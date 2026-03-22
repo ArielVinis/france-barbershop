@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/src/lib/auth"
-import { BarberLayoutClient } from "@/src/components/templates/barber/barber-layout-client"
-import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
+import { BarberLayoutClient } from "@/src/app/(authenticated)/barber/_components/barber-layout-client"
+import { getBarberByUserId } from "@/src/app/(authenticated)/barber/_features/_data/get-barber-by-user-id"
 
 export default async function BarberLayout({
   children,

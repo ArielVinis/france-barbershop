@@ -27,7 +27,7 @@ const DAY_NAMES = [
 export type BarberForOwner = NonNullable<
   Awaited<
     ReturnType<
-      typeof import("@/src/features/owner/_data/get-barber-for-owner").getBarberForOwner
+      typeof import("@/src/app/(authenticated)/owner/_features/_data/get-barber-for-owner").getBarberForOwner
     >
   >
 >

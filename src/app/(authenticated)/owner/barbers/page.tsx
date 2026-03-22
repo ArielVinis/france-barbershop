@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/src/lib/auth"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
+import { getOwnerByUserId } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-by-user-id"
+import { getOwnerBarbers } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-barbers"
 import { OwnerBarbersTable } from "./used/owner-barbers-table"
 
 export default async function OwnerBarbersPage({

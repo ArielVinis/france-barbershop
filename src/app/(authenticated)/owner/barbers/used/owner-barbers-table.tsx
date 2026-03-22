@@ -44,10 +44,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
-import { createBarberOwner } from "@/src/features/owner/_actions/create-barber-owner"
-import { deleteBarberOwner } from "@/src/features/owner/_actions/delete-barber-owner"
-import { toggleBarberActiveOwner } from "@/src/features/owner/_actions/toggle-barber-active-owner"
-import { getBarberScheduleForOwner } from "@/src/features/owner/_actions/get-barber-schedule-for-owner"
+import { createBarberOwner } from "@/src/app/(authenticated)/owner/_features/_actions/create-barber-owner"
+import { deleteBarberOwner } from "@/src/app/(authenticated)/owner/_features/_actions/delete-barber-owner"
+import { toggleBarberActiveOwner } from "@/src/app/(authenticated)/owner/_features/_actions/toggle-barber-active-owner"
+import { getBarberScheduleForOwner } from "@/src/app/(authenticated)/owner/_features/_actions/get-barber-schedule-for-owner"
 import {
   OwnerBarberScheduleContent,
   type BarberForOwner,
@@ -55,7 +55,7 @@ import {
 
 type BarberRow = Awaited<
   ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-barbers").getOwnerBarbers
+    typeof import("@/src/app/(authenticated)/owner/_features/_data/get-owner-barbers").getOwnerBarbers
   >
 >[number]
 

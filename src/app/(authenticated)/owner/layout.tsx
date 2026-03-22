@@ -1,8 +1,8 @@
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
-import { AppSidebar } from "@/src/components/templates/owner/app-sidebar"
+import { AppSidebar } from "@/src/app/(authenticated)/owner/_components/app-sidebar"
 import { SiteHeader } from "@/src/components/templates/SiteHeader/site-header"
 import { getCurrentUser } from "@/src/lib/auth"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
+import { getOwnerByUserId } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-by-user-id"
 
 export default async function OwnerLayout({
   children,

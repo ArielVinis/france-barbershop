@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/src/lib/auth"
-import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookings"
+import { getBarberBookings } from "@/src/app/(authenticated)/barber/_features/_data/get-barber-bookings"
 import { BarberBookingsClient } from "./used/barber-bookings-client"
 
 export default async function BarberBookingsPage() {

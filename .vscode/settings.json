@@ -1,5 +1,0 @@
-{
-  "files.exclude": {
-    "**/prisma/generated/**/schema.prisma": true
-  }
-}

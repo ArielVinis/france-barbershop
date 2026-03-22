@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/src/lib/auth"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getOwnerServices } from "@/src/features/owner/_data/get-owner-services"
+import { getOwnerByUserId } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-by-user-id"
+import { getOwnerServices } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-services"
 import { OwnerServicesTable } from "./used/owner-services-table"
 
 export default async function OwnerServicesPage({
