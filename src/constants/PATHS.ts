@@ -30,4 +30,9 @@ export const PATHS = Object.freeze({
   BOOKINGS: {
     HOME: "/bookings",
   },
+
+  STRIPE: {
+    PAYMENT_CONFIRMATION:
+      "/payment-confirmation?session_id={CHECKOUT_SESSION_ID}",
+  },
 })
