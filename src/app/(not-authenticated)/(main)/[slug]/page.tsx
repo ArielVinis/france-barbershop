@@ -1,8 +1,9 @@
 import PhoneItem from "@/src/components/barbershop/phone-item"
 import ServiceItem from "@/src/components/barbershop/service-item"
 import SidebarSheet from "@/src/components/layout/sidebar-sheet"
-import { Button } from "@/src/components/ui/button"
+import { Button, buttonVariants } from "@/src/components/ui/button"
 import { Sheet, SheetTrigger } from "@/src/components/ui/sheet"
+import { cn } from "@/src/lib/utils"
 import { PATHS } from "@/src/constants/PATHS"
 import { db } from "@/src/lib/prisma"
 import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react"
@@ -52,6 +53,8 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
           alt={barbershop.name}
           src={barbershop?.imageUrl}
           fill
+          priority
+          sizes="100vw"
           className="object-cover"
         />
 
@@ -67,14 +70,13 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
         </Button>
 
         <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              size="icon"
-              variant="outline"
-              className="absolute right-4 top-4"
-            >
-              <MenuIcon />
-            </Button>
+          <SheetTrigger
+            className={cn(
+              buttonVariants({ size: "icon", variant: "outline" }),
+              "absolute right-4 top-4",
+            )}
+          >
+            <MenuIcon />
           </SheetTrigger>
           <SidebarSheet />
         </Sheet>

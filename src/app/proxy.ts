@@ -5,11 +5,11 @@ import { PATHS } from "@/src/constants/PATHS"
 
 export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname
+  const user = await getCurrentUser()
 
   // /owner/* - requer role OWNER (matcher já exclui /dev/owner)
   if (pathname === PATHS.OWNER.HOME) {
     try {
-      const user = await getCurrentUser()
       const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
       if (user.role !== "OWNER") {
         return NextResponse.redirect(notAuthorized)
@@ -24,7 +24,6 @@ export async function proxy(req: NextRequest) {
   // /barber/* - requer role BARBER
   if (pathname === PATHS.BARBER.HOME) {
     try {
-      const user = await getCurrentUser()
       const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
       if (user.role !== "BARBER") {
         return NextResponse.redirect(notAuthorized)

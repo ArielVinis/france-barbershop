@@ -10,6 +10,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -109,6 +110,9 @@ const BookingItem = ({ booking }: BookingItemProps) => {
       <SheetContent className="w-[85%]">
         <SheetHeader>
           <SheetTitle className="text-left">Informações da Reserva</SheetTitle>
+          <SheetDescription className="sr-only">
+            Detalhes do agendamento, local e opções da reserva.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="relative mt-6 flex h-[180px] w-full items-end">
@@ -116,6 +120,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
             alt={`Mapa da barbearia ${booking.service.barbershop.name}`}
             src="/map.png"
             fill
+            sizes="85vw"
             className="rounded-xl object-cover"
           />
 

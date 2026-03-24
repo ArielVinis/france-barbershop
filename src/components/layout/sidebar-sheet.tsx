@@ -9,7 +9,13 @@ import {
   LogOutIcon,
   SquareScissors,
 } from "lucide-react"
-import { SheetClose, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet"
+import {
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "../ui/sheet"
 import { quickSearchOptions } from "../../constants/search"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
@@ -47,6 +53,9 @@ const SidebarSheet = () => {
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="text-left">Menu</SheetTitle>
+          <SheetDescription className="sr-only">
+            Atalhos de navegação e opções da conta.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="flex items-center justify-between gap-3 border-b border-solid py-5">

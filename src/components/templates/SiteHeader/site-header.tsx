@@ -1,13 +1,12 @@
 import { Separator } from "@/src/components/ui/separator"
 import { SidebarTrigger } from "@/src/components/ui/sidebar"
 
-export function SiteHeader({
-  title,
-  rightContent,
-}: {
-  title: any
-  rightContent?: any
-}) {
+interface SiteHeaderProps {
+  title: string
+  rightContent?: React.ReactNode
+}
+
+export function SiteHeader({ title, rightContent }: SiteHeaderProps) {
   return (
     <header className="h-(--header-height) group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) flex shrink-0 items-center gap-2 border-b py-4 transition-[width,height] ease-linear">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">

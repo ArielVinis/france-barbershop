@@ -9,9 +9,14 @@ import { PATHS } from "@/src/constants/PATHS"
 
 interface BarbershopItemProps {
   barbershop: Barbershop
+  /** Prioriza carregamento (LCP) — use no primeiro card visível da lista. */
+  priority?: boolean
 }
 
-const BarbershopItem = ({ barbershop }: BarbershopItemProps) => {
+const BarbershopItem = ({
+  barbershop,
+  priority = false,
+}: BarbershopItemProps) => {
   return (
     <Card className="min-w-[167px] rounded-2xl">
       <CardContent className="p-0 px-1 pt-1">
@@ -20,9 +25,10 @@ const BarbershopItem = ({ barbershop }: BarbershopItemProps) => {
           <Image
             alt={barbershop.name}
             fill
+            priority={priority}
             className="rounded-2xl object-cover"
             src={barbershop.imageUrl}
-            sizes="100dvw"
+            sizes="(max-width: 768px) 45vw, 200px"
           />
 
           <Badge

@@ -5,12 +5,13 @@ import { MenuIcon } from "lucide-react"
 import { Sheet, SheetTrigger } from "../ui/sheet"
 import SidebarSheet from "./sidebar-sheet"
 import Link from "next/link"
+import { PATHS } from "@/src/constants/PATHS"
 
 const Header = () => {
   return (
     <Card>
       <CardContent className="flex flex-row items-center justify-between p-5">
-        <Link href="/">
+        <Link href={PATHS.HOME}>
           <Image
             alt="France Barber"
             src="/logo.png"

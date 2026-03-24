@@ -74,8 +74,9 @@ const Home = async () => {
             alt="Agende nos melhores com France Barber"
             src="/banner.png"
             fill
+            priority
+            sizes="100vw"
             className="rounded-xl object-cover"
-            loading="eager"
           />
         </div>
 
@@ -101,8 +102,12 @@ const Home = async () => {
           Recomendados
         </h2>
         <div className="hide-scrollbar flex gap-4 overflow-auto">
-          {barbershops.map((barbershop) => (
-            <BarbershopItem key={barbershop.id} barbershop={barbershop} />
+          {barbershops.map((barbershop, index) => (
+            <BarbershopItem
+              key={barbershop.id}
+              barbershop={barbershop}
+              priority={index === 0}
+            />
           ))}
         </div>
 

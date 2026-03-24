@@ -1,6 +1,6 @@
 "use client"
 
-import { LogOutIcon, MoreVerticalIcon } from "lucide-react"
+import { CreditCard, LogOutIcon, MoreVerticalIcon } from "lucide-react"
 import { signOut } from "next-auth/react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
@@ -19,6 +19,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/src/components/ui/sidebar"
+import Checkout from "@/src/app/(stripe)/_components/checkout"
 
 export function NavUser({
   user,
@@ -43,7 +44,7 @@ export function NavUser({
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.image ?? ""} alt={user.name} />
                 <AvatarFallback className="rounded-lg">
-                  {(user.name ?? "U").slice(0, 2).toUpperCase()}
+                  {user.name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -79,6 +80,14 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <Checkout>
+                <span className="flex items-center gap-2">
+                  <CreditCard />
+                  Assinatura
+                </span>
+              </Checkout>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => signOut({ callbackUrl: PATHS.HOME })}

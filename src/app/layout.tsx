@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { Toaster } from "sonner"
 import Footer from "../components/layout/footer"
-import AuthProvider from "../providers/auth"
+import AuthProvider from "../providers/authProvider"
 
 export const metadata: Metadata = {
   title: "France Barber",
