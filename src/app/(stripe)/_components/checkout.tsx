@@ -34,7 +34,7 @@ export default function Checkout({ children }: CheckoutProps) {
       <DialogContent className="hide-scrollbar max-h-[100dvh] overflow-y-auto p-0">
         <DialogTitle></DialogTitle>
         <DialogDescription></DialogDescription>
-        <div id="checkout" className="p-6">
+        <div id="checkout" className="p-3">
           <EmbeddedCheckoutProvider
             stripe={stripePromise}
             options={{ fetchClientSecret }}
