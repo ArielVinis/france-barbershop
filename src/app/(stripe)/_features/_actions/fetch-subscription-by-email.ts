@@ -17,3 +17,25 @@ export async function fetchSubscriptionByEmail(email: string) {
 
   return subscription
 }
+
+export function translateSubscriptionStatus(status: string) {
+  switch (status) {
+    case "active":
+      return "Ativo"
+    case "canceled":
+      return "Cancelado"
+    default:
+      return status
+  }
+}
+
+export function translateSubscriptionInterval(interval: string) {
+  switch (interval) {
+    case "month":
+      return "Mensal"
+    case "year":
+      return "Anual"
+    default:
+      return interval
+  }
+}
