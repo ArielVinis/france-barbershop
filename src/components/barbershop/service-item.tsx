@@ -1,11 +1,11 @@
 "use client"
 
-import {
+import type {
   Barbershop,
   BarbershopService,
   Booking,
   BarbershopSchedule,
-} from "@prisma/client"
+} from "@/prisma/generated/prisma/client"
 import Image from "next/image"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"

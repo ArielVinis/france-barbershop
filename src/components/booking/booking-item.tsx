@@ -1,6 +1,6 @@
 "use client"
 
-import { Prisma } from "@prisma/client"
+import type { Prisma } from "@/prisma/generated/prisma/client"
 import { Avatar, AvatarImage } from "../ui/avatar"
 import { Badge } from "../ui/badge"
 import { Card, CardContent } from "../ui/card"

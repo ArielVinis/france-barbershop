@@ -39,7 +39,7 @@ import {
 import { toast } from "sonner"
 import { updateBookingStatus } from "@/src/app/(authenticated)/barber/_features/_actions/update-booking-status"
 import { updateBookingObservations } from "@/src/app/(authenticated)/barber/_features/_actions/update-booking-observations"
-import type { PaymentMethod } from "@prisma/client"
+import type { PaymentMethod } from "@/prisma/generated/prisma/client"
 
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   PIX: "PIX",

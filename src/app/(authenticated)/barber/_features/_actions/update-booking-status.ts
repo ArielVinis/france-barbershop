@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
-import { BookingStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
+import type {
+  BookingStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "@/prisma/generated/prisma/client"
 
 export interface UpdateBookingStatusOptions {
   /** Obrigatório ao finalizar (FINISHED) para relatórios */
