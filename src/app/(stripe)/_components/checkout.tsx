@@ -5,7 +5,7 @@ import {
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js"
 
-import { fetchClientSecret } from "../_actions/fetch-client-secret"
+import { fetchClientSecret } from "../_features/_actions/fetch-client-secret"
 import { loadStripe } from "@stripe/stripe-js"
 import {
   Dialog,
