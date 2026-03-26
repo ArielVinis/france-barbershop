@@ -232,6 +232,21 @@ Acesse [http://localhost:3000](http://localhost:3000)
   - [x] Bloquear horários específicos
   - [x] Feriados e dias especiais
 
+- [ ] **Criar tela de assinatura para o Dono**
+  - [ ] Tela "Minha Assinatura" para o dono da barbearia gerenciar a assinatura (Stripe)
+    - Exibe detalhes do plano atual em um Card:
+      - Nome do plano (ex: Plano Pro)
+      - Status da assinatura (ex: Ativo ou Inativo)
+      - Próxima cobrança (data)
+      - Valor (mensalidade)
+      - Ciclo (ex: Mensal)
+    - Ações disponíveis em outro Card:
+      - Botão para atualizar método de pagamento
+      - Botão grande (vermelho) para cancelar assinatura
+    - Layout dividido em dois cards: um para detalhes, outro para ações.
+    - Tudo conectado ao Stripe (informações provenientes via API)
+    - Exemplo visual: [🖼️ Tela similar à mostrada, porém, mais moderna: ![Ideia de tela](public/idea.png)]
+
 ### 🟡 Média Prioridade
 
 - [ ] **Sistema de avaliações**
