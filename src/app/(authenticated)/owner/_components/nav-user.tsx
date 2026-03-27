@@ -2,6 +2,7 @@
 
 import { CreditCard, LogOutIcon, MoreVerticalIcon } from "lucide-react"
 import { signOut } from "next-auth/react"
+import Link from "next/link"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -19,7 +20,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/src/components/ui/sidebar"
-import Checkout from "@/src/app/(stripe)/_components/checkout"
 
 export function NavUser({
   user,
@@ -80,13 +80,11 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Checkout>
-                <span className="flex items-center gap-2">
-                  <CreditCard />
-                  Assinatura
-                </span>
-              </Checkout>
+            <DropdownMenuItem asChild>
+              <Link href={PATHS.OWNER.SUBSCRIPTION}>
+                <CreditCard />
+                Assinatura
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
