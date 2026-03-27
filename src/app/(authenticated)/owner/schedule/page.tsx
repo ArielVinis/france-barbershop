@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-by-user-id"
 import { getOwnerBarbers } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-barbers"
@@ -8,6 +9,8 @@ import { bookingsToCalendarEvents } from "@/src/lib/booking-calendar-utils"
 import { ScheduleFilters } from "./used/schedule-filters"
 import { OwnerScheduleCalendar } from "./used/owner-schedule-calendar"
 import { OwnerBookingsTable } from "../dashboard/used/dashboard-content/owner-bookings-table"
+import { hasOwnerSubscriptionAccess } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-subscription-access"
+import { PATHS } from "@/src/constants/PATHS"
 
 export default async function OwnerSchedulePage({
   searchParams,
@@ -22,6 +25,10 @@ export default async function OwnerSchedulePage({
   const user = await getCurrentUser()
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
+  const hasSubscriptionAccess = await hasOwnerSubscriptionAccess(owner.user.email)
+  if (!hasSubscriptionAccess) {
+    redirect(PATHS.OWNER.SUBSCRIPTION)
+  }
 
   if (owner.barbershops.length === 0) {
     return (

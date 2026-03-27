@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-by-user-id"
 import { getOwnerDashboardStats } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-dashboard-stats"
@@ -9,6 +10,8 @@ import {
 } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-chart-data"
 import type { OwnerBookingsPeriod } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-bookings"
 import { DashboardContent } from "@/src/app/(authenticated)/owner/dashboard/used/dashboard-content"
+import { hasOwnerSubscriptionAccess } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-subscription-access"
+import { PATHS } from "@/src/constants/PATHS"
 
 const PERIOD_LABELS: Record<OwnerBookingsPeriod, string> = {
   day: "hoje",
@@ -24,6 +27,10 @@ export default async function OwnerDashboardPage({
   const user = await getCurrentUser()
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
+  const hasSubscriptionAccess = await hasOwnerSubscriptionAccess(owner.user.email)
+  if (!hasSubscriptionAccess) {
+    redirect(PATHS.OWNER.SUBSCRIPTION)
+  }
 
   if (owner.barbershops.length === 0) {
     return (

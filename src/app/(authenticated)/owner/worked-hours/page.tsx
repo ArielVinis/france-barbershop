@@ -1,7 +1,10 @@
 import { getCurrentUser } from "@/src/lib/auth"
+import { redirect } from "next/navigation"
 import { getOwnerByUserId } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-by-user-id"
 import { getOwnerBarbershopHours } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-barbershop-hours"
 import { OwnerBarbershopHoursClient } from "./used/owner-barbershop-hours-client"
+import { hasOwnerSubscriptionAccess } from "@/src/app/(authenticated)/owner/_features/_data/get-owner-subscription-access"
+import { PATHS } from "@/src/constants/PATHS"
 
 export default async function OwnerHorariosPage({
   searchParams,
@@ -11,6 +14,10 @@ export default async function OwnerHorariosPage({
   const user = await getCurrentUser()
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
+  const hasSubscriptionAccess = await hasOwnerSubscriptionAccess(owner.user.email)
+  if (!hasSubscriptionAccess) {
+    redirect(PATHS.OWNER.SUBSCRIPTION)
+  }
 
   if (owner.barbershops.length === 0) {
     return (
