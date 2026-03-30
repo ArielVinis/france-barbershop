@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/src/lib/auth"
 import { PATHS } from "@/src/constants/PATHS"
 
 export async function proxy(req: NextRequest) {
-  const pathname = req.nextUrl.pathname
+  const { pathname } = req.nextUrl
   let user
 
   try {
