@@ -1,8 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
+import { requireBarberForSession } from "@/src/app/(authenticated)/barber/_features/_data/require-barber-for-session"
 import type {
   BookingStatus,
   PaymentMethod,
@@ -20,10 +20,10 @@ export async function updateBookingStatus(
   status: BookingStatus,
   options?: UpdateBookingStatusOptions,
 ) {
-  const { id: barberId } = await getCurrentUser()
+  const barber = await requireBarberForSession()
 
   const booking = await db.booking.findFirst({
-    where: { id: bookingId, barberId },
+    where: { id: bookingId, barberId: barber.id },
   })
   if (!booking) {
     throw new Error("Agendamento não encontrado")

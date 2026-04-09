@@ -1,8 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
+import { requireBarberForSession } from "@/src/app/(authenticated)/barber/_features/_data/require-barber-for-session"
 
 const MAX_OBSERVATIONS_LENGTH = 500
 
@@ -10,7 +10,7 @@ export async function updateBookingObservations(
   bookingId: string,
   observations: string | null,
 ) {
-  const { id: barberId } = await getCurrentUser()
+  const { id: barberId } = await requireBarberForSession()
 
   const booking = await db.booking.findFirst({
     where: { id: bookingId, barberId },

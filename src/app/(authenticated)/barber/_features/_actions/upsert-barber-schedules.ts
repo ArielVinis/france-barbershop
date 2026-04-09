@@ -1,8 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
+import { requireBarberForSession } from "@/src/app/(authenticated)/barber/_features/_data/require-barber-for-session"
 
 export type BarberScheduleInput = {
   dayOfWeek: number
@@ -34,7 +34,7 @@ function validateSchedule(input: BarberScheduleInput): string | null {
 }
 
 export async function upsertBarberSchedules(inputs: BarberScheduleInput[]) {
-  const { id: barberId } = await getCurrentUser()
+  const { id: barberId } = await requireBarberForSession()
 
   for (const input of inputs) {
     if (input.isActive) {
