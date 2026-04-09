@@ -93,6 +93,25 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
+model Booking {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId     String
+  service       BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  barberId      String?
+  barber        Barber?           @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  date          DateTime
+  status        BookingStatus     @default(CONFIRMED)
+  observations  String?
+  paymentMethod PaymentMethod?
+  paymentStatus PaymentStatus     @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Barbershop
 model Barbershop {
   id          String               @id @default(uuid())
   name        String
@@ -113,6 +132,58 @@ model Barbershop {
   updatedAt DateTime @updatedAt
 }
 
+model BarbershopService {
+  id              String     @id @default(uuid())
+  name            String
+  description     String
+  imageUrl        String
+  price           Decimal    @db.Decimal(10, 2)
+  durationMinutes Int
+  barbershopId    String
+  barbershop      Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+}
+
+model BarbershopSchedule {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
+  startTime    String // "08:00" formato HH:mm
+  endTime      String // "18:00" formato HH:mm
+  isActive     Boolean    @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([barbershopId, dayOfWeek])
+}
+
+model BarbershopBreak {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int // 0 = Domingo, …, 6 = Sábado
+  startTime    String // "12:00" formato HH:mm
+  endTime      String // "13:00" formato HH:mm
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BarbershopBlockedSlot {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  startAt      DateTime
+  endAt        DateTime
+  reason       String? // ex.: Feriado, Reforma
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Barber
 model Barber {
   id             String              @id @default(uuid())
   userId         String              @unique
@@ -168,75 +239,7 @@ model BarberBlockedSlot {
   updatedAt DateTime @updatedAt
 }
 
-model BarbershopService {
-  id              String     @id @default(uuid())
-  name            String
-  description     String
-  imageUrl        String
-  price           Decimal    @db.Decimal(10, 2)
-  durationMinutes Int
-  barbershopId    String
-  barbershop      Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  bookings        Booking[]
-}
-
-model Booking {
-  id            String            @id @default(uuid())
-  userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  serviceId     String
-  service       BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  barberId      String?
-  barber        Barber?           @relation(fields: [barberId], references: [id], onDelete: SetNull)
-  date          DateTime
-  status        BookingStatus     @default(CONFIRMED)
-  observations  String?
-  paymentMethod PaymentMethod?
-  paymentStatus PaymentStatus     @default(PENDING)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model BarbershopSchedule {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
-  startTime    String // "08:00" formato HH:mm
-  endTime      String // "18:00" formato HH:mm
-  isActive     Boolean    @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([barbershopId, dayOfWeek])
-}
-
-model BarbershopBreak {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int // 0 = Domingo, …, 6 = Sábado
-  startTime    String // "12:00" formato HH:mm
-  endTime      String // "13:00" formato HH:mm
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model BarbershopBlockedSlot {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  startAt      DateTime
-  endAt        DateTime
-  reason       String? // ex.: Feriado, Reforma
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
+// Rating
 model Rating {
   id           String     @id @default(uuid())
   userId       String
