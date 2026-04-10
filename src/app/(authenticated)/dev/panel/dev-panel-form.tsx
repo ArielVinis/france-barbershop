@@ -13,13 +13,14 @@ import {
 } from "@/src/components/ui/select"
 import { Label } from "@/src/components/ui/label"
 import { setCurrentUserAsOwner } from "@/src/features/dev/_actions/set-current-user-as-owner"
+import { PATHS } from "@/src/constants/PATHS"
 
-type DevOwnerFormProps = {
+type DevPanelFormProps = {
   user: { name?: string | null; email?: string | null; role?: string }
   barbershops: { id: string; name: string; slug: string }[]
 }
 
-export function DevOwnerForm({ user, barbershops }: DevOwnerFormProps) {
+export function DevPanelForm({ user, barbershops }: DevPanelFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [barbershopId, setBarbershopId] = useState<string>("")
@@ -34,7 +35,7 @@ export function DevOwnerForm({ user, barbershops }: DevOwnerFormProps) {
       try {
         await setCurrentUserAsOwner(barbershopId)
         toast.success("Pronto! Você é dono desta barbearia. Redirecionando…")
-        router.push("/owner")
+        router.push(PATHS.PANEL.ROOT)
         router.refresh()
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Erro ao vincular")
