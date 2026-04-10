@@ -32,6 +32,7 @@ Camada de dados (Prisma: dashboards, bookings, etc.)
 | ------------------------------------ | ----------------------------------------------------------------- |
 | Tipos `PanelContext`                 | `src/types/panel-context.ts`                                      |
 | Regra barbearia ↔ owner              | `src/lib/authz/barbershop-for-owner.ts` (`getBarbershopForOwner`) |
+| Regra usuário ↔ barbeiro             | `src/lib/authz/barber-for-user.ts` (`getBarberForUser`) |
 | Re-export legível nas features owner | `@/src/lib/authz/barbershop-for-owner` → re-exporta `lib/authz`   |
 | Barrel `authz`                       | `src/lib/authz/index.ts` — re-exporta política + tipos do painel  |
 | Módulo owner (dados/ações)           | `src/features/owner/_data/`, `src/features/owner/_actions/`       |
@@ -48,12 +49,12 @@ Marque `[x]` conforme for concluindo.
 - [x] **1.1** Criar pasta `src/lib/authz/` e um `index.ts` (re-export) opcional.
 - [x] **1.2** Tipos de contexto do painel em `src/types/panel-context.ts` (union discriminada + `isOwnerContext`).
 - [x] **1.3** `getBarbershopForOwner` canônico em `src/lib/authz/barbershop-for-owner.ts`;
-- [ ] **1.4** Implementar `getBarberForUser(userId)` (ou equivalente) que retorna `{ id, barbershopId, ... } | null` para regras do papel BARBER.
-- [ ] **1.5** Implementar `requireRole(user, allowedRoles)` que lança ou retorna erro tipado — usar em Server Actions sensíveis.
+- [x] **1.4** `getBarberForUser(userId)` canônico em `src/lib/authz/barber-for-user.ts` (retorno mínimo de authz: `{ id, barbershopId }`); `getBarberByUserId` permanece no módulo `features/barber` para carga rica de dados de UI.
+- [x] **1.5** `requireRole(user, allowedRoles)` implementado em `src/lib/authz/require-role.ts` e exportado no barrel `src/lib/authz/index.ts`.
 
 ### Fase 2 — Resolver contexto do painel
 
-- [ ] **2.1** Implementar `resolvePanelContext(user, input)` conforme exemplo abaixo (ajustar `input` ao que vem de URL/form: `barbershopId` opcional).
+- [x] **2.1** `resolvePanelContext(user, input)` implementado em `src/lib/authz/resolve-panel-context.ts` (OWNER exige `barbershopId`; BARBER resolve contexto via `getBarberForUser`).
 - [ ] **2.2** Para OWNER com várias barbearias, definir regra: barbearia padrão vs obrigatoriedade de `barbershopId` na rota (alinhar com UI).
 - [ ] **2.3** Usar `resolvePanelContext` nas Server Actions que hoje ramificam `if (role === OWNER)` / `BARBER` manualmente.
 
@@ -264,8 +265,8 @@ Ex.: `get-owner-bookings.ts` e `get-owner-dashboard-stats.ts` recebem `barbersho
 
 ## Código do barbeiro: `User.id` ≠ `Barber.id`
 
-- Helper **`requireBarberForSession`** em `src/features/barber/_data/require-barber-for-session.ts` — `getCurrentUser` + `getBarberByUserId`; as actions de booking, pausas, bloqueios e agenda usam `barber.id` correto.
-- Quando existir `src/lib/authz/`, esse helper pode ser **movido ou re-exportado** (paralelo a `getBarbershopForOwner`).
+- Helper **`requireBarberForSession`** em `src/features/barber/_data/require-barber-for-session.ts` — `getCurrentUser` + resolução do barbeiro; as actions de booking, pausas, bloqueios e agenda usam `barber.id` correto.
+- Nome canônico em `authz`: **`getBarberForUser`**. Nome de dados ricos para UI em `features/barber`: **`getBarberByUserId`**.
 
 ---
 
