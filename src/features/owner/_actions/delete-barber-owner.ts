@@ -1,0 +1,29 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { getCurrentUser } from "@/src/lib/auth"
+import { db } from "@/src/lib/prisma"
+import { PATHS } from "@/src/constants/PATHS"
+
+/**
+ * Remove o vínculo barbeiro–barbearia. O usuário continua existindo (role pode ficar BARBER).
+ */
+export async function deleteBarberOwner(barberId: string) {
+  const user = await getCurrentUser()
+
+  const barber = await db.barber.findFirst({
+    where: {
+      id: barberId,
+      barbershop: {
+        owners: { some: { id: user.id } },
+      },
+    },
+  })
+  if (!barber)
+    throw new Error("Barbeiro não encontrado ou não pertence à sua barbearia")
+
+  await db.barber.delete({ where: { id: barberId } })
+
+  revalidatePath(PATHS.PANEL.ROOT)
+  revalidatePath(PATHS.PANEL.BARBERS)
+}

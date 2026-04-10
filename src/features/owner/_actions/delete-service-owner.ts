@@ -1,0 +1,31 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { getCurrentUser } from "@/src/lib/auth"
+import { db } from "@/src/lib/prisma"
+import { PATHS } from "@/src/constants/PATHS"
+
+export async function deleteServiceOwner(serviceId: string) {
+  const user = await getCurrentUser()
+
+  const service = await db.barbershopService.findFirst({
+    where: {
+      id: serviceId,
+      barbershop: {
+        owners: { some: { id: user.id } },
+      },
+    },
+    include: { _count: { select: { bookings: true } } },
+  })
+  if (!service)
+    throw new Error("Serviço não encontrado ou não pertence à sua barbearia")
+  if (service._count.bookings > 0)
+    throw new Error(
+      "Não é possível excluir: existem agendamentos vinculados a este serviço",
+    )
+
+  await db.barbershopService.delete({ where: { id: serviceId } })
+
+  revalidatePath(PATHS.PANEL.ROOT)
+  revalidatePath(PATHS.PANEL.SERVICES)
+}
