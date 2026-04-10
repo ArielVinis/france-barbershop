@@ -81,14 +81,14 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link href={PATHS.OWNER.SUBSCRIPTION}>
+              <Link href={PATHS.PANEL.SUBSCRIPTION}>
                 <CreditCard />
                 Assinatura
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => signOut({ callbackUrl: PATHS.HOME })}
+              onClick={() => signOut({ callbackUrl: PATHS.ROOT })}
             >
               <LogOutIcon />
               Sair

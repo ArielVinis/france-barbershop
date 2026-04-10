@@ -13,9 +13,9 @@ import {
 import { PATHS } from "@/src/constants/PATHS"
 import Image from "next/image"
 import { sidebarItems } from "@/src/resources/sidebar-items"
-import { NavMain } from "@/src/app/(authenticated)/panel/_components/nav-main"
-import { NavSection } from "@/src/app/(authenticated)/panel/_components/nav-section"
-import { NavUser } from "@/src/app/(authenticated)/panel/_components/nav-user"
+import { NavMain } from "@/src/components/templates/Sidebar/nav-main"
+import { NavSection } from "@/src/components/templates/Sidebar/nav-section"
+import { NavUser } from "@/src/components/templates/Sidebar/nav-user"
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: { name?: string | null; image?: string | null; email?: string | null }
@@ -32,7 +32,7 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link href={PATHS.HOME}>
+              <Link href={PATHS.ROOT}>
                 <Image
                   src={barbershops[0].imageUrl ?? "/logo.png"}
                   alt={barbershops[0].name}
@@ -67,7 +67,7 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
               {barbershops.map((b) => (
                 <SidebarMenuItem key={b.id}>
                   <SidebarMenuButton asChild>
-                    <Link href={PATHS.BARBERSHOP.HOME(b.slug)}>{b.name}</Link>
+                    <Link href={PATHS.BARBERSHOP.ROOT(b.slug)}>{b.name}</Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
