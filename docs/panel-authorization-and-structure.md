@@ -26,15 +26,28 @@ Regras / authz (validar recurso → IDs confiáveis ou erro)
 Camada de dados (Prisma: dashboards, bookings, etc.)
 ```
 
+## Estrutura atual (após reorganização)
+
+| Peça                                 | Caminho                                                           |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| Tipos `PanelContext`                 | `src/types/panel-context.ts`                                      |
+| Regra barbearia ↔ owner              | `src/lib/authz/barbershop-for-owner.ts` (`getBarbershopForOwner`) |
+| Re-export legível nas features owner | `@/src/lib/authz/barbershop-for-owner` → re-exporta `lib/authz`   |
+| Barrel `authz`                       | `src/lib/authz/index.ts` — re-exporta política + tipos do painel  |
+| Módulo owner (dados/ações)           | `src/features/owner/_data/`, `src/features/owner/_actions/`       |
+| Módulo barbeiro                      | `src/features/barber/_data/`, `src/features/barber/_actions/`     |
+
+Imports novos podem usar `@/src/lib/authz`.
+
 ## TODOs
 
 Marque `[x]` conforme for concluindo.
 
 ### Fase 1 — Base de autorização
 
-- [ ] **1.1** Criar pasta `src/lib/authz/` e um `index.ts` (re-export) opcional.
-- [ ] **1.2** Documentar tipos de contexto do painel (union discriminada) em `src/lib/authz/panel-context.ts` (ou `src/types/panel-context.ts`).
-- [ ] **1.3** Mover ou re-exportar `getBarbershopForOwner` de `owner/_features/_data/assert-owner-barbershop.ts` para `src/lib/authz/barbershop-for-owner.ts` (evitar duplicação; atualizar imports).
+- [x] **1.1** Criar pasta `src/lib/authz/` e um `index.ts` (re-export) opcional.
+- [x] **1.2** Tipos de contexto do painel em `src/types/panel-context.ts` (union discriminada + `isOwnerContext`).
+- [x] **1.3** `getBarbershopForOwner` canônico em `src/lib/authz/barbershop-for-owner.ts`;
 - [ ] **1.4** Implementar `getBarberForUser(userId)` (ou equivalente) que retorna `{ id, barbershopId, ... } | null` para regras do papel BARBER.
 - [ ] **1.5** Implementar `requireRole(user, allowedRoles)` que lança ou retorna erro tipado — usar em Server Actions sensíveis.
 
@@ -67,7 +80,7 @@ Marque `[x]` conforme for concluindo.
 ### Tipos de contexto (union discriminada)
 
 ```ts
-// src/lib/authz/panel-context.ts
+// src/types/panel-context.ts
 export type PanelContextOwner = {
   role: "OWNER"
   userId: string
@@ -144,7 +157,7 @@ export function requireRole(user: AuthUser, allowed: AppRole[]) {
 import type { AuthUser } from "@/src/lib/auth"
 import { getBarbershopForOwner } from "./barbershop-for-owner"
 import { getBarberForUser } from "./barber-for-user"
-import type { PanelContext } from "./panel-context"
+import type { PanelContext } from "@/src/types/panel-context"
 
 type ResolveInput = {
   /** Opcional: filtro de barbearia para OWNER (URL, form, etc.) */
@@ -214,7 +227,7 @@ export async function loadDashboardAction(formData: FormData) {
 
 ---
 
-## Como as regras aparecem hoje em `owner/_features`
+## Como as regras aparecem hoje em `src/features/owner`
 
 O painel do owner **já implementa** o espírito de “regra + recurso”, em quatro formas (vale espelhar para o barbeiro com outro escopo).
 
@@ -238,12 +251,12 @@ Ex.: `get-owner-bookings.ts` e `get-owner-dashboard-stats.ts` recebem `barbersho
 
 ## Escopo BARBER: só os dados dele, menos ações
 
-| Aspecto | OWNER (hoje) | BARBER (regra desejada) |
-|--------|----------------|-------------------------|
-| **Identidade na regra** | `user.id` como dono (`owners.some`) | Resolver **`Barber.id`** a partir de `User.id` e usar nas queries |
-| **Agendamentos** | Todos da(s) barbearia(s), filtro opcional por barbeiro | Somente `booking.barberId ===` do barbeiro logado |
-| **Dashboard / stats** | Agregados por barbearia | Agregados **só** das linhas do barbeiro (ou métricas omitidas) |
-| **Serviços / barbeiros / horário da loja** | CRUD e gestão ampla | **Sem** gestão de outros barbeiros ou serviços da loja; só o que o produto permitir (agenda/pausas/bloqueios **próprios**) |
+| Aspecto                                    | OWNER (hoje)                                           | BARBER (regra desejada)                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| **Identidade na regra**                    | `user.id` como dono (`owners.some`)                    | Resolver **`Barber.id`** a partir de `User.id` e usar nas queries                                                          |
+| **Agendamentos**                           | Todos da(s) barbearia(s), filtro opcional por barbeiro | Somente `booking.barberId ===` do barbeiro logado                                                                          |
+| **Dashboard / stats**                      | Agregados por barbearia                                | Agregados **só** das linhas do barbeiro (ou métricas omitidas)                                                             |
+| **Serviços / barbeiros / horário da loja** | CRUD e gestão ampla                                    | **Sem** gestão de outros barbeiros ou serviços da loja; só o que o produto permitir (agenda/pausas/bloqueios **próprios**) |
 
 **Resumo:** mesmo padrão técnico do owner (action → usuário → **regra no `where` do Prisma**), trocando “sou dono desta barbearia” por “sou este `Barber`”.
 
@@ -251,7 +264,7 @@ Ex.: `get-owner-bookings.ts` e `get-owner-dashboard-stats.ts` recebem `barbersho
 
 ## Código do barbeiro: `User.id` ≠ `Barber.id`
 
-- Helper **`requireBarberForSession`** em `barber/_features/_data/require-barber-for-session.ts` — `getCurrentUser` + `getBarberByUserId`; as actions de booking, pausas, bloqueios e agenda usam `barber.id` correto.
+- Helper **`requireBarberForSession`** em `src/features/barber/_data/require-barber-for-session.ts` — `getCurrentUser` + `getBarberByUserId`; as actions de booking, pausas, bloqueios e agenda usam `barber.id` correto.
 - Quando existir `src/lib/authz/`, esse helper pode ser **movido ou re-exportado** (paralelo a `getBarbershopForOwner`).
 
 ---
