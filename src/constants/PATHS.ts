@@ -1,35 +1,31 @@
 export const PATHS = Object.freeze({
-  HOME: "/",
+  ROOT: "/",
   NOT_AUTHENTICATED: "/not-authenticated",
   SIGN_IN: "/api/auth/signin",
   NOT_AUTHORIZED: "/not-authorized",
 
-  BARBER: {
-    HOME: "/barber",
-    BOOKINGS: "/barber/bookings",
-    SETTINGS: "/barber/settings",
-    PROFILE: "/barber/profile",
-    RATINGS: "/barber/ratings",
+  DEV: {
+    PANEL: "/dev/panel",
   },
 
-  OWNER: {
-    HOME: "/owner",
-    SUBSCRIPTION: "/owner/assinatura",
-    BARBERS: "/owner/barbers",
+  PANEL: {
+    ROOT: "/panel",
+    SUBSCRIPTION: "/panel/subscription",
+    BARBERS: "/panel/barbers",
     BARBER_SCHEDULE: (barberId: string) =>
-      `/owner/barbers/${barberId}/schedule`,
-    SERVICES: "/owner/services",
-    SCHEDULE: "/owner/schedule",
-    WORKED_HOURS: "/owner/worked-hours",
+      `/panel/barbers/${barberId}/schedule`,
+    SERVICES: "/panel/services",
+    SCHEDULE: "/panel/schedule",
+    WORKED_HOURS: "/panel/worked-hours",
   },
 
   BARBERSHOP: {
-    HOME: (slug: string) => `/${slug}`,
+    ROOT: (slug: string) => `/${slug}`,
     SEARCH: (title: string) => `/barbershops?title=${title}`,
   },
 
   BOOKINGS: {
-    HOME: "/bookings",
+    ROOT: "/bookings",
   },
 
   STRIPE: {

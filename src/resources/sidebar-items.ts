@@ -16,27 +16,27 @@ export const sidebarItems = {
   navMain: [
     {
       name: "Dashboard",
-      url: PATHS.OWNER.HOME,
+      url: PATHS.PANEL.ROOT,
       icon: LayoutDashboardIcon,
     },
     {
       name: "Agendamentos",
-      url: PATHS.OWNER.SCHEDULE,
+      url: PATHS.PANEL.SCHEDULE,
       icon: CalendarDaysIcon,
     },
     {
       name: "Barbeiros",
-      url: PATHS.OWNER.BARBERS,
+      url: PATHS.PANEL.BARBERS,
       icon: UserPlusIcon,
     },
     {
       name: "Serviços",
-      url: PATHS.OWNER.SERVICES,
+      url: PATHS.PANEL.SERVICES,
       icon: WrenchIcon,
     },
     {
       name: "Horários de trabalho",
-      url: PATHS.OWNER.WORKED_HOURS,
+      url: PATHS.PANEL.WORKED_HOURS,
       icon: ClockIcon,
     },
   ],
