@@ -67,7 +67,7 @@ export function DashboardContent({
         />
       </div>
       <div className="px-4 lg:px-6">
-        <Link href={PATHS.OWNER.SCHEDULE}>
+        <Link href={PATHS.PANEL.SCHEDULE}>
           <Button variant="outline">
             Ver agendamentos (calendário e tabela)
           </Button>

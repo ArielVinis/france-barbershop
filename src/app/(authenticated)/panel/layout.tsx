@@ -1,5 +1,5 @@
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
-import { AppSidebar } from "@/src/app/(authenticated)/panel/_components/app-sidebar"
+import { AppSidebar } from "@/src/components/templates/Sidebar/app-sidebar"
 import { SiteHeader } from "@/src/components/templates/SiteHeader/site-header"
 import { getCurrentUser } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
@@ -21,7 +21,7 @@ export default async function OwnerLayout({
         barbershops={owner.barbershops}
       />
       <SidebarInset>
-        <SiteHeader title="Painel do proprietário" />
+        <SiteHeader title="Painel interno" />
         <div className="flex flex-1 flex-col">{children}</div>
       </SidebarInset>
     </SidebarProvider>
