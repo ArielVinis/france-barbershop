@@ -30,7 +30,7 @@ export default async function Return({ searchParams }: ReturnProps) {
   const customerEmail = session.customer_details?.email ?? null
 
   if (status === "open") {
-    return redirect(PATHS.OWNER.HOME)
+    return redirect(PATHS.PANEL.ROOT)
   }
 
   if (status === "expired") {
@@ -38,7 +38,7 @@ export default async function Return({ searchParams }: ReturnProps) {
       <section id="expired">
         <p>A sessão de pagamento expirou. Por favor, tente novamente.</p>
         <Button asChild>
-          <Link href={PATHS.HOME}>Voltar para a página de checkout</Link>
+          <Link href={PATHS.ROOT}>Voltar para a página de checkout</Link>
         </Button>
       </section>
     )
@@ -67,7 +67,7 @@ export default async function Return({ searchParams }: ReturnProps) {
             </div>
             <div className="pt-4">
               <Button variant="outline" asChild>
-                <Link href={PATHS.OWNER.HOME}>
+                <Link href={PATHS.PANEL.ROOT}>
                   <HomeIcon />
                   Acessar o painel do proprietário
                 </Link>
