@@ -35,10 +35,34 @@ Camada de dados (Prisma: dashboards, bookings, etc.)
 | Regra usuário ↔ barbeiro             | `src/lib/authz/barber-for-user.ts` (`getBarberForUser`) |
 | Re-export legível nas features owner | `@/src/lib/authz/barbershop-for-owner` → re-exporta `lib/authz`   |
 | Barrel `authz`                       | `src/lib/authz/index.ts` — re-exporta política + tipos do painel  |
+| Helpers de query `shopId` (painel)   | `src/lib/panel/shop-query.ts` (`SHOP_QUERY_PARAM`, `resolveShopIdForAggregate`, `resolveScopedShopIdOrRedirect`) |
+| Seletor de loja (header)             | `src/components/templates/Panel/panel-shop-selector.tsx`        |
 | Módulo owner (dados/ações)           | `src/features/owner/_data/`, `src/features/owner/_actions/`       |
 | Módulo barbeiro                      | `src/features/barber/_data/`, `src/features/barber/_actions/`     |
 
 Imports novos podem usar `@/src/lib/authz`.
+
+## Política de `shopId` na URL (Fase 2.2)
+
+Parâmetro canónico: **`shopId`** (não `barbershop`).
+
+| Tipo de rota | Exemplos | Comportamento |
+| ------------ | -------- | ------------- |
+| **Agregada** | `/panel`, `/panel/schedule` | Com **várias** lojas: `shopId` ausente ou `all` → visão “todas”; `shopId=<uuid>` → filtra essa loja. Com **uma** loja: comportamento efetivo é sempre essa loja; a UI normaliza a URL para `shopId=<id>`. |
+| **Escopada** | `/panel/services`, `/panel/barbers`, `/panel/worked-hours` | Sempre uma loja explícita. Com **uma** loja: essa é a padrão. Com **várias**: `shopId` inválido ou ausente → **redirect** para a mesma rota com `shopId` da primeira loja (params restantes preservados). |
+
+**`resolvePanelContext`:** pensado para ações **escopadas** (mutação com uma barbearia). Para OWNER, `shopId` vazio ou `all` → `null` (use agregação na página, não este helper). Para BARBER, o escopo vem do vínculo na base, não do query param.
+
+## Matriz de capacidades OWNER vs BARBER (produto)
+
+| Área | OWNER | BARBER |
+| ---- | ----- | ------ |
+| Troca de loja no painel (`shopId`) | Sim (várias lojas) | Não aplicável no layout atual (painel = OWNER) |
+| Dashboard / agenda agregados | Sim (`resolveShopIdForAggregate`) | Futuro: métricas só do próprio barbeiro |
+| Serviços, barbeiros, horário da loja | CRUD / gestão via loja escopada | Regra desejada: sem gestão ampla da loja; só o que o produto expuser (ex.: própria agenda) |
+| Dados | `getBarbershopForOwner` + `shopId` validado | `getBarberForUser` → `barberId` + `barbershopId` fixos da sessão |
+
+Quando o painel passar a ser partilhado com BARBER, alinhar rotas e `resolvePanelContext` com esta matriz (gates por `requireRole` + regras em queries).
 
 ## TODOs
 
@@ -54,8 +78,8 @@ Marque `[x]` conforme for concluindo.
 
 ### Fase 2 — Resolver contexto do painel
 
-- [x] **2.1** `resolvePanelContext(user, input)` implementado em `src/lib/authz/resolve-panel-context.ts` (OWNER exige `barbershopId`; BARBER resolve contexto via `getBarberForUser`).
-- [ ] **2.2** Para OWNER com várias barbearias, definir regra: barbearia padrão vs obrigatoriedade de `barbershopId` na rota (alinhar com UI).
+- [x] **2.1** `resolvePanelContext(user, input)` implementado em `src/lib/authz/resolve-panel-context.ts` (OWNER exige `shopId` válido; BARBER resolve contexto via `getBarberForUser`).
+- [x] **2.2** Regra de URL e escopo (ver secção **Política de `shopId` na URL** abaixo): agregado vs escopado, padrão com uma loja, seletor no header.
 - [ ] **2.3** Usar `resolvePanelContext` nas Server Actions que hoje ramificam `if (role === OWNER)` / `BARBER` manualmente.
 
 ### Fase 3 — Camada de dados
@@ -161,8 +185,8 @@ import { getBarberForUser } from "./barber-for-user"
 import type { PanelContext } from "@/src/types/panel-context"
 
 type ResolveInput = {
-  /** Opcional: filtro de barbearia para OWNER (URL, form, etc.) */
-  barbershopId?: string
+  /** `shopId` da URL ou formulário (OWNER escopado) */
+  shopId?: string
 }
 
 export async function resolvePanelContext(
@@ -170,11 +194,9 @@ export async function resolvePanelContext(
   input: ResolveInput,
 ): Promise<PanelContext | null> {
   if (user.role === "OWNER") {
-    if (!input.barbershopId) {
-      // TODO: implementar “barbearia padrão” ou exigir ID — ver Fase 2.2
-      return null
-    }
-    const shop = await getBarbershopForOwner(user.id, input.barbershopId)
+    const raw = input.shopId?.trim()
+    if (!raw || raw === "all") return null
+    const shop = await getBarbershopForOwner(user.id, raw)
     if (!shop) return null
     return { role: "OWNER", userId: user.id, barbershopId: shop.id }
   }
@@ -206,9 +228,9 @@ import { resolvePanelContext } from "@/src/lib/authz/resolve-panel-context"
 
 export async function loadDashboardAction(formData: FormData) {
   const user = await getCurrentUser()
-  const barbershopId = formData.get("barbershopId")?.toString()
+  const shopId = formData.get("shopId")?.toString()
 
-  const ctx = await resolvePanelContext(user, { barbershopId })
+  const ctx = await resolvePanelContext(user, { shopId })
   if (!ctx) {
     return {
       success: false as const,
@@ -276,4 +298,4 @@ Ex.: `get-owner-bookings.ts` e `get-owner-dashboard-stats.ts` recebem `barbersho
 - Tratar **“R = Rule”** como camada **`src/lib/authz`** com funções pequenas e testáveis; tratar **papel** como **gate** em rota/action e como ramo em `resolvePanelContext`.
 - Evitar um único motor de regras genérico (estilo PDP completo) **até** o produto exigir muitas regras variáveis — YAGNI. Se no futuro as regras explodirem, aí se avalia biblioteca ou tabela de políticas.
 
-Quando avançar na Fase 2.2, atualize este documento com a regra exata de “barbearia padrão” vs `barbershopId` obrigatório.
+A regra de URL e padrão de loja está descrita em **Política de `shopId` na URL**.
