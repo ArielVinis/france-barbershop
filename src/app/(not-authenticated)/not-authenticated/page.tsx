@@ -7,7 +7,7 @@ export default async function NotAuthenticatedPage({
   searchParams: Promise<{ callbackUrl?: string }>
 }) {
   const params = await searchParams
-  const callbackUrl = params.callbackUrl ?? PATHS.HOME
+  const callbackUrl = params.callbackUrl ?? PATHS.ROOT
 
   return <NotAuthenticatedClient callbackUrl={callbackUrl} />
 }

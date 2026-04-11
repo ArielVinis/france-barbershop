@@ -64,7 +64,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
           className="absolute left-4 top-4"
           asChild
         >
-          <Link href={PATHS.HOME}>
+          <Link href={PATHS.ROOT}>
             <ChevronLeftIcon />
           </Link>
         </Button>
