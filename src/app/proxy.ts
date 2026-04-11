@@ -15,18 +15,10 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(notAuthenticated)
   }
 
-  // /owner/* - requer role OWNER (matcher já exclui /dev/owner)
-  if (pathname.startsWith(PATHS.OWNER.HOME)) {
+  // /panel/* — hoje o layout e dados são de proprietário (OWNER)
+  if (pathname.startsWith(PATHS.PANEL.ROOT)) {
     const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
     if (user.role !== "OWNER") {
-      return NextResponse.redirect(notAuthorized)
-    }
-  }
-
-  // /barber/* - requer role BARBER
-  if (pathname.startsWith(PATHS.BARBER.HOME)) {
-    const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
-    if (user.role !== "BARBER") {
       return NextResponse.redirect(notAuthorized)
     }
   }
@@ -35,5 +27,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/owner/:path*", "/barber/:path*"],
+  matcher: ["/panel/:path*"],
 }
