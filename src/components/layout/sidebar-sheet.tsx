@@ -2,7 +2,6 @@
 
 import { Button } from "../ui/button"
 import {
-  Building2,
   CalendarIcon,
   HomeIcon,
   LogInIcon,
@@ -35,7 +34,7 @@ const SidebarSheet = () => {
   const [signInDialogIsOpen, setSignInDialogIsOpen] = useState(false)
   const handleBookingsClick = () => {
     if (data?.user) {
-      return router.push(PATHS.BOOKINGS.HOME)
+      return router.push(PATHS.BOOKINGS.ROOT)
     }
     return setSignInDialogIsOpen(true)
   }
@@ -90,7 +89,7 @@ const SidebarSheet = () => {
         <div className="flex flex-col gap-2 border-b border-solid py-5">
           <SheetClose asChild>
             <Button className="justify-start gap-2" variant="ghost" asChild>
-              <Link href={PATHS.HOME}>
+              <Link href={PATHS.ROOT}>
                 <HomeIcon size={18} />
                 Início
               </Link>
@@ -104,22 +103,12 @@ const SidebarSheet = () => {
             <CalendarIcon size={18} />
             Agendamentos
           </Button>
-          {(data?.user as { role?: string })?.role === "BARBER" && (
+          {(data?.user?.role === "BARBER" || data?.user?.role === "OWNER") && (
             <SheetClose asChild>
               <Button className="justify-start gap-2" variant="ghost" asChild>
-                <Link href={PATHS.BARBER.HOME}>
+                <Link href={PATHS.PANEL.ROOT}>
                   <SquareScissors size={18} />
-                  Painel do barbeiro
-                </Link>
-              </Button>
-            </SheetClose>
-          )}
-          {(data?.user as { role?: string })?.role === "OWNER" && (
-            <SheetClose asChild>
-              <Button className="justify-start gap-2" variant="ghost" asChild>
-                <Link href={PATHS.OWNER.HOME}>
-                  <Building2 size={18} />
-                  Painel do proprietário
+                  Painel interno
                 </Link>
               </Button>
             </SheetClose>
