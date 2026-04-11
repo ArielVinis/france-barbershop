@@ -5,11 +5,15 @@ import { getOwnerServices } from "@/src/features/owner/_data/get-owner-services"
 import { OwnerServicesTable } from "./used/owner-services-table"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
+import {
+  flattenSearchParams,
+  resolveScopedShopIdOrRedirect,
+} from "@/src/lib/panel/shop-query"
 
 export default async function OwnerServicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ barbershop?: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const user = await getCurrentUser()
   const owner = await getOwnerByUserId(user.id)
@@ -18,7 +22,7 @@ export default async function OwnerServicesPage({
     owner.user.email,
   )
   if (!hasSubscriptionAccess) {
-    redirect(PATHS.OWNER.SUBSCRIPTION)
+    redirect(PATHS.PANEL.SUBSCRIPTION)
   }
 
   if (owner.barbershops.length === 0) {
@@ -34,14 +38,17 @@ export default async function OwnerServicesPage({
     )
   }
 
-  const params = await searchParams
-  const barbershopId =
-    params.barbershop &&
-    owner.barbershops.some((b) => b.id === params.barbershop)
-      ? params.barbershop
-      : undefined
+  const raw = await searchParams
+  const flat = flattenSearchParams(raw)
+  const ids = owner.barbershops.map((b) => b.id)
+  const shopId = resolveScopedShopIdOrRedirect(
+    flat.shopId,
+    ids,
+    PATHS.PANEL.SERVICES,
+    flat,
+  )
 
-  const services = await getOwnerServices(user.id, barbershopId)
+  const services = await getOwnerServices(user.id, shopId)
 
   return (
     <div className="flex flex-1 flex-col">
@@ -53,6 +60,7 @@ export default async function OwnerServicesPage({
               id: b.id,
               name: b.name,
             }))}
+            selectedBarbershopId={shopId}
           />
         </div>
       </div>

@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { PATHS } from "@/src/constants/PATHS"
+import { SHOP_QUERY_PARAM } from "@/src/lib/panel/shop-query"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -94,6 +96,7 @@ export function OwnerBarbershopHoursClient({
   initialBlockedSlots,
 }: OwnerBarbershopHoursClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [schedules, setSchedules] = useState<ScheduleRow[]>(() =>
     buildScheduleRows(initialSchedules),
   )
@@ -111,7 +114,9 @@ export function OwnerBarbershopHoursClient({
   const [isPendingBlock, startBlockTransition] = useTransition()
 
   const handleBarbershopChange = (nextId: string) => {
-    router.push(`/owner/horarios?barbershop=${nextId}`)
+    const next = new URLSearchParams(searchParams.toString())
+    next.set(SHOP_QUERY_PARAM, nextId)
+    router.push(`${PATHS.PANEL.WORKED_HOURS}?${next.toString()}`)
   }
 
   const handleScheduleChange = (

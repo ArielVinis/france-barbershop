@@ -11,13 +11,14 @@ import { OwnerScheduleCalendar } from "./used/owner-schedule-calendar"
 import { OwnerBookingsTable } from "../dashboard/used/dashboard-content/owner-bookings-table"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
+import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
 
 export default async function OwnerSchedulePage({
   searchParams,
 }: {
   searchParams: Promise<{
     period?: string
-    barbershop?: string
+    shopId?: string
     barber?: string
     viewDate?: string
   }>
@@ -29,7 +30,7 @@ export default async function OwnerSchedulePage({
     owner.user.email,
   )
   if (!hasSubscriptionAccess) {
-    redirect(PATHS.OWNER.SUBSCRIPTION)
+    redirect(PATHS.PANEL.SUBSCRIPTION)
   }
 
   if (owner.barbershops.length === 0) {
@@ -60,11 +61,11 @@ export default async function OwnerSchedulePage({
     params.period === "month"
       ? params.period
       : "week"
+  const barbershopIds = owner.barbershops.map((b) => b.id)
+  const shopResolved = resolveShopIdForAggregate(params.shopId, barbershopIds)
   const barbershopId =
-    params.barbershop &&
-    owner.barbershops.some((b) => b.id === params.barbershop)
-      ? params.barbershop
-      : null
+    shopResolved === "all" || shopResolved === null ? null : shopResolved
+
   const barbers = await getOwnerBarbers(user.id, barbershopId ?? undefined)
   const barberId =
     params.barber && barbers.some((b) => b.id === params.barber)
@@ -79,7 +80,6 @@ export default async function OwnerSchedulePage({
       })()
     : new Date()
 
-  const barbershopIds = owner.barbershops.map((b) => b.id)
   const dateForTable = new Date()
 
   const [bookingsForTable, bookingsForCalendar] = await Promise.all([
@@ -97,7 +97,6 @@ export default async function OwnerSchedulePage({
     }),
   ])
 
-  const barbershops = owner.barbershops.map((b) => ({ id: b.id, name: b.name }))
   const barbersForFilter = barbers.map((b) => ({
     id: b.id,
     name: b.user.name ?? "Barbeiro",
@@ -114,7 +113,7 @@ export default async function OwnerSchedulePage({
   return (
     <div className="flex flex-1 flex-col gap-6">
       <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
-        <ScheduleFilters barbershops={barbershops} barbers={barbersForFilter} />
+        <ScheduleFilters barbers={barbersForFilter} />
       </Suspense>
 
       <div className="px-4 lg:px-6">

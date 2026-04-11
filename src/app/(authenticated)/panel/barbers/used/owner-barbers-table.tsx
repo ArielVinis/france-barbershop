@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
   CalendarIcon,
@@ -62,11 +62,13 @@ type BarberRow = Awaited<
 type OwnerBarbersTableProps = {
   barbers: BarberRow[]
   barbershops: { id: string; name: string }[]
+  selectedBarbershopId: string
 }
 
 export function OwnerBarbersTable({
   barbers,
   barbershops,
+  selectedBarbershopId,
 }: OwnerBarbersTableProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -75,13 +77,18 @@ export function OwnerBarbersTable({
     barberId: string
     name: string
   } | null>(null)
-  const [addBarbershopId, setAddBarbershopId] = useState<string>("")
+  const [addBarbershopId, setAddBarbershopId] =
+    useState<string>(selectedBarbershopId)
   const [addEmail, setAddEmail] = useState("")
   const [scheduleDialogBarberId, setScheduleDialogBarberId] = useState<
     string | null
   >(null)
   const [scheduleData, setScheduleData] = useState<BarberForOwner | null>(null)
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
+
+  useEffect(() => {
+    setAddBarbershopId(selectedBarbershopId)
+  }, [selectedBarbershopId])
 
   useEffect(() => {
     if (!scheduleDialogBarberId) return
@@ -108,7 +115,7 @@ export function OwnerBarbersTable({
         await createBarberOwner(addBarbershopId, addEmail.trim())
         toast.success("Barbeiro vinculado com sucesso")
         setAddOpen(false)
-        setAddBarbershopId("")
+        setAddBarbershopId(selectedBarbershopId)
         setAddEmail("")
         router.refresh()
       } catch (e) {
@@ -150,7 +157,6 @@ export function OwnerBarbersTable({
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 lg:px-6">
         <h2 className="text-lg font-semibold">Gestão de barbeiros</h2>
         <div className="flex items-center gap-2">
-          <BarbershopFilter barbershops={barbershops} />
           <Button onClick={() => setAddOpen(true)} size="sm">
             <PlusIcon className="mr-2 h-4 w-4" />
             Adicionar barbeiro
@@ -358,40 +364,5 @@ export function OwnerBarbersTable({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
-
-function BarbershopFilter({
-  barbershops,
-}: {
-  barbershops: { id: string; name: string }[]
-}) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const value = searchParams.get("barbershop") ?? "all"
-
-  const setBarbershop = (id: string) => {
-    const next = new URLSearchParams(searchParams.toString())
-    if (id === "all") next.delete("barbershop")
-    else next.set("barbershop", id)
-    router.push(`/owner/barbers?${next.toString()}`)
-  }
-
-  if (barbershops.length <= 1) return null
-
-  return (
-    <Select value={value} onValueChange={setBarbershop}>
-      <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Barbearia" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Todas</SelectItem>
-        {barbershops.map((b) => (
-          <SelectItem key={b.id} value={b.id}>
-            {b.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   )
 }

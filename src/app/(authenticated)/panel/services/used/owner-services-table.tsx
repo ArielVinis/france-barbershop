@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useTransition, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
@@ -50,6 +50,8 @@ type ServiceRow = Awaited<
 type OwnerServicesTableProps = {
   services: ServiceRow[]
   barbershops: { id: string; name: string }[]
+  /** Loja ativa (query `shopId`); pré-preenche novo serviço */
+  selectedBarbershopId: string
 }
 
 const DEFAULT_IMAGE =
@@ -65,6 +67,7 @@ function formatPrice(value: number) {
 export function OwnerServicesTable({
   services,
   barbershops,
+  selectedBarbershopId,
 }: OwnerServicesTableProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -76,13 +79,18 @@ export function OwnerServicesTable({
   } | null>(null)
 
   const [addForm, setAddForm] = useState({
-    barbershopId: "",
+    barbershopId: selectedBarbershopId,
     name: "",
     description: "",
     imageUrl: "",
     price: "",
     durationMinutes: "",
   })
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAddForm((prev) => ({ ...prev, barbershopId: selectedBarbershopId }))
+  }, [selectedBarbershopId])
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -119,7 +127,7 @@ export function OwnerServicesTable({
         toast.success("Serviço criado")
         setAddOpen(false)
         setAddForm({
-          barbershopId: "",
+          barbershopId: selectedBarbershopId,
           name: "",
           description: "",
           imageUrl: "",
@@ -200,7 +208,6 @@ export function OwnerServicesTable({
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 lg:px-6">
         <h2 className="text-lg font-semibold">Gestão de serviços</h2>
         <div className="flex items-center gap-2">
-          <BarbershopFilter barbershops={barbershops} />
           <Button onClick={() => setAddOpen(true)} size="sm">
             <PlusIcon className="mr-2 h-4 w-4" />
             Adicionar serviço
@@ -494,40 +501,5 @@ export function OwnerServicesTable({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
-
-function BarbershopFilter({
-  barbershops,
-}: {
-  barbershops: { id: string; name: string }[]
-}) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const value = searchParams.get("barbershop") ?? "all"
-
-  const setBarbershop = (id: string) => {
-    const next = new URLSearchParams(searchParams.toString())
-    if (id === "all") next.delete("barbershop")
-    else next.set("barbershop", id)
-    router.push(`/owner/services?${next.toString()}`)
-  }
-
-  if (barbershops.length <= 1) return null
-
-  return (
-    <Select value={value} onValueChange={setBarbershop}>
-      <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Barbearia" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Todas</SelectItem>
-        {barbershops.map((b) => (
-          <SelectItem key={b.id} value={b.id}>
-            {b.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   )
 }

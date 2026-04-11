@@ -33,7 +33,6 @@ type ChartDistributionData = Awaited<
 >
 
 type DashboardContentProps = {
-  barbershops: { id: string; name: string }[]
   stats: DashboardStats
   periodLabel: string
   chartRevenue: ChartRevenueData
@@ -42,7 +41,6 @@ type DashboardContentProps = {
 }
 
 export function DashboardContent({
-  barbershops,
   stats,
   periodLabel,
   chartRevenue,
@@ -52,7 +50,7 @@ export function DashboardContent({
   return (
     <>
       <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
-        <DashboardFilters barbershops={barbershops} />
+        <DashboardFilters />
       </Suspense>
       <SectionCards stats={stats} periodLabel={periodLabel} />
       <div className="grid gap-4 px-4 lg:grid-cols-2 lg:px-6">

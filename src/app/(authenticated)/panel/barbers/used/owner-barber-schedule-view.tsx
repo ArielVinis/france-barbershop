@@ -162,7 +162,7 @@ export function OwnerBarberScheduleView({
     <div className="space-y-6 px-4 lg:px-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={PATHS.OWNER.BARBERS}>
+          <Link href={`${PATHS.PANEL.BARBERS}?shopId=${barber.barbershop.id}`}>
             <ChevronLeftIcon className="h-4 w-4" />
           </Link>
         </Button>

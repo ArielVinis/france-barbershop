@@ -34,7 +34,7 @@ export function OwnerScheduleCalendar({
     (newDate: Date) => {
       const next = new URLSearchParams(searchParams.toString())
       next.set("viewDate", format(newDate, "yyyy-MM-dd"))
-      router.push(`${PATHS.OWNER.SCHEDULE}?${next.toString()}`)
+      router.push(`${PATHS.PANEL.SCHEDULE}?${next.toString()}`)
     },
     [router, searchParams],
   )

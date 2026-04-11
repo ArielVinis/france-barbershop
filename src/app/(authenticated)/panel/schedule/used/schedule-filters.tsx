@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Select,
   SelectContent,
@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/src/components/ui/select"
 import { Label } from "@/src/components/ui/label"
-import { PATHS } from "@/src/constants/PATHS"
+import { SHOP_QUERY_PARAM } from "@/src/lib/panel/shop-query"
 
 export type PeriodValue = "day" | "week" | "month"
 
@@ -19,45 +19,39 @@ const PERIOD_OPTIONS: { value: PeriodValue; label: string }[] = [
   { value: "month", label: "Este mês" },
 ]
 
-type BarbershopOption = { id: string; name: string }
 type BarberOption = { id: string; name: string; barbershopId: string }
 
 type ScheduleFiltersProps = {
-  barbershops: BarbershopOption[]
   barbers: BarberOption[]
 }
 
-export function ScheduleFilters({
-  barbershops,
-  barbers,
-}: ScheduleFiltersProps) {
+export function ScheduleFilters({ barbers }: ScheduleFiltersProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const period = (searchParams.get("period") as PeriodValue) ?? "week"
-  const barbershopId = searchParams.get("barbershop") ?? "all"
+  const shopId = searchParams.get(SHOP_QUERY_PARAM) ?? "all"
   const barberId = searchParams.get("barber") ?? "all"
 
   const setParams = (updates: {
     period?: string
-    barbershop?: string
     barber?: string
     viewDate?: string
   }) => {
     const next = new URLSearchParams(searchParams.toString())
     if (updates.period != null) next.set("period", updates.period)
-    if (updates.barbershop != null) {
-      next.set("barbershop", updates.barbershop)
-      if (updates.barbershop === "all") next.delete("barber")
+    if (updates.barber != null) {
+      if (updates.barber === "all") next.delete("barber")
+      else next.set("barber", updates.barber)
     }
-    if (updates.barber != null) next.set("barber", updates.barber)
     if (updates.viewDate != null) next.set("viewDate", updates.viewDate)
-    router.push(`${PATHS.OWNER.SCHEDULE}?${next.toString()}`)
+    router.push(`${pathname}?${next.toString()}`)
   }
 
   const barbersFiltered =
-    barbershopId === "all"
+    shopId === "all"
       ? barbers
-      : barbers.filter((b) => b.barbershopId === barbershopId)
+      : barbers.filter((b) => b.barbershopId === shopId)
   const barberValue =
     barberId !== "all" && barbersFiltered.some((b) => b.id === barberId)
       ? barberId
@@ -75,25 +69,6 @@ export function ScheduleFilters({
             {PERIOD_OPTIONS.map((o) => (
               <SelectItem key={o.value} value={o.value}>
                 {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Barbearia</Label>
-        <Select
-          value={barbershopId}
-          onValueChange={(v) => setParams({ barbershop: v, barber: "all" })}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            {barbershops.map((b) => (
-              <SelectItem key={b.id} value={b.id}>
-                {b.name}
               </SelectItem>
             ))}
           </SelectContent>

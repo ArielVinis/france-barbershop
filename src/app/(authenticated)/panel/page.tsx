@@ -12,6 +12,7 @@ import type { OwnerBookingsPeriod } from "@/src/features/owner/_data/get-owner-b
 import { DashboardContent } from "@/src/app/(authenticated)/panel/dashboard/used/dashboard-content"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
+import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
 
 const PERIOD_LABELS: Record<OwnerBookingsPeriod, string> = {
   day: "hoje",
@@ -22,7 +23,7 @@ const PERIOD_LABELS: Record<OwnerBookingsPeriod, string> = {
 export default async function OwnerDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string; barbershop?: string }>
+  searchParams: Promise<{ period?: string; shopId?: string }>
 }) {
   const user = await getCurrentUser()
   const owner = await getOwnerByUserId(user.id)
@@ -64,13 +65,10 @@ export default async function OwnerDashboardPage({
     params.period === "month"
       ? params.period
       : "week"
-  const barbershopId =
-    params.barbershop &&
-    owner.barbershops.some((b) => b.id === params.barbershop)
-      ? params.barbershop
-      : null
-
   const barbershopIds = owner.barbershops.map((b) => b.id)
+  const shopResolved = resolveShopIdForAggregate(params.shopId, barbershopIds)
+  const barbershopId =
+    shopResolved === "all" || shopResolved === null ? null : shopResolved
   const date = new Date()
 
   const [stats, chartRevenue, chartBookings, chartDistribution] =
@@ -100,14 +98,11 @@ export default async function OwnerDashboardPage({
   }
 
   const periodLabel = PERIOD_LABELS[period]
-  const barbershops = owner.barbershops.map((b) => ({ id: b.id, name: b.name }))
-
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <DashboardContent
-            barbershops={barbershops}
             stats={dashboardStats}
             periodLabel={periodLabel}
             chartRevenue={chartRevenue}
