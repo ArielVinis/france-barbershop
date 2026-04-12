@@ -12,17 +12,28 @@ import {
 } from "@/src/components/ui/sidebar"
 import { PATHS } from "@/src/constants/PATHS"
 import Image from "next/image"
-import { sidebarItems } from "@/src/resources/sidebar-items"
+import {
+  getPanelNavMainForRole,
+  type PanelNavRole,
+} from "@/src/resources/sidebar-items"
 import { NavMain } from "@/src/components/templates/Sidebar/nav-main"
-import { NavSection } from "@/src/components/templates/Sidebar/nav-section"
 import { NavUser } from "@/src/components/templates/Sidebar/nav-user"
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  userRole: PanelNavRole
   user: { name?: string | null; image?: string | null; email?: string | null }
   barbershops: { id: string; name: string; slug: string; imageUrl?: string }[]
 }
 
-export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  userRole,
+  user,
+  barbershops,
+  ...props
+}: AppSidebarProps) {
+  const navItems = getPanelNavMainForRole(userRole)
+  const brand = barbershops[0]
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -34,14 +45,15 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
             >
               <Link href={PATHS.ROOT}>
                 <Image
-                  src={barbershops[0].imageUrl ?? "/logo.png"}
-                  alt={barbershops[0].name}
+                  src={brand?.imageUrl ?? "/logo.png"}
+                  alt={brand?.name ?? "France Barber"}
                   width={50}
                   height={50}
                   style={{ width: "auto", height: "auto" }}
+                  loading="eager"
                 />
                 <span className="text-base font-semibold">
-                  {barbershops[0].name ?? "France Barber"}
+                  {brand?.name ?? "France Barber"}
                 </span>
               </Link>
             </SidebarMenuButton>
@@ -49,15 +61,7 @@ export function AppSidebar({ user, barbershops, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={sidebarItems.navMain} />
-        {sidebarItems.sections.map((section: any) => (
-          <NavSection
-            key={section.title}
-            title={section.name}
-            items={section.items}
-          />
-        ))}
-
+        <NavMain items={navItems} />
         {barbershops.length > 0 && (
           <div className="px-2 py-2">
             <p className="mb-1 px-2 text-xs font-medium uppercase text-muted-foreground">

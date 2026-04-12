@@ -8,8 +8,9 @@ import {
   SidebarMenuItem,
 } from "@/src/components/ui/sidebar"
 import Link from "next/link"
+import type { PanelNavMainItem } from "@/src/resources/sidebar-items"
 
-export function NavMain({ items }: { items: any[] }) {
+export function NavMain({ items }: { items: PanelNavMainItem[] }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
