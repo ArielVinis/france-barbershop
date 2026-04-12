@@ -25,7 +25,7 @@ export async function createBarberOwner(
     include: { barber: true },
   })
   if (!existingUser)
-    throw new Error("Nenhum usuário encontrado com este e-mail")
+    throw new Error("Nenhum usuário encontrado no sistema com este e-mail")
   if (existingUser.barber)
     throw new Error("Este usuário já é barbeiro em outra barbearia")
 

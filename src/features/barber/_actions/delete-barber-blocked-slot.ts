@@ -19,7 +19,6 @@ export async function deleteBarberBlockedSlot(slotId: string) {
     where: { id: slotId },
   })
 
-  revalidatePath(PATHS.PANEL.WORKED_HOURS)
-  revalidatePath(PATHS.PANEL.BARBERS)
   revalidatePath(PATHS.PANEL.SCHEDULE)
+  revalidatePath(PATHS.PANEL.ROOT)
 }

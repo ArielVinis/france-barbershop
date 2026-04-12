@@ -79,7 +79,6 @@ export async function upsertBarberSchedules(inputs: BarberScheduleInput[]) {
     }
   }
 
-  revalidatePath(PATHS.PANEL.WORKED_HOURS)
-  revalidatePath(PATHS.PANEL.BARBERS)
   revalidatePath(PATHS.PANEL.SCHEDULE)
+  revalidatePath(PATHS.PANEL.ROOT)
 }

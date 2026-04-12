@@ -62,5 +62,5 @@ export async function updateBookingStatus(
   })
 
   revalidatePath(PATHS.PANEL.SCHEDULE)
-  revalidatePath(PATHS.PANEL.BARBERS)
+  revalidatePath(PATHS.PANEL.ROOT)
 }

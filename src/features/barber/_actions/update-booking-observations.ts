@@ -28,5 +28,5 @@ export async function updateBookingObservations(
   })
 
   revalidatePath(PATHS.PANEL.SCHEDULE)
-  revalidatePath(PATHS.PANEL.BARBERS)
+  revalidatePath(PATHS.PANEL.ROOT)
 }

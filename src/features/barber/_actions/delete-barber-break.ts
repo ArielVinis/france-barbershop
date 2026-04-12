@@ -19,7 +19,6 @@ export async function deleteBarberBreak(breakId: string) {
     where: { id: breakId },
   })
 
-  revalidatePath(PATHS.PANEL.WORKED_HOURS)
-  revalidatePath(PATHS.PANEL.BARBERS)
   revalidatePath(PATHS.PANEL.SCHEDULE)
+  revalidatePath(PATHS.PANEL.ROOT)
 }
