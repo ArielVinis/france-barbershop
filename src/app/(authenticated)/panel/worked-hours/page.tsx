@@ -9,6 +9,7 @@ import {
   flattenSearchParams,
   resolveScopedShopIdOrRedirect,
 } from "@/src/lib/panel/shop-query"
+import { redirectBarberFromOwnerOnlyRoutes } from "@/src/lib/panel/ensure-panel-owner"
 
 export default async function OwnerHorariosPage({
   searchParams,
@@ -16,6 +17,7 @@ export default async function OwnerHorariosPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const user = await getCurrentUser()
+  redirectBarberFromOwnerOnlyRoutes(user)
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
   const hasSubscriptionAccess = await hasOwnerSubscriptionAccess(

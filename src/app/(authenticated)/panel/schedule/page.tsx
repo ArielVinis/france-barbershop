@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/lib/auth"
+import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
+import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookings"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
 import { getOwnerBookings } from "@/src/features/owner/_data/get-owner-bookings"
@@ -9,6 +11,7 @@ import { bookingsToCalendarEvents } from "@/src/lib/booking-calendar-utils"
 import { ScheduleFilters } from "./used/schedule-filters"
 import { OwnerScheduleCalendar } from "./used/owner-schedule-calendar"
 import { OwnerBookingsTable } from "../dashboard/used/dashboard-content/owner-bookings-table"
+import { BarberBookingsTable } from "./used/barber-bookings-table"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
 import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
@@ -24,6 +27,66 @@ export default async function OwnerSchedulePage({
   }>
 }) {
   const user = await getCurrentUser()
+
+  if (user.role === "BARBER") {
+    const barber = await getBarberByUserId(user.id)
+    if (!barber) return null
+
+    const params = await searchParams
+    const period =
+      params.period === "day" ||
+      params.period === "week" ||
+      params.period === "month"
+        ? params.period
+        : "week"
+    const viewDateParam = params.viewDate
+    const viewDate = viewDateParam
+      ? (() => {
+          const d = new Date(viewDateParam)
+          return Number.isNaN(d.getTime()) ? new Date() : d
+        })()
+      : new Date()
+    const dateForTable = new Date()
+
+    const [bookingsForTable, bookingsForCalendar] = await Promise.all([
+      getBarberBookings(barber.id, period, dateForTable),
+      getBarberBookings(barber.id, "month", viewDate),
+    ])
+
+    const calendarEvents = bookingsToCalendarEvents(
+      bookingsForCalendar.map((b) => ({
+        ...b,
+        date: b.date,
+      })),
+    )
+
+    return (
+      <div className="flex flex-1 flex-col gap-6">
+        <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
+          <ScheduleFilters barbers={[]} variant="barber" />
+        </Suspense>
+
+        <div className="px-4 lg:px-6">
+          <h2 className="mb-1 text-lg font-semibold">Calendário</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Os seus agendamentos no mês visível.
+          </p>
+          <OwnerScheduleCalendar events={calendarEvents} viewDate={viewDate} />
+        </div>
+
+        <div className="px-4 lg:px-6">
+          <h2 className="mb-1 text-lg font-semibold">Meus agendamentos</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Filtrar por período. Atualize estado pelo menu de cada linha.
+          </p>
+          <BarberBookingsTable
+            bookings={JSON.parse(JSON.stringify(bookingsForTable))}
+          />
+        </div>
+      </div>
+    )
+  }
+
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
   const hasSubscriptionAccess = await hasOwnerSubscriptionAccess(

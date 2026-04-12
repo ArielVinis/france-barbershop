@@ -15,10 +15,9 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(notAuthenticated)
   }
 
-  // /panel/* — hoje o layout e dados são de proprietário (OWNER)
   if (pathname.startsWith(PATHS.PANEL.ROOT)) {
     const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
-    if (user.role !== "OWNER") {
+    if (user.role !== "OWNER" && user.role !== "BARBER") {
       return NextResponse.redirect(notAuthorized)
     }
   }

@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/lib/auth"
+import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
+import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookings"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { getOwnerDashboardStats } from "@/src/features/owner/_data/get-owner-dashboard-stats"
 import {
@@ -10,6 +12,7 @@ import {
 } from "@/src/features/owner/_data/get-owner-chart-data"
 import type { OwnerBookingsPeriod } from "@/src/features/owner/_data/get-owner-bookings"
 import { DashboardContent } from "@/src/app/(authenticated)/panel/dashboard/used/dashboard-content"
+import { BarberDashboardContent } from "@/src/app/(authenticated)/panel/dashboard/used/barber-dashboard-content"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
 import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
@@ -26,6 +29,30 @@ export default async function OwnerDashboardPage({
   searchParams: Promise<{ period?: string; shopId?: string }>
 }) {
   const user = await getCurrentUser()
+
+  if (user.role === "BARBER") {
+    const barber = await getBarberByUserId(user.id)
+    if (!barber) return null
+    const weekBookings = await getBarberBookings(barber.id, "week", new Date())
+    const preview = weekBookings.map((b) => ({
+      id: b.id,
+      date: b.date,
+      user: { name: b.user.name ?? "Cliente" },
+      service: { name: b.service.name },
+    }))
+    return (
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <BarberDashboardContent
+            barberName={barber.user.name ?? "Barbeiro"}
+            barbershopName={barber.barbershop.name}
+            weekBookings={preview}
+          />
+        </div>
+      </div>
+    )
+  }
+
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
   const hasSubscriptionAccess = await hasOwnerSubscriptionAccess(

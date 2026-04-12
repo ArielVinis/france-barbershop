@@ -23,9 +23,14 @@ type BarberOption = { id: string; name: string; barbershopId: string }
 
 type ScheduleFiltersProps = {
   barbers: BarberOption[]
+  /** Barbeiro logado: só período (sem filtro de loja/barbeiro). */
+  variant?: "owner" | "barber"
 }
 
-export function ScheduleFilters({ barbers }: ScheduleFiltersProps) {
+export function ScheduleFilters({
+  barbers,
+  variant = "owner",
+}: ScheduleFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -49,11 +54,15 @@ export function ScheduleFilters({ barbers }: ScheduleFiltersProps) {
   }
 
   const barbersFiltered =
-    shopId === "all"
-      ? barbers
-      : barbers.filter((b) => b.barbershopId === shopId)
+    variant === "owner"
+      ? shopId === "all"
+        ? barbers
+        : barbers.filter((b) => b.barbershopId === shopId)
+      : []
   const barberValue =
-    barberId !== "all" && barbersFiltered.some((b) => b.id === barberId)
+    variant === "owner" &&
+    barberId !== "all" &&
+    barbersFiltered.some((b) => b.id === barberId)
       ? barberId
       : "all"
 
@@ -74,25 +83,27 @@ export function ScheduleFilters({ barbers }: ScheduleFiltersProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Barbeiro</Label>
-        <Select
-          value={barberValue}
-          onValueChange={(v) => setParams({ barber: v })}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {barbersFiltered.map((b) => (
-              <SelectItem key={b.id} value={b.id}>
-                {b.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {variant === "owner" && (
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">Barbeiro</Label>
+          <Select
+            value={barberValue}
+            onValueChange={(v) => setParams({ barber: v })}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {barbersFiltered.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   )
 }
