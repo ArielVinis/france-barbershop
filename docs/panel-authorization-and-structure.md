@@ -1,313 +1,106 @@
-# Painel Owner/Barber: regras de acesso e estrutura
+# Painel unificado: autorização e escopo
 
-Este documento alinha **regras explícitas** (validação de escopo) com o **papel** do usuário (`Role` no Prisma / sessão), propõe uma estrutura de pastas e lista **TODOs** com exemplos de código para implementação incremental.
-
-## Painel unificado (`/panel`)
-
-- **Uma árvore de rotas:** `src/app/(authenticated)/panel/` para OWNER e BARBER.
-- **`src/app/(authenticated)/panel/layout.tsx`:** ramifica por `user.role` — OWNER usa `getOwnerByUserId` + `PanelShopSelector`; BARBER usa `getBarberByUserId`, **sem** seletor de lojas do dono.
-- **Navegação:** `src/resources/sidebar-items.ts` — definições com `roles: ("OWNER" | "BARBER")[]` e **`getPanelNavMainForRole(role)`** filtrada em `AppSidebar` (evita duplicar arrays por papel).
-- **Rotas só OWNER:** `redirectBarberFromOwnerOnlyRoutes` em `src/lib/panel/ensure-panel-owner.ts` nas páginas de serviços, barbeiros, horários da loja; assinatura redireciona BARBER para `/panel`.
-- **Gate HTTP:** `src/app/proxy.ts` — matcher `/panel/:path*` permite `OWNER` e `BARBER` (ajustar se integrar em `middleware` no futuro).
-- **E2E:** `e2e/panel-unauthenticated.spec.ts` + `playwright.config.ts`; `npm run test:e2e` (requer `npm install` e `npx playwright install` na primeira vez).
-
-## Rule-based vs Role-based (e o que usar aqui)
-
-| Abordagem                   | O que é                                                                                                                   | No seu projeto                                                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Role-based**              | Acesso guiado por **papel** fixo (OWNER, BARBER, CLIENT).                                                                 | O enum `Role` e a sessão (`session.user.role`) definem **qual área** do app e **quais ações grossas** são possíveis. |
-| **Rule-based** (“R = Rule”) | **Regras explícitas** do tipo: “só se `barbershopId` pertencer ao usuário”, “só bookings do `barber` ligado a `user.id`”. | Funções de política em `src/lib/authz/` + queries sempre com **IDs já validados**.                                   |
-
-**Recomendação:** usar **os dois juntos**:
-
-1. **Papel (Role)** — roteamento de UI, middleware, e “este endpoint é só OWNER ou só BARBER”.
-2. **Regras** — cada leitura/escrita crítica passa por helpers que implementam a regra de negócio (posse da barbearia, vínculo barbeiro–usuário).
-
-Isso **é** o que foi sugerido antes: não é “só RBAC clássico”; o núcleo seguro são as **regras** sobre recursos. O `Role` só reduz o espaço de regras aplicáveis.
-
-## Arquitetura alvo (resumo)
-
-```
-Sessão (id + role)
-       ↓
-Regras / authz (validar recurso → IDs confiáveis ou erro)
-       ↓
-Camada de dados (Prisma: dashboards, bookings, etc.)
-```
-
-## Estrutura atual (após reorganização)
-
-| Peça                                 | Caminho                                                           |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| Tipos `PanelContext`                 | `src/types/panel-context.ts`                                      |
-| Regra barbearia ↔ owner              | `src/lib/authz/barbershop-for-owner.ts` (`getBarbershopForOwner`) |
-| Regra usuário ↔ barbeiro             | `src/lib/authz/barber-for-user.ts` (`getBarberForUser`) |
-| Re-export legível nas features owner | `@/src/lib/authz/barbershop-for-owner` → re-exporta `lib/authz`   |
-| Barrel `authz`                       | `src/lib/authz/index.ts` — re-exporta política + tipos do painel  |
-| Helpers de query `shopId` (painel)   | `src/lib/panel/shop-query.ts` (`SHOP_QUERY_PARAM`, `resolveShopIdForAggregate`, `resolveScopedShopIdOrRedirect`) |
-| Redirecionar BARBER de rotas só dono | `src/lib/panel/ensure-panel-owner.ts` (`redirectBarberFromOwnerOnlyRoutes`) |
-| Seletor de loja (header)             | `src/components/templates/Panel/panel-shop-selector.tsx`        |
-| Módulo owner (dados/ações)           | `src/features/owner/_data/`, `src/features/owner/_actions/`       |
-| Módulo barbeiro                      | `src/features/barber/_data/`, `src/features/barber/_actions/`     |
-
-Imports novos podem usar `@/src/lib/authz`.
-
-## Política de `shopId` na URL (Fase 2.2)
-
-Parâmetro canónico: **`shopId`** (não `barbershop`).
-
-| Tipo de rota | Exemplos | Comportamento |
-| ------------ | -------- | ------------- |
-| **Agregada** | `/panel`, `/panel/schedule` | Com **várias** lojas: `shopId` ausente ou `all` → visão “todas”; `shopId=<uuid>` → filtra essa loja. Com **uma** loja: comportamento efetivo é sempre essa loja; a UI normaliza a URL para `shopId=<id>`. |
-| **Escopada** | `/panel/services`, `/panel/barbers`, `/panel/worked-hours` | Sempre uma loja explícita. Com **uma** loja: essa é a padrão. Com **várias**: `shopId` inválido ou ausente → **redirect** para a mesma rota com `shopId` da primeira loja (params restantes preservados). |
-
-**`resolvePanelContext`:** pensado para ações **escopadas** (mutação com uma barbearia). Para OWNER, `shopId` vazio ou `all` → `null` (use agregação na página, não este helper). Para BARBER, o escopo vem do vínculo na base, não do query param.
-
-## Matriz de capacidades OWNER vs BARBER (produto)
-
-| Área | OWNER | BARBER |
-| ---- | ----- | ------ |
-| Troca de loja no painel (`shopId`) | Sim (várias lojas; seletor no header) | Não: uma loja (a do vínculo); sem seletor |
-| Dashboard | Agregados / métricas dono (`resolveShopIdForAggregate`, etc.) | Resumo + lista da semana (`getBarberBookings`) |
-| Agenda (`/panel/schedule`) | Calendário + tabela owner (`getOwnerBookings`) | Calendário + `BarberBookingsTable` (`getBarberBookings`) |
-| Serviços, barbeiros, horário da loja | CRUD / gestão via loja escopada | **Sem acesso** — redirect para `/panel` |
-| Dados | `getBarbershopForOwner` + `shopId` validado | `getBarberByUserId` / `requireBarberForSession` + `barberId` nas queries |
-
-`resolvePanelContext` continua a matriz: OWNER escopado com `shopId`; BARBER ignora `shopId` na URL para o contexto.
-
-## TODOs
-
-Marque `[x]` conforme for concluindo.
-
-### Fase 1 — Base de autorização
-
-- [x] **1.1** Criar pasta `src/lib/authz/` e um `index.ts` (re-export) opcional.
-- [x] **1.2** Tipos de contexto do painel em `src/types/panel-context.ts` (union discriminada + `isOwnerContext`).
-- [x] **1.3** `getBarbershopForOwner` canônico em `src/lib/authz/barbershop-for-owner.ts`;
-- [x] **1.4** `getBarberForUser(userId)` canônico em `src/lib/authz/barber-for-user.ts` (retorno mínimo de authz: `{ id, barbershopId }`); `getBarberByUserId` permanece no módulo `features/barber` para carga rica de dados de UI.
-- [x] **1.5** `requireRole(user, allowedRoles)` implementado em `src/lib/authz/require-role.ts` e exportado no barrel `src/lib/authz/index.ts`.
-
-### Fase 2 — Resolver contexto do painel
-
-- [x] **2.1** `resolvePanelContext(user, input)` implementado em `src/lib/authz/resolve-panel-context.ts` (OWNER exige `shopId` válido; BARBER resolve contexto via `getBarberForUser`).
-- [x] **2.2** Regra de URL e escopo (ver secção **Política de `shopId` na URL** abaixo): agregado vs escopado, padrão com uma loja, seletor no header.
-- [ ] **2.3** Usar `resolvePanelContext` nas Server Actions que hoje ramificam `if (role === OWNER)` / `BARBER` manualmente (exemplo: `createServiceOwner` já valida loja via `resolvePanelContext`).
-
-### Fase 3 — Camada de dados
-
-- [ ] **3.1** Garantir que funções `getOwner*` / agregações recebam **apenas** `barbershopId` já validado (assinatura clara nos nomes ou JSDoc).
-- [ ] **3.2** Garantir que funções `getBarber*` recebam `barberId` validado ou derivem sempre de `getBarberForUser`.
-- [ ] **3.3** Revisar queries que aceitam `barbershopId` do cliente sem passar por `getBarbershopForOwner`.
-
-### Fase 4 — UI compartilhada (opcional, paralelo)
-
-- [ ] **4.1** Extrair shell comum (sidebar + header) para componente/feature compartilhada (hoje: `layout.tsx` + `AppSidebar`).
-- [x] **4.2** Navegação por papel: `panelNavMainDefinitions` + `getPanelNavMainForRole` em `src/resources/sidebar-items.ts` + `AppSidebar` com `userRole`.
-
-### Fase 5 — Testes e hardening
-
-- [ ] **5.1** Testes unitários para `getBarbershopForOwner` e `getBarberForUser` (casos: dono errado, barbeiro inexistente).
-- [ ] **5.2** Testes de integração mínimos em 1–2 Server Actions críticas (OWNER com `barbershopId` alheio → negado).
-- [x] **5.3** E2E Playwright: smoke sem sessão em `/panel` (`e2e/panel-unauthenticated.spec.ts`).
+Documento de **direção técnica** — o que nomear, onde colocar a lógica e em que ordem confiar em dados. O detalhe de implementação está no código referenciado.
 
 ---
 
-## Exemplos de código
+## 1. Princípio
 
-### Tipos de contexto (union discriminada)
+- **`Role` (sessão / Prisma):** define **área grossa** (painel owner vs barber vs cliente) e gates de rota/UI.
+- **Regras sobre recursos:** definem **quem pode tocar em que ID**. Toda leitura ou escrita sensível deve usar **IDs já validados** por helpers em `src/lib/authz/` ou equivalente nas features — nunca só o ID que veio do cliente.
 
-```ts
-// src/types/panel-context.ts
-export type PanelContextOwner = {
-  role: "OWNER"
-  userId: string
-  barbershopId: string
-}
-
-export type PanelContextBarber = {
-  role: "BARBER"
-  userId: string
-  barberId: string
-  barbershopId: string
-}
-
-export type PanelContext = PanelContextOwner | PanelContextBarber
-
-export function isOwnerContext(c: PanelContext): c is PanelContextOwner {
-  return c.role === "OWNER"
-}
-```
-
-### Regra: barbearia pertence ao owner
-
-```ts
-// src/lib/authz/barbershop-for-owner.ts
-import { db } from "@/src/lib/prisma"
-
-export async function getBarbershopForOwner(
-  userId: string,
-  barbershopId: string,
-) {
-  return db.barbershop.findFirst({
-    where: {
-      id: barbershopId,
-      owners: { some: { id: userId } },
-    },
-    select: { id: true, slug: true },
-  })
-}
-```
-
-### Regra: barbeiro ligado ao usuário
-
-```ts
-// src/lib/authz/barber-for-user.ts
-import { db } from "@/src/lib/prisma"
-
-export async function getBarberForUser(userId: string) {
-  return db.barber.findFirst({
-    where: { userId },
-    select: { id: true, barbershopId: true },
-  })
-}
-```
-
-### Exigir papel (gate por Role)
-
-```ts
-// src/lib/authz/require-role.ts
-import type { AuthUser } from "@/src/lib/auth"
-
-type AppRole = NonNullable<AuthUser["role"]>
-
-export function requireRole(user: AuthUser, allowed: AppRole[]) {
-  if (!allowed.includes(user.role as AppRole)) {
-    throw new Error("Forbidden")
-  }
-}
-```
-
-### Resolver contexto (regras + papel)
-
-```ts
-// src/lib/authz/resolve-panel-context.ts
-import type { AuthUser } from "@/src/lib/auth"
-import { getBarbershopForOwner } from "./barbershop-for-owner"
-import { getBarberForUser } from "./barber-for-user"
-import type { PanelContext } from "@/src/types/panel-context"
-
-type ResolveInput = {
-  /** `shopId` da URL ou formulário (OWNER escopado) */
-  shopId?: string
-}
-
-export async function resolvePanelContext(
-  user: AuthUser,
-  input: ResolveInput,
-): Promise<PanelContext | null> {
-  if (user.role === "OWNER") {
-    const raw = input.shopId?.trim()
-    if (!raw || raw === "all") return null
-    const shop = await getBarbershopForOwner(user.id, raw)
-    if (!shop) return null
-    return { role: "OWNER", userId: user.id, barbershopId: shop.id }
-  }
-
-  if (user.role === "BARBER") {
-    const barber = await getBarberForUser(user.id)
-    if (!barber) return null
-    return {
-      role: "BARBER",
-      userId: user.id,
-      barberId: barber.id,
-      barbershopId: barber.barbershopId,
-    }
-  }
-
-  return null
-}
-```
-
-### Server Action: orquestração
-
-```ts
-"use server"
-
-import { getCurrentUser } from "@/src/lib/auth"
-import { resolvePanelContext } from "@/src/lib/authz/resolve-panel-context"
-// import { getBarbershopDashboard } from "..."
-// import { getBarberDashboard } from "..."
-
-export async function loadDashboardAction(formData: FormData) {
-  const user = await getCurrentUser()
-  const shopId = formData.get("shopId")?.toString()
-
-  const ctx = await resolvePanelContext(user, { shopId })
-  if (!ctx) {
-    return {
-      success: false as const,
-      error: "Sem permissão ou contexto inválido",
-    }
-  }
-
-  if (ctx.role === "OWNER") {
-    // return { success: true, data: await getBarbershopDashboard(ctx.barbershopId) }
-  }
-  // ctx.role === "BARBER"
-  // return { success: true, data: await getBarberDashboard(ctx.barberId) }
-
-  return { success: false as const, error: "Não implementado" }
-}
-```
+RBAC sozinho não basta: o ponto seguro é **posse** (dono da barbearia, barbeiro ligado ao `user.id`).
 
 ---
 
-## Como as regras aparecem hoje em `src/features/owner`
+## 2. Nomenclatura
 
-O painel do owner **já implementa** o espírito de “regra + recurso”, em quatro formas (vale espelhar para o barbeiro com outro escopo).
+| Nome | Uso |
+|------|-----|
+| **`shopId`** | Query string canónica no painel (**não** usar `barbershop` na URL). |
+| **`barbershopId`** | ID no modelo Prisma / base de dados. |
+| **`PanelContext`** | `src/types/panel-context.ts` — resultado de `resolvePanelContext`: `{ role, userId, barbershopId }` e, se barbeiro, `barberId`. |
+| **`getBarbershopForOwner(userId, barbershopId)`** | Confirma que a loja pertence ao dono. |
+| **`getBarberForUser(userId)`** | Authz mínima: `{ id, barbershopId }` do barbeiro. |
+| **`getBarberByUserId`** | Dados ricos para UI em `features/barber` — não substitui `getBarberForUser` em regras de escrita. |
 
-### 1. Actions: `getCurrentUser` + `findFirst` com vínculo à barbearia
-
-Ex.: `update-booking-status-owner.ts` e `reschedule-booking-owner.ts` carregam o booking só se `service.barbershop.owners` contém `user.id`. É a **regra de posse** na query — não basta conhecer o `bookingId`.
-
-### 2. Actions: validar `barbershopId` antes de mutar
-
-Ex.: `create-service-owner.ts` e `upsert-barbershop-schedules-owner.ts` usam `getBarbershopForOwner` para garantir que o `barbershopId` **pertence ao dono**, depois criam/atualizam registros.
-
-### 3. Data loaders: escopo em lote + filtros opcionais
-
-Ex.: `get-owner-bookings.ts` e `get-owner-dashboard-stats.ts` recebem `barbershopIds` **já limitados** às barbearias do owner (p.ex. via `getOwnerByUserId` na página). Filtros `barbershopId` / `barberId` devem continuar **dentro** desse conjunto (validados na UI ou na action).
-
-### 4. Leitura de um barbeiro específico
-
-`get-barber-for-owner.ts` — `findFirst` com `barber.id` **e** `barbershop.owners` contém `ownerId`. O dono não acessa barbeiro de outra barbearia.
+**Identidade na regra:** para BARBER, queries críticas usam **`Barber.id`** resolvido a partir da sessão, não `User.id` como se fosse o mesmo identificador de agendamento.
 
 ---
 
-## Escopo BARBER: só os dados dele, menos ações
+## 3. Onde está o quê
 
-| Aspecto                                    | OWNER (hoje)                                           | BARBER (regra desejada)                                                                                                    |
-| ------------------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| **Identidade na regra**                    | `user.id` como dono (`owners.some`)                    | Resolver **`Barber.id`** a partir de `User.id` e usar nas queries                                                          |
-| **Agendamentos**                           | Todos da(s) barbearia(s), filtro opcional por barbeiro | Somente `booking.barberId ===` do barbeiro logado                                                                          |
-| **Dashboard / stats**                      | Agregados por barbearia                                | Agregados **só** das linhas do barbeiro (ou métricas omitidas)                                                             |
-| **Serviços / barbeiros / horário da loja** | CRUD e gestão ampla                                    | **Sem** gestão de outros barbeiros ou serviços da loja; só o que o produto permitir (agenda/pausas/bloqueios **próprios**) |
+| Responsabilidade | Local |
+|-------------------|--------|
+| Política de authz + barrel | `src/lib/authz/` (`index.ts`) |
+| Contexto do painel (union) | `src/types/panel-context.ts` |
+| Resolver escopo por papel + `shopId` | `src/lib/authz/resolve-panel-context.ts` |
+| `shopId` na URL (agregado vs escopado) | `src/lib/panel/shop-query.ts` |
+| BARBER não entra em rotas só dono | `src/lib/panel/ensure-panel-owner.ts` |
+| Rotas do painel | `src/app/(authenticated)/panel/` |
+| Nav por papel | `src/resources/sidebar-items.ts` + `AppSidebar` |
+| Dados/ações owner | `src/features/owner/_data/`, `_actions/` |
+| Dados/ações barbeiro | `src/features/barber/_data/`, `_actions/` |
 
-**Resumo:** mesmo padrão técnico do owner (action → usuário → **regra no `where` do Prisma**), trocando “sou dono desta barbearia” por “sou este `Barber`”.
-
----
-
-## Código do barbeiro: `User.id` ≠ `Barber.id`
-
-- Helper **`requireBarberForSession`** em `src/features/barber/_data/require-barber-for-session.ts` — `getCurrentUser` + resolução do barbeiro; as actions de booking, pausas, bloqueios e agenda usam `barber.id` correto.
-- Nome canônico em `authz`: **`getBarberForUser`**. Nome de dados ricos para UI em `features/barber`: **`getBarberByUserId`**.
+Imports novos: `@/src/lib/authz`.
 
 ---
 
-## Melhor opção (resposta direta)
+## 4. Comportamento por papel (produto)
 
-- **Sim:** a linha que você gostou (regras na query + papel na sessão) continua sendo a **melhor opção** para este app.
-- Tratar **“R = Rule”** como camada **`src/lib/authz`** com funções pequenas e testáveis; tratar **papel** como **gate** em rota/action e como ramo em `resolvePanelContext`.
-- Evitar um único motor de regras genérico (estilo PDP completo) **até** o produto exigir muitas regras variáveis — YAGNI. Se no futuro as regras explodirem, aí se avalia biblioteca ou tabela de políticas.
+| | **OWNER** | **BARBER** |
+|---|-----------|------------|
+| Loja(s) | Uma ou várias; seletor no header quando aplicável. | Uma loja — a do vínculo. |
+| `shopId` na URL | Controla filtro / escopo (agregado vs uma loja). | Pode repetir na URL por **paridade de rotas**; **autorização** vem do vínculo. Se cruzares com input, exige `shopId === barbershopId` do contexto. |
+| Dashboard / agenda | Métricas e lista ao nível dono (agregado ou filtrado). | Só o que é **dele** (ex.: bookings do seu `barberId`). |
+| Serviços, barbeiros, horário da loja | Gestão na loja escopada. | Sem acesso — redirecionar (já tratado em `ensure-panel-owner`). |
 
-A regra de URL e padrão de loja está descrita em **Política de `shopId` na URL**.
+---
+
+## 5. Política de `shopId` (URL)
+
+- **Rotas agregadas** (`/panel`, `/panel/schedule`, …): com várias lojas, `shopId` ausente ou `all` = visão “todas”; `shopId=<uuid>` = filtra. Com uma loja, a UI tende a normalizar para o UUID dessa loja.
+- **Rotas escopadas** (serviços, barbeiros, horários da loja): exige uma loja válida; com várias lojas, ausência ou ID inválido → redirect com `shopId` corrigido (ver `shop-query.ts`).
+
+`resolvePanelContext` **não** substitui o agregado: para OWNER, `shopId` vazio ou `all` devolve `null` — nesse modo use `resolveShopIdForAggregate` / loaders que já restringem ao conjunto de lojas do dono.
+
+---
+
+## 6. Escolha do helper (resumo)
+
+1. **Só dono, uma loja explícita** — `getBarbershopForOwner` **ou** `resolvePanelContext` + confirmar `ctx.role === "OWNER"`. Evita duas queries diferentes para a mesma regra.
+2. **Mesma rota ou action para OWNER e BARBER** — `resolvePanelContext` → `if (ctx.role === …)` → funções de dados específicas por papel.
+3. **Dono em modo “todas as lojas”** — não passar pelo caminho “uma loja” de `resolvePanelContext`; usar fluxo agregado já descrito em `shop-query` / loaders.
+
+Para BARBER, `resolvePanelContext` **não** usa `shopId` para inferir loja: o `barbershopId` vem de `getBarberForUser`. Validar `shopId` externo contra esse valor se fizer sentido para o produto.
+
+---
+
+## 7. Padrões no código atual (espelhar no barbeiro)
+
+- **Posse na query:** ex. booking só se `barbershop.owners` contém o dono, ou `getBarbershopForOwner` antes de mutar.
+- **Loaders owner:** listas de IDs de loja já limitadas no layout/página; filtros adicionais não podem ultrapassar esse conjunto.
+- **Barbeiro em session:** `requireBarberForSession` nas actions do módulo `barber`; em authz preferir **`getBarberForUser`** para política explícita.
+
+---
+
+## 8. Roadmap enxuto
+
+**Feito (base):** pasta `authz/`, `PanelContext`, `getBarbershopForOwner`, `getBarberForUser`, `requireRole`, `resolvePanelContext`, `shop-query`, redirect BARBER de rotas só dono, nav por papel, smoke E2E sem sessão.
+
+**A fazer (prioridade sugerida):**
+
+- [ ] Loaders/actions **unificados** (ex.: dashboard) com `resolvePanelContext` + ramos por papel (**TODO 2.3**).
+- [ ] Camada de dados: funções `getOwner*` / `getBarber*` recebem só IDs já validados; revisar aceitação de `barbershopId` cru do cliente (**Fase 3**).
+- [ ] Testes unitários em `getBarbershopForOwner` / `getBarberForUser`; um ou dois testes de integração em actions críticas (**Fase 5**).
+- [ ] (Opcional) Extrair shell comum sidebar + header.
+
+---
+
+## 9. O que evitar
+
+- Aceitar `barbershopId` ou `bookingId` do request **sem** cruzar com dono ou barbeiro na query ou num helper.
+- Misturar **`User.id`** com **`Barber.id`** em filtros de agendamento.
+- Motor de políticas genérico (PDP) antes de existir complexidade real — **YAGNI**.
+
+Para exemplos de assinatura, abrir os ficheiros em `src/lib/authz/` e `src/types/panel-context.ts` (são a fonte de verdade).
