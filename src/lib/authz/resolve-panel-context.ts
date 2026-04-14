@@ -9,15 +9,18 @@ type ResolveInput = {
 }
 
 /**
- * Contexto **escopado** para Server Actions e mutações que exigem uma barbearia
- * explícita e validada.
+ * Contexto **escopado** para Server Actions, mutações com uma barbearia explícita
+ * e loaders/actions **unificadas** (OWNER + BARBER) que ramificam por `ctx.role`.
  *
  * - **OWNER:** exige `shopId` com UUID de uma loja do dono. Valores vazios ou
- *   `all` retornam `null` — visões agregadas (dashboard/agenda) resolvem escopo
- *   com `resolveShopIdForAggregate` / dados agregados, não com este helper.
- * - **BARBER:** ignora `shopId`; escopo vem do vínculo `User` → `Barber` → loja.
+ *   `all` retornam `null` — visões agregadas resolvem escopo com
+ *   `resolveShopIdForAggregate` / dados agregados, não com este helper.
+ * - **BARBER:** o `barbershopId` confiável vem do vínculo `User` → `Barber` → loja
+ *   (`getBarberForUser`); `shopId` em `input` **não** altera o escopo aqui. A URL
+ *   pode ainda trazer `shopId` para paridade com o owner — o chamador deve
+ *   validar `shopId === barber.barbershopId` antes de confiar no valor do cliente.
  *
- * Política resumida: ver `docs/panel-authorization-and-structure.md` (matriz OWNER vs BARBER).
+ * Política: `docs/panel-authorization-and-structure.md`.
  */
 export async function resolvePanelContext(
   user: AuthUser,
