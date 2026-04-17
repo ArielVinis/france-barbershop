@@ -8,21 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card"
-
-export type DashboardStats = {
-  revenue: number
-  revenueBreakdown?: { barbershopName: string; revenue: number }[]
-  bookingsCount: number
-  activeBarbersCount: number
-  topServices: { serviceName: string; count: number }[]
-}
+import type { PanelDashboardStats } from "@/src/types/panel-dashboard"
 
 type SectionCardsProps = {
-  stats: DashboardStats
+  stats: PanelDashboardStats
   periodLabel?: string
+  /** Ajusta textos do cartão “Barbeiros” para vista do próprio barbeiro. */
+  viewerRole?: "OWNER" | "BARBER"
 }
 
-export function SectionCards({ stats, periodLabel }: SectionCardsProps) {
+export function SectionCards({
+  stats,
+  periodLabel,
+  viewerRole = "OWNER",
+}: SectionCardsProps) {
   const periodText = periodLabel ?? "no período"
 
   return (
@@ -79,7 +78,9 @@ export function SectionCards({ stats, periodLabel }: SectionCardsProps) {
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Barbeiros ativos</CardDescription>
+          <CardDescription>
+            {viewerRole === "BARBER" ? "No seu perfil" : "Barbeiros ativos"}
+          </CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
             {stats.activeBarbersCount}
           </CardTitle>
@@ -89,7 +90,9 @@ export function SectionCards({ stats, periodLabel }: SectionCardsProps) {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
           <div className="text-muted-foreground">
-            Cadastrados na(s) barbearia(s)
+            {viewerRole === "BARBER"
+              ? "Apenas os seus agendamentos nesta barbearia"
+              : "Cadastrados na(s) barbearia(s)"}
           </div>
         </CardFooter>
       </Card>

@@ -7,37 +7,20 @@ import { ChartBookings } from "./dashboard-content/chart-bookings"
 import { ChartDistribution } from "./dashboard-content/chart-distribution"
 import { PATHS } from "@/src/constants/PATHS"
 import { Button } from "@/src/components/ui/button"
-
-type DashboardStats = {
-  revenue: number
-  revenueBreakdown: { barbershopName: string; revenue: number }[]
-  bookingsCount: number
-  activeBarbersCount: number
-  topServices: { serviceName: string; count: number }[]
-}
-
-type ChartRevenueData = Awaited<
-  ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-chart-data").getOwnerChartDataRevenue
-  >
->
-type ChartBookingsData = Awaited<
-  ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-chart-data").getOwnerChartDataBookings
-  >
->
-type ChartDistributionData = Awaited<
-  ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-chart-data").getOwnerChartDataDistribution
-  >
->
+import type {
+  PanelDashboardBookingsSeries,
+  PanelDashboardDistribution,
+  PanelDashboardRevenueSeries,
+  PanelDashboardStats,
+} from "@/src/types/panel-dashboard"
 
 type DashboardContentProps = {
-  stats: DashboardStats
+  stats: PanelDashboardStats
   periodLabel: string
-  chartRevenue: ChartRevenueData
-  chartBookings: ChartBookingsData
-  chartDistribution: ChartDistributionData
+  chartRevenue: PanelDashboardRevenueSeries
+  chartBookings: PanelDashboardBookingsSeries
+  chartDistribution: PanelDashboardDistribution
+  viewerRole?: "OWNER" | "BARBER"
 }
 
 export function DashboardContent({
@@ -46,13 +29,18 @@ export function DashboardContent({
   chartRevenue,
   chartBookings,
   chartDistribution,
+  viewerRole = "OWNER",
 }: DashboardContentProps) {
   return (
     <>
       <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
         <DashboardFilters />
       </Suspense>
-      <SectionCards stats={stats} periodLabel={periodLabel} />
+      <SectionCards
+        stats={stats}
+        periodLabel={periodLabel}
+        viewerRole={viewerRole}
+      />
       <div className="grid gap-4 px-4 lg:grid-cols-2 lg:px-6">
         <ChartRevenue data={chartRevenue} periodLabel={periodLabel} />
         <ChartBookings data={chartBookings} periodLabel={periodLabel} />
