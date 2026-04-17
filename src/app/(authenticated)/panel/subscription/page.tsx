@@ -1,7 +1,6 @@
-import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/lib/auth"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { PATHS } from "@/src/constants/PATHS"
+import { BarberSubscriptionPanel } from "@/src/app/(authenticated)/panel/subscription/barber-subscription-panel"
 import {
   fetchSubscriptionByEmail,
   isOwnerSubscriptionAllowed,
@@ -33,7 +32,10 @@ function formatDate(value: number | null | undefined) {
 
 export default async function OwnerSubscriptionPage() {
   const user = await getCurrentUser()
-  if (user.role === "BARBER") redirect(PATHS.PANEL.ROOT)
+  if (user.role === "BARBER") {
+    return <BarberSubscriptionPanel />
+  }
+
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
 
