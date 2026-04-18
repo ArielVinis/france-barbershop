@@ -37,6 +37,9 @@ RBAC sozinho não basta: o ponto seguro é **posse** (dono da barbearia, barbeir
 | Resolver escopo por papel + `shopId`   | `src/lib/authz/resolve-panel-context.ts`        |
 | `shopId` na URL (agregado vs escopado) | `src/lib/panel/shop-query.ts`                   |
 | BARBER não entra em rotas só dono      | `src/lib/panel/ensure-panel-owner.ts`           |
+| `shopId` URL === loja do vínculo (BARBER) | `src/lib/panel/ensure-barber-shop-query.ts` (`ensureBarberShopIdMatchesUrl`) |
+| Filtro OWNER `barbershopId` vs conjunto de lojas | `src/lib/panel/resolve-owner-shop-ids.ts` (`resolveOwnerShopIdsForQueries`) |
+| Contratos tipados lista de lojas dono  | `src/types/panel-data-scope.ts` (`OwnerBarbershopIdList`) |
 | Rotas do painel                        | `src/app/(authenticated)/panel/`                |
 | Nav por papel                          | `src/resources/sidebar-items.ts` + `AppSidebar` |
 | Dados/ações owner                      | `src/features/owner/_data/`, `_actions/`        |
@@ -71,7 +74,7 @@ Imports novos: `@/src/lib/authz`.
 - **Mesmo critério de acesso** ao painel quando a assinatura do **plano da barbearia** não está ativa: redirecionar para `PATHS.PANEL.SUBSCRIPTION` (`/panel/subscription`), tal como o dono.
 - **Conteúdo por papel na rota de subscrição:**
   - **OWNER:** fluxo atual (detalhes Stripe, checkout, portal, etc.).
-  - **BARBER:** ecrã **informativo** — plano expirado ou pagamento em falta; explicar que **só o dono** pode regularizar a assinatura e que, após isso, o barbeiro volta a ter acesso ao painel de gestão. **Não** assumir que o email do barbeiro é o da fatura; a fonte de verdade da subscrição deve seguir a **loja / dono** (ex.: email ou customer associado ao dono da barbearia do vínculo). _Nota de implementação:_ hoje `subscription/page.tsx` redireciona BARBER para `/panel`; alinhar código a esta decisão.
+  - **BARBER:** ecrã **informativo** — plano expirado ou pagamento em falta; explicar que **só o dono** pode regularizar a assinatura e que, após isso, o barbeiro volta a ter acesso ao painel de gestão. **Não** assumir que o email do barbeiro é o da fatura; a fonte de verdade da subscrição deve seguir a **loja / dono** (ex.: email ou customer associado ao dono da barbearia do vínculo). Implementação: `barber-subscription-panel.tsx` + `hasBarbershopSubscriptionAccess`.
 
 ---
 
@@ -110,9 +113,9 @@ Para BARBER, `resolvePanelContext` **não** usa `shopId` para inferir loja: o `b
 
 - [x] Loaders/actions **unificados** (ex.: dashboard) com ramos por papel em `/panel`; métricas/gráficos **paritários** filtrados por `barberId` (`src/features/barber/_data/get-barber-dashboard-stats.ts`, `get-barber-chart-data.ts`). _Nota:_ o ramo BARBER usa `getBarberForUser` + validação de `shopId` na página; `resolvePanelContext` continua disponível para actions/rotas escopadas.
 - [x] Gate de subscrição no painel para **BARBER** (`hasBarbershopSubscriptionAccess` + redirect para `/panel/subscription`) + variante de UI (`barber-subscription-panel.tsx`; ver secção 4.3).
-- [ ] Validação rígida `shopId` === `barbershopId` do vínculo em todas as entradas relevantes para BARBER.
-- [ ] Camada de dados: funções `getOwner*` / `getBarber*` recebem só IDs já validados; revisar aceitação de `barbershopId` cru do cliente (**Fase 3**).
-- [ ] Testes unitários em `getBarbershopForOwner` / `getBarberForUser`; um ou dois testes de integração em actions críticas (**Fase 5**).
+- [x] Validação rígida `shopId` === `barbershopId` do vínculo (BARBER): `ensureBarberShopIdMatchesUrl` em `/panel` (`PanelDashboardBarberSection`) e `/panel/schedule`; agenda alinhada a `getBarberForUser`. Novas rotas BARBER com query devem chamar o mesmo helper.
+- [x] Camada de dados: `OwnerBarbershopIdList` + `resolveOwnerShopIdsForQueries` em leituras agregadas (`getOwnerDashboardStats`, charts, `getOwnerBookings`); filtro explícito inválido → vazio (sem alargar a “todas as lojas”). JSDoc em `getOwnerServices` / `getOwnerBarbers` / `getOwnerBarbershopHours` / `getBarberBookings`; `createBarberOwner` usa `getBarbershopForOwner`.
+- [x] Testes unitários em `getBarbershopForOwner` / `getBarberForUser` e integração em `createBarberOwner` / `createServiceOwner` — `tests/unit/` (`npm run test`). **Fase 5**.
 - [ ] (Opcional) Extrair shell comum sidebar + header.
 
 ---
