@@ -3,7 +3,10 @@ import { cache } from "react"
 
 /**
  * Lista serviços das barbearias do dono.
- * Filtro opcional por barbershopId (deve pertencer ao dono).
+ *
+ * `barbershopId` opcional restringe por ID; a query exige `owners: some(ownerUserId)`,
+ * por isso IDs de lojas alheias devolvem lista vazia (não confundir com validação em mutações:
+ * aí use `getBarbershopForOwner` / `resolvePanelContext`).
  */
 export const getOwnerServices = cache(
   async (ownerUserId: string, barbershopId?: string) => {

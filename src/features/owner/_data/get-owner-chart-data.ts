@@ -11,6 +11,8 @@ import {
   format,
 } from "date-fns"
 import { db } from "@/src/lib/prisma"
+import { resolveOwnerShopIdsForQueries } from "@/src/lib/panel/resolve-owner-shop-ids"
+import type { OwnerBarbershopIdList } from "@/src/types/panel-data-scope"
 
 export type OwnerChartPeriod = "day" | "week" | "month"
 
@@ -25,7 +27,7 @@ export type BookingsChartPoint = { date: string; count: number }
  * Considera apenas bookings com paymentStatus PAID.
  */
 export async function getOwnerChartDataRevenue(
-  barbershopIds: string[],
+  barbershopIds: OwnerBarbershopIdList,
   options: {
     barbershopId?: string | null
     period: OwnerChartPeriod
@@ -33,10 +35,7 @@ export async function getOwnerChartDataRevenue(
   },
 ): Promise<RevenueChartPoint[]> {
   const { period, date, barbershopId } = options
-  const shopIds =
-    barbershopId && barbershopIds.includes(barbershopId)
-      ? [barbershopId]
-      : barbershopIds
+  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
   if (shopIds.length === 0) return []
 
   const start =
@@ -81,7 +80,7 @@ export async function getOwnerChartDataRevenue(
  * Dados para gráfico de quantidade de agendamentos ao longo do tempo (por dia).
  */
 export async function getOwnerChartDataBookings(
-  barbershopIds: string[],
+  barbershopIds: OwnerBarbershopIdList,
   options: {
     barbershopId?: string | null
     period: OwnerChartPeriod
@@ -89,10 +88,7 @@ export async function getOwnerChartDataBookings(
   },
 ): Promise<BookingsChartPoint[]> {
   const { period, date, barbershopId } = options
-  const shopIds =
-    barbershopId && barbershopIds.includes(barbershopId)
-      ? [barbershopId]
-      : barbershopIds
+  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
   if (shopIds.length === 0) return []
 
   const start =
@@ -136,7 +132,7 @@ export type DistributionByBarber = { name: string; count: number }
  * Distribuição de agendamentos por serviço e por barbeiro no período.
  */
 export async function getOwnerChartDataDistribution(
-  barbershopIds: string[],
+  barbershopIds: OwnerBarbershopIdList,
   options: {
     barbershopId?: string | null
     period: OwnerChartPeriod
@@ -147,10 +143,7 @@ export async function getOwnerChartDataDistribution(
   byBarber: DistributionByBarber[]
 }> {
   const { period, date, barbershopId } = options
-  const shopIds =
-    barbershopId && barbershopIds.includes(barbershopId)
-      ? [barbershopId]
-      : barbershopIds
+  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
   if (shopIds.length === 0) {
     return { byService: [], byBarber: [] }
   }

@@ -9,6 +9,8 @@ import {
   endOfMonth,
 } from "date-fns"
 import { db } from "@/src/lib/prisma"
+import { resolveOwnerShopIdsForQueries } from "@/src/lib/panel/resolve-owner-shop-ids"
+import type { OwnerBarbershopIdList } from "@/src/types/panel-data-scope"
 
 export type OwnerStatsPeriod = "day" | "week" | "month"
 
@@ -24,12 +26,8 @@ export type OwnerDashboardStats = {
   topServices: { serviceId: string; serviceName: string; count: number }[]
 }
 
-/**
- * Estatísticas do dashboard do dono: faturamento (PAID), total de agendamentos,
- * barbeiros cadastrados e top 5 serviços por quantidade no período.
- */
 export async function getOwnerDashboardStats(
-  barbershopIds: string[],
+  barbershopIds: OwnerBarbershopIdList,
   options: {
     barbershopId?: string | null
     period: OwnerStatsPeriod
@@ -37,10 +35,7 @@ export async function getOwnerDashboardStats(
   },
 ): Promise<OwnerDashboardStats> {
   const { period, date, barbershopId } = options
-  const shopIds =
-    barbershopId && barbershopIds.includes(barbershopId)
-      ? [barbershopId]
-      : barbershopIds
+  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
   if (shopIds.length === 0) {
     return {
       revenue: 0,

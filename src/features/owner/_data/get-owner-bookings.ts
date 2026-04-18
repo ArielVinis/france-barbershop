@@ -9,16 +9,19 @@ import {
   endOfMonth,
 } from "date-fns"
 import { db } from "@/src/lib/prisma"
+import { resolveOwnerShopIdsForQueries } from "@/src/lib/panel/resolve-owner-shop-ids"
+import type { OwnerBarbershopIdList } from "@/src/types/panel-data-scope"
 
 export type OwnerBookingsPeriod = "day" | "week" | "month"
 
 /**
  * Lista agendamentos das barbearias do dono.
- * @param barbershopIds - IDs das barbearias do dono (todas ou uma só)
- * @param options - barbershopId e barberId opcionais para filtrar; period e date para o intervalo
+ *
+ * @param barbershopIds - Conjunto de lojas do dono (`OwnerBarbershopIdList`).
+ * @param options.barbershopId - Filtro opcional; só aplica se estiver em `barbershopIds`.
  */
 export async function getOwnerBookings(
-  barbershopIds: string[],
+  barbershopIds: OwnerBarbershopIdList,
   options: {
     barbershopId?: string | null
     barberId?: string | null
@@ -27,10 +30,7 @@ export async function getOwnerBookings(
   },
 ) {
   const { period, date, barbershopId, barberId } = options
-  const shopIds =
-    barbershopId && barbershopIds.includes(barbershopId)
-      ? [barbershopId]
-      : barbershopIds
+  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
   if (shopIds.length === 0) return []
 
   const start =
