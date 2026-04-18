@@ -12,8 +12,8 @@ import { PATHS } from "@/src/constants/PATHS"
 import {
   normalizePanelDashboardPeriod,
   PANEL_DASHBOARD_PERIOD_LABELS,
-  redirectBarberCanonicalDashboard,
 } from "@/src/lib/panel/dashboard-params"
+import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
 
 type Props = {
   userId: string
@@ -28,10 +28,14 @@ export async function PanelDashboardBarberSection({
   if (!barber) return null
 
   const period = normalizePanelDashboardPeriod(searchParams.period)
-  const shopParam = searchParams.shopId?.trim()
-  if (!shopParam || shopParam === "all" || shopParam !== barber.barbershopId) {
-    redirectBarberCanonicalDashboard(period, barber.barbershopId)
-  }
+  ensureBarberShopIdMatchesUrl(
+    PATHS.PANEL.ROOT,
+    {
+      period,
+      shopId: searchParams.shopId,
+    },
+    barber.barbershopId,
+  )
 
   const hasSubscriptionAccess = await hasBarbershopSubscriptionAccess(
     barber.barbershopId,

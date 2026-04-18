@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/lib/auth"
-import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
+import { getBarberForUser } from "@/src/lib/authz"
 import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookings"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
@@ -13,8 +13,10 @@ import { OwnerScheduleCalendar } from "./used/owner-schedule-calendar"
 import { OwnerBookingsTable } from "../dashboard/used/dashboard-content/owner-bookings-table"
 import { BarberBookingsTable } from "./used/barber-bookings-table"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
+import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-barbershop-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
 import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
+import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
 
 export default async function OwnerSchedulePage({
   searchParams,
@@ -29,10 +31,28 @@ export default async function OwnerSchedulePage({
   const user = await getCurrentUser()
 
   if (user.role === "BARBER") {
-    const barber = await getBarberByUserId(user.id)
+    const barber = await getBarberForUser(user.id)
     if (!barber) return null
 
     const params = await searchParams
+    ensureBarberShopIdMatchesUrl(
+      PATHS.PANEL.SCHEDULE,
+      {
+        period: params.period,
+        shopId: params.shopId,
+        barber: params.barber,
+        viewDate: params.viewDate,
+      },
+      barber.barbershopId,
+    )
+
+    const hasSubscriptionAccess = await hasBarbershopSubscriptionAccess(
+      barber.barbershopId,
+    )
+    if (!hasSubscriptionAccess) {
+      redirect(PATHS.PANEL.SUBSCRIPTION)
+    }
+
     const period =
       params.period === "day" ||
       params.period === "week" ||
