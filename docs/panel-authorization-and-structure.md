@@ -30,20 +30,20 @@ RBAC sozinho não basta: o ponto seguro é **posse** (dono da barbearia, barbeir
 
 ## 3. Onde está o quê
 
-| Responsabilidade                       | Local                                           |
-| -------------------------------------- | ----------------------------------------------- |
-| Política de authz + barrel             | `src/lib/authz/` (`index.ts`)                   |
-| Contexto do painel (union)             | `src/types/panel-context.ts`                    |
-| Resolver escopo por papel + `shopId`   | `src/lib/authz/resolve-panel-context.ts`        |
-| `shopId` na URL (agregado vs escopado) | `src/lib/panel/shop-query.ts`                   |
-| BARBER não entra em rotas só dono      | `src/lib/panel/ensure-panel-owner.ts`           |
-| `shopId` URL === loja do vínculo (BARBER) | `src/lib/panel/ensure-barber-shop-query.ts` (`ensureBarberShopIdMatchesUrl`) |
-| Filtro OWNER `barbershopId` vs conjunto de lojas | `src/lib/panel/resolve-owner-shop-ids.ts` (`resolveOwnerShopIdsForQueries`) |
-| Contratos tipados lista de lojas dono  | `src/types/panel-data-scope.ts` (`OwnerBarbershopIdList`) |
-| Rotas do painel                        | `src/app/(authenticated)/panel/`                |
-| Nav por papel                          | `src/resources/sidebar-items.ts` + `AppSidebar` |
-| Dados/ações owner                      | `src/features/owner/_data/`, `_actions/`        |
-| Dados/ações barbeiro                   | `src/features/barber/_data/`, `_actions/`       |
+| Responsabilidade                                 | Local                                                                        |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Política de authz + barrel                       | `src/lib/authz/` (`index.ts`)                                                |
+| Contexto do painel (union)                       | `src/types/panel-context.ts`                                                 |
+| Resolver escopo por papel + `shopId`             | `src/lib/authz/resolve-panel-context.ts`                                     |
+| `shopId` na URL (agregado vs escopado)           | `src/lib/panel/shop-query.ts`                                                |
+| BARBER não entra em rotas só dono                | `src/lib/panel/ensure-panel-owner.ts`                                        |
+| `shopId` URL === loja do vínculo (BARBER)        | `src/lib/panel/ensure-barber-shop-query.ts` (`ensureBarberShopIdMatchesUrl`) |
+| Filtro OWNER `barbershopId` vs conjunto de lojas | `src/lib/panel/resolve-owner-shop-ids.ts` (`resolveOwnerShopIdsForQueries`)  |
+| Contratos tipados lista de lojas dono            | `src/types/panel-data-scope.ts` (`OwnerBarbershopIdList`)                    |
+| Rotas do painel                                  | `src/app/(authenticated)/panel/`                                             |
+| Nav por papel                                    | `src/resources/sidebar-items.ts` + `AppSidebar`                              |
+| Dados/ações owner                                | `src/features/owner/_data/`, `_actions/`                                     |
+| Dados/ações barbeiro                             | `src/features/barber/_data/`, `_actions/`                                    |
 
 Imports novos: `@/src/lib/authz`.
 
@@ -116,7 +116,6 @@ Para BARBER, `resolvePanelContext` **não** usa `shopId` para inferir loja: o `b
 - [x] Validação rígida `shopId` === `barbershopId` do vínculo (BARBER): `ensureBarberShopIdMatchesUrl` em `/panel` (`PanelDashboardBarberSection`) e `/panel/schedule`; agenda alinhada a `getBarberForUser`. Novas rotas BARBER com query devem chamar o mesmo helper.
 - [x] Camada de dados: `OwnerBarbershopIdList` + `resolveOwnerShopIdsForQueries` em leituras agregadas (`getOwnerDashboardStats`, charts, `getOwnerBookings`); filtro explícito inválido → vazio (sem alargar a “todas as lojas”). JSDoc em `getOwnerServices` / `getOwnerBarbers` / `getOwnerBarbershopHours` / `getBarberBookings`; `createBarberOwner` usa `getBarbershopForOwner`.
 - [x] Testes unitários em `getBarbershopForOwner` / `getBarberForUser` e integração em `createBarberOwner` / `createServiceOwner` — `tests/unit/` (`npm run test`). **Fase 5**.
-- [ ] (Opcional) Extrair shell comum sidebar + header.
 
 ---
 
