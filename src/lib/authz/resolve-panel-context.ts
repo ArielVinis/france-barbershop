@@ -1,7 +1,7 @@
 import type { AuthUser } from "@/src/lib/auth"
 import type { PanelContext } from "@/src/types/panel-context"
-import { getBarberForUser } from "./barber-for-user"
-import { getBarbershopForOwner } from "./barbershop-for-owner"
+import { getBarberForUser } from "./get-barber-for-user"
+import { getBarbershopsForUser } from "./get-barbershops-for-user"
 
 type ResolveInput = {
   shopId?: string
@@ -14,7 +14,7 @@ export async function resolvePanelContext(
   if (user.role === "OWNER") {
     const raw = input.shopId?.trim()
     if (!raw || raw === "all") return null
-    const shop = await getBarbershopForOwner(user.id, raw)
+    const shop = await getBarbershopsForUser(user.id, raw)
     if (!shop) return null
     return { role: "OWNER", userId: user.id, barbershopId: shop.id }
   }
