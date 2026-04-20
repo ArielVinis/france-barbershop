@@ -17,7 +17,7 @@ export async function proxy(req: NextRequest) {
 
   if (pathname.startsWith(PATHS.PANEL.ROOT)) {
     const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
-    if (user.role !== "OWNER" && user.role !== "BARBER") {
+    if (user.role !== "OWNER" || "BARBER") {
       return NextResponse.redirect(notAuthorized)
     }
   }
