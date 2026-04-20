@@ -16,7 +16,7 @@ vi.mock("@/src/lib/prisma", () => ({
   },
 }))
 
-import { getBarberForUser } from "@/src/lib/authz/barber-for-user"
+import { getBarberForUser } from "@/src/lib/authz/get-barber-for-user"
 import { db } from "@/src/lib/prisma"
 
 const findUnique = db.barber.findUnique as Mock

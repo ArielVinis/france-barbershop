@@ -9,7 +9,7 @@ vi.mock("@/src/lib/auth", () => ({
 }))
 
 vi.mock("@/src/lib/authz", () => ({
-  resolvePanelContext: vi.fn(),
+  requireBarbershopForOwner: vi.fn(),
 }))
 
 vi.mock("@/src/lib/prisma", () => ({
@@ -22,7 +22,7 @@ vi.mock("@/src/lib/prisma", () => ({
 
 import { createServiceOwner } from "@/src/features/owner/_actions/create-service-owner"
 import { getCurrentUser } from "@/src/lib/auth"
-import { resolvePanelContext } from "@/src/lib/authz"
+import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 
 const validInput = {
@@ -37,32 +37,33 @@ const validInput = {
 describe("createServiceOwner (integração com authz)", () => {
   beforeEach(() => {
     vi.mocked(getCurrentUser).mockReset()
-    vi.mocked(resolvePanelContext).mockReset()
+    vi.mocked(requireBarbershopForOwner).mockReset()
     vi.mocked(db.barbershopService.create).mockReset()
   })
 
-  it("lança quando resolvePanelContext não devolve OWNER", async () => {
+  it("lança quando a barbearia não existe", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue({
       id: "u1",
       role: "OWNER",
     } as never)
-    vi.mocked(resolvePanelContext).mockResolvedValue(null)
+    vi.mocked(requireBarbershopForOwner).mockRejectedValue(
+      new Error("Barbearia não encontrada"),
+    )
 
     await expect(createServiceOwner(validInput)).rejects.toThrow(
-      "Barbearia não encontrada ou você não é o dono",
+      "Barbearia não encontrada",
     )
     expect(db.barbershopService.create).not.toHaveBeenCalled()
   })
 
-  it("cria serviço quando o contexto é OWNER escopado à loja", async () => {
+  it("cria serviço quando a loja é autorizada via helper", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue({
       id: "u1",
       role: "OWNER",
     } as never)
-    vi.mocked(resolvePanelContext).mockResolvedValue({
-      role: "OWNER",
-      userId: "u1",
-      barbershopId: "shop-1",
+    vi.mocked(requireBarbershopForOwner).mockResolvedValue({
+      id: "shop-1",
+      slug: "shop-1",
     })
 
     await createServiceOwner(validInput)

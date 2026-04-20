@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, Mock } from "vitest"
-import { getBarbershopForOwner } from "@/src/lib/authz/barbershop-for-owner"
+import { getBarbershopsForUser } from "@/src/lib/authz/get-barbershops-for-user"
 import { db } from "@/src/lib/prisma"
+
+vi.mock("react", () => ({
+  cache: (fn: unknown) => fn,
+}))
 
 vi.mock("@/src/lib/prisma", () => ({
   db: {
@@ -12,7 +16,7 @@ vi.mock("@/src/lib/prisma", () => ({
 
 const findFirst = db.barbershop.findFirst as Mock
 
-describe("getBarbershopForOwner", () => {
+describe("getBarbershopsForUser", () => {
   beforeEach(() => {
     findFirst.mockReset()
   })
@@ -20,7 +24,7 @@ describe("getBarbershopForOwner", () => {
   it("passa id e dono ao Prisma", async () => {
     findFirst.mockResolvedValue({ id: "shop-1", slug: "foo" })
 
-    const result = await getBarbershopForOwner("user-1", "shop-1")
+    const result = await getBarbershopsForUser("user-1", "shop-1")
 
     expect(findFirst).toHaveBeenCalledWith({
       where: {
@@ -35,7 +39,7 @@ describe("getBarbershopForOwner", () => {
   it("devolve null quando a loja não existe ou o utilizador não é dono", async () => {
     findFirst.mockResolvedValue(null)
 
-    const result = await getBarbershopForOwner("user-1", "outra-loja")
+    const result = await getBarbershopsForUser("user-1", "outra-loja")
 
     expect(result).toBeNull()
   })
