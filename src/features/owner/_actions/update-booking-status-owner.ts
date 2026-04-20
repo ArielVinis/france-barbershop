@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/lib/auth"
+import { ForbiddenError, NotFoundError, requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import type {
   BookingStatus,
@@ -25,19 +26,19 @@ export async function updateBookingStatusOwner(
 ) {
   const user = await getCurrentUser()
 
-  const booking = await db.booking.findFirst({
-    where: {
-      id: bookingId,
-      service: {
-        barbershop: {
-          owners: { some: { id: user.id } },
-        },
-      },
-    },
-    include: { service: true },
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: { service: { select: { barbershopId: true } } },
   })
-  if (!booking) {
-    throw new Error("Agendamento não encontrado")
+  if (!booking) throw new NotFoundError("Agendamento não encontrado")
+
+  try {
+    await requireBarbershopForOwner(user.id, booking.service.barbershopId)
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw new ForbiddenError("Você não tem acesso a este agendamento")
+    }
+    throw error
   }
 
   const allowed: Record<BookingStatus, BookingStatus[]> = {

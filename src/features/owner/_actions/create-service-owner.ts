@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { getCurrentUser } from "@/src/lib/auth"
-import { resolvePanelContext } from "@/src/lib/authz"
+import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
@@ -31,17 +31,14 @@ export async function createServiceOwner(input: CreateServiceOwnerInput) {
   const data = parsed.data
 
   const user = await getCurrentUser()
-  const ctx = await resolvePanelContext(user, { shopId: data.barbershopId })
-  if (!ctx || ctx.role !== "OWNER") {
-    throw new Error("Barbearia não encontrada ou você não é o dono")
-  }
+  const shop = await requireBarbershopForOwner(user.id, data.barbershopId)
 
   const imageUrl = data.imageUrl || "/banner.png"
   const description = data.description || data.name
 
   await db.barbershopService.create({
     data: {
-      barbershopId: ctx.barbershopId,
+      barbershopId: shop.id,
       name: data.name,
       description,
       imageUrl,

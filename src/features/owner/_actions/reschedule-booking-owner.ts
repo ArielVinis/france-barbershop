@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/lib/auth"
+import { ForbiddenError, NotFoundError, requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
@@ -16,22 +17,22 @@ export async function rescheduleBookingOwner(
 ) {
   const user = await getCurrentUser()
 
-  const booking = await db.booking.findFirst({
-    where: {
-      id: bookingId,
-      service: {
-        barbershop: {
-          owners: { some: { id: user.id } },
-        },
-      },
-    },
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
     include: {
       service: { select: { barbershopId: true } },
     },
   })
 
-  if (!booking) {
-    throw new Error("Agendamento não encontrado")
+  if (!booking) throw new NotFoundError("Agendamento não encontrado")
+
+  try {
+    await requireBarbershopForOwner(user.id, booking.service.barbershopId)
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw new ForbiddenError("Você não tem acesso a este agendamento")
+    }
+    throw error
   }
 
   const allowedStatuses = ["CONFIRMED", "IN_PROGRESS"]
@@ -42,14 +43,15 @@ export async function rescheduleBookingOwner(
   }
 
   if (barberId) {
-    const barber = await db.barber.findFirst({
-      where: {
-        id: barberId,
-        barbershopId: booking.service.barbershopId,
-      },
+    const barber = await db.barber.findUnique({
+      where: { id: barberId },
+      select: { barbershopId: true },
     })
-    if (!barber) {
-      throw new Error("Barbeiro não pertence à barbearia deste agendamento")
+    if (!barber) throw new NotFoundError("Barbeiro não encontrado")
+    if (barber.barbershopId !== booking.service.barbershopId) {
+      throw new ForbiddenError(
+        "Você não tem acesso ao barbeiro informado para este agendamento",
+      )
     }
   }
 

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/lib/auth"
-import { getBarbershopForOwner } from "@/src/lib/authz"
+import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
@@ -12,9 +12,7 @@ export async function createBarberOwner(
 ) {
   const user = await getCurrentUser()
 
-  const ownerBarbershop = await getBarbershopForOwner(user.id, barbershopId)
-  if (!ownerBarbershop)
-    throw new Error("Barbearia não encontrada ou você não é o dono")
+  const ownerBarbershop = await requireBarbershopForOwner(user.id, barbershopId)
 
   const existingUser = await db.user.findUnique({
     where: { email: userEmail.trim().toLowerCase() },

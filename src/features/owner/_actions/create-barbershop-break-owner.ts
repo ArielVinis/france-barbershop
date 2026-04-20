@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
-import { getBarbershopForOwner } from "@/src/lib/authz/barbershop-for-owner"
+import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { PATHS } from "@/src/constants/PATHS"
 
 const TIME_REGEX = /^([01]?\d|2[0-3]):([0-5]\d)$/
@@ -19,8 +19,7 @@ export async function createBarbershopBreakOwner(
   input: CreateBarbershopBreakInput,
 ) {
   const user = await getCurrentUser()
-  const shop = await getBarbershopForOwner(user.id, barbershopId)
-  if (!shop) throw new Error("Barbearia não encontrada ou você não é o dono")
+  const shop = await requireBarbershopForOwner(user.id, barbershopId)
 
   if (input.dayOfWeek < 0 || input.dayOfWeek > 6) {
     throw new Error("Dia da semana inválido (0-6)")

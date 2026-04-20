@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/lib/auth"
 import { db } from "@/src/lib/prisma"
-import { getBarbershopForOwner } from "@/src/lib/authz/barbershop-for-owner"
+import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { PATHS } from "@/src/constants/PATHS"
 
 export async function createBarbershopBlockedSlotOwner(
@@ -11,8 +11,7 @@ export async function createBarbershopBlockedSlotOwner(
   input: { startAt: Date; endAt: Date; reason: string | null },
 ) {
   const user = await getCurrentUser()
-  const shop = await getBarbershopForOwner(user.id, barbershopId)
-  if (!shop) throw new Error("Barbearia não encontrada ou você não é o dono")
+  const shop = await requireBarbershopForOwner(user.id, barbershopId)
 
   if (input.startAt >= input.endAt) {
     throw new Error("Data de fim deve ser após o início")
