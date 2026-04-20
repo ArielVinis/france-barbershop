@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/src/lib/auth"
+import { getBarberForUser } from "@/src/lib/authz"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { BarberSubscriptionPanel } from "@/src/app/(authenticated)/panel/subscription/barber-subscription-panel"
 import {
@@ -16,6 +17,7 @@ import {
   CardTitle,
 } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
+import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
 
 function formatCurrency(amount: number | null | undefined, currency = "brl") {
   if (amount == null) return "-"
@@ -30,9 +32,23 @@ function formatDate(value: number | null | undefined) {
   return new Date(value * 1000).toLocaleDateString("pt-BR")
 }
 
-export default async function OwnerSubscriptionPage() {
+export default async function OwnerSubscriptionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ shopId?: string }>
+}) {
   const user = await getCurrentUser()
   if (user.role === "BARBER") {
+    const barber = await getBarberForUser(user.id)
+    if (!barber) return null
+
+    const params = await searchParams
+    ensureBarberShopIdMatchesUrl(
+      PATHS.PANEL.SUBSCRIPTION,
+      { shopId: params.shopId },
+      barber.barbershopId,
+    )
+
     return <BarberSubscriptionPanel />
   }
 
