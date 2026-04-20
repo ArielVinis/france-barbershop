@@ -20,7 +20,7 @@ RBAC sozinho não basta: o ponto seguro é **posse** (dono da barbearia, barbeir
 | **`shopId`**                                      | Query string canónica no painel (**não** usar `barbershop` na URL).                                                             |
 | **`barbershopId`**                                | ID no modelo Prisma / base de dados.                                                                                            |
 | **`PanelContext`**                                | `src/types/panel-context.ts` — resultado de `resolvePanelContext`: `{ role, userId, barbershopId }` e, se barbeiro, `barberId`. |
-| **`getBarbershopForOwner(userId, barbershopId)`** | Confirma que a loja pertence ao dono.                                                                                           |
+| **`getBarbershopsForUser(userId, barbershopId)`** | Confirma que a loja pertence ao dono.                                                                                           |
 | **`getBarberForUser(userId)`**                    | Authz mínima: `{ id, barbershopId }` do barbeiro.                                                                               |
 | **`getBarberByUserId`**                           | Dados ricos para UI em `features/barber` — não substitui `getBarberForUser` em regras de escrita.                               |
 
@@ -89,7 +89,7 @@ Imports novos: `@/src/lib/authz`.
 
 ## 6. Escolha do helper (resumo)
 
-1. **Só dono, uma loja explícita** — `getBarbershopForOwner` **ou** `resolvePanelContext` + confirmar `ctx.role === "OWNER"`. Evita duas queries diferentes para a mesma regra.
+1. **Só dono, uma loja explícita** — `getBarbershopsForUser` **ou** `resolvePanelContext` + confirmar `ctx.role === "OWNER"`. Evita duas queries diferentes para a mesma regra.
 2. **Mesma rota ou action para OWNER e BARBER** — `resolvePanelContext` → `if (ctx.role === …)` → funções de dados específicas por papel.
 3. **Dono em modo “todas as lojas”** — não passar pelo caminho “uma loja” de `resolvePanelContext`; usar fluxo agregado já descrito em `shop-query` / loaders.
 
@@ -99,7 +99,7 @@ Para BARBER, `resolvePanelContext` **não** usa `shopId` para inferir loja: o `b
 
 ## 7. Padrões no código atual (espelhar no barbeiro)
 
-- **Posse na query:** ex. booking só se `barbershop.owners` contém o dono, ou `getBarbershopForOwner` antes de mutar.
+- **Posse na query:** ex. booking só se `barbershop.owners` contém o dono, ou `getBarbershopsForUser` antes de mutar.
 - **Loaders owner:** listas de IDs de loja já limitadas no layout/página; filtros adicionais não podem ultrapassar esse conjunto.
 - **Barbeiro em session:** `requireBarberForSession` nas actions do módulo `barber`; em authz preferir **`getBarberForUser`** para política explícita.
 
@@ -107,15 +107,17 @@ Para BARBER, `resolvePanelContext` **não** usa `shopId` para inferir loja: o `b
 
 ## 8. Roadmap enxuto
 
-**Feito (base):** pasta `authz/`, `PanelContext`, `getBarbershopForOwner`, `getBarberForUser`, `requireRole`, `resolvePanelContext`, `shop-query`, redirect BARBER de rotas só dono, nav por papel, smoke E2E sem sessão.
+**Feito (base):** pasta `authz/`, `PanelContext`, `getBarbershopsForUser`, `getBarberForUser`, `resolvePanelContext`, `shop-query`, redirect BARBER de rotas só dono, nav por papel, smoke E2E sem sessão.
 
 **A fazer (prioridade sugerida):**
 
 - [x] Loaders/actions **unificados** (ex.: dashboard) com ramos por papel em `/panel`; métricas/gráficos **paritários** filtrados por `barberId` (`src/features/barber/_data/get-barber-dashboard-stats.ts`, `get-barber-chart-data.ts`). _Nota:_ o ramo BARBER usa `getBarberForUser` + validação de `shopId` na página; `resolvePanelContext` continua disponível para actions/rotas escopadas.
 - [x] Gate de subscrição no painel para **BARBER** (`hasBarbershopSubscriptionAccess` + redirect para `/panel/subscription`) + variante de UI (`barber-subscription-panel.tsx`; ver secção 4.3).
 - [x] Validação rígida `shopId` === `barbershopId` do vínculo (BARBER): `ensureBarberShopIdMatchesUrl` em `/panel` (`PanelDashboardBarberSection`) e `/panel/schedule`; agenda alinhada a `getBarberForUser`. Novas rotas BARBER com query devem chamar o mesmo helper.
-- [x] Camada de dados: `OwnerBarbershopIdList` + `resolveOwnerShopIdsForQueries` em leituras agregadas (`getOwnerDashboardStats`, charts, `getOwnerBookings`); filtro explícito inválido → vazio (sem alargar a “todas as lojas”). JSDoc em `getOwnerServices` / `getOwnerBarbers` / `getOwnerBarbershopHours` / `getBarberBookings`; `createBarberOwner` usa `getBarbershopForOwner`.
-- [x] Testes unitários em `getBarbershopForOwner` / `getBarberForUser` e integração em `createBarberOwner` / `createServiceOwner` — `tests/unit/` (`npm run test`). **Fase 5**.
+- [x] Camada de dados: `OwnerBarbershopIdList` + `resolveOwnerShopIdsForQueries` em leituras agregadas (`getOwnerDashboardStats`, charts, `getOwnerBookings`); filtro explícito inválido → vazio (sem alargar a “todas as lojas”). JSDoc em `getOwnerServices` / `getOwnerBarbers` / `getOwnerBarbershopHours` / `getBarberBookings`; `createBarberOwner` usa `getBarbershopsForUser`.
+- [x] Testes unitários em `getBarbershopsForUser` / `getBarberForUser` e integração em `createBarberOwner` / `createServiceOwner` — `tests/unit/` (`npm run test`). **Fase 5**.
+- [x] `features/owner` com validação de acesso via helpers de `src/lib/authz` (sem `owners: some` inline nas mutações principais).
+- [x] Erros de autorização diferenciados em mutações de owner (`ForbiddenError` 403 vs `NotFoundError` 404), com mensagens explícitas por recurso.
 
 ---
 
