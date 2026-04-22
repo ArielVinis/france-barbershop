@@ -1,6 +1,6 @@
 import { db } from "@/src/lib/prisma"
 import { cache } from "react"
-import { getBarbershopsForUser } from "@/src/lib/authz"
+import { getBarbershopForUser } from "@/src/lib/authz"
 
 export const getBarberForOwner = cache(
   async (barberId: string, ownerId: string) => {
@@ -23,7 +23,7 @@ export const getBarberForOwner = cache(
     })
     if (!barber) return null
 
-    const ownerShop = await getBarbershopsForUser(ownerId, barber.barbershop.id)
+    const ownerShop = await getBarbershopForUser(ownerId, barber.barbershop.id)
     if (!ownerShop) return null
 
     return barber
