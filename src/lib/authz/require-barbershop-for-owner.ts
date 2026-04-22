@@ -1,9 +1,8 @@
 import { db } from "@/src/lib/prisma"
-import {
-  getBarbershopsForUser,
-  type OwnerBarbershopLookup,
-} from "./get-barbershops-for-user"
+import { getBarbershopForUser } from "./get-barbershops-for-user"
 import { ForbiddenError, NotFoundError } from "./errors"
+
+export type OwnerBarbershopLookup = { id: string; slug: string }
 
 export async function requireBarbershopForOwner(
   userId: string,
@@ -17,7 +16,7 @@ export async function requireBarbershopForOwner(
     throw new NotFoundError("Barbearia não encontrada")
   }
 
-  const owned = await getBarbershopsForUser(userId, barbershopId)
+  const owned = await getBarbershopForUser(userId, barbershopId)
   if (!owned) {
     throw new ForbiddenError("Você não tem acesso a esta barbearia")
   }

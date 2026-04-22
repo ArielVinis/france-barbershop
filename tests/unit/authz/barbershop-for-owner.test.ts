@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, Mock } from "vitest"
-import { getBarbershopsForUser } from "@/src/lib/authz/get-barbershops-for-user"
+import { getBarbershopForUser } from "@/src/lib/authz/get-barbershops-for-user"
 import { db } from "@/src/lib/prisma"
 
 vi.mock("react", () => ({
@@ -16,7 +16,7 @@ vi.mock("@/src/lib/prisma", () => ({
 
 const findFirst = db.barbershop.findFirst as Mock
 
-describe("getBarbershopsForUser", () => {
+describe("getBarbershopForUser", () => {
   beforeEach(() => {
     findFirst.mockReset()
   })
@@ -24,7 +24,7 @@ describe("getBarbershopsForUser", () => {
   it("passa id e dono ao Prisma", async () => {
     findFirst.mockResolvedValue({ id: "shop-1", slug: "foo" })
 
-    const result = await getBarbershopsForUser("user-1", "shop-1")
+    const result = await getBarbershopForUser("user-1", "shop-1")
 
     expect(findFirst).toHaveBeenCalledWith({
       where: {
@@ -39,7 +39,7 @@ describe("getBarbershopsForUser", () => {
   it("devolve null quando a loja não existe ou o utilizador não é dono", async () => {
     findFirst.mockResolvedValue(null)
 
-    const result = await getBarbershopsForUser("user-1", "outra-loja")
+    const result = await getBarbershopForUser("user-1", "outra-loja")
 
     expect(result).toBeNull()
   })

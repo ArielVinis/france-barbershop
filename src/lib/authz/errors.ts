@@ -1,3 +1,12 @@
+export class ValidationError extends Error {
+  readonly status = 400
+
+  constructor(message = "Dados inválidos") {
+    super(message)
+    this.name = "ValidationError"
+  }
+}
+
 export class ForbiddenError extends Error {
   readonly status = 403
 
