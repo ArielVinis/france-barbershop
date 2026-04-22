@@ -1,52 +1,50 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { z } from "zod"
-import { getCurrentUser } from "@/src/lib/auth"
-import { requireBarbershopForOwner } from "@/src/lib/authz"
+import { assertCan } from "@/src/auth"
+import {
+  CreateServiceOwnerInputSchema,
+  type CreateServiceOwnerInput,
+  type CreateServiceOwnerOutput,
+} from "@/src/features/owner/_dto/create-service-owner.dto"
+import { getAuthContext } from "@/src/lib/auth"
+import { ValidationError } from "@/src/lib/authz/errors"
+import { requireBarbershopForOwner } from "@/src/lib/authz/require-barbershop-for-owner"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
-const CreateServiceOwnerSchema = z.object({
-  barbershopId: z.string().min(1, "Barbearia é obrigatória"),
-  name: z.string().trim().min(1, "Nome do serviço é obrigatório"),
-  description: z.string().trim(),
-  imageUrl: z.string().trim(),
-  price: z.coerce.number().min(0, "Preço não pode ser negativo"),
-  durationMinutes: z.coerce
-    .number()
-    .int("Duração deve ser um número inteiro")
-    .min(1, "Duração mínima é 1 minuto"),
-})
+export type { CreateServiceOwnerInput, CreateServiceOwnerOutput }
 
-export type CreateServiceOwnerInput = z.infer<typeof CreateServiceOwnerSchema>
+export async function createServiceOwner(
+  input: CreateServiceOwnerInput,
+): Promise<CreateServiceOwnerOutput> {
+  const parsed = CreateServiceOwnerInputSchema.safeParse(input)
 
-export async function createServiceOwner(input: CreateServiceOwnerInput) {
-  const parsed = CreateServiceOwnerSchema.safeParse(input)
   if (!parsed.success) {
-    const msg = parsed.error.issues[0]?.message ?? "Dados inválidos"
-    throw new Error(msg)
+    throw new ValidationError(parsed.error.issues[0]?.message)
   }
 
   const data = parsed.data
+  const ctx = await getAuthContext()
 
-  const user = await getCurrentUser()
-  const shop = await requireBarbershopForOwner(user.id, data.barbershopId)
+  assertCan(ctx, "create", "service", {
+    barbershopId: data.barbershopId,
+  })
 
-  const imageUrl = data.imageUrl || "/banner.png"
-  const description = data.description || data.name
+  const shop = await requireBarbershopForOwner(ctx.userId, data.barbershopId)
 
-  await db.barbershopService.create({
+  const created = await db.barbershopService.create({
     data: {
       barbershopId: shop.id,
-      name: data.name,
-      description,
-      imageUrl,
+      name: data.name.trim(),
+      description: data.description?.trim() ?? "",
+      imageUrl: data.imageUrl,
       price: data.price,
       durationMinutes: data.durationMinutes,
     },
+    select: { id: true },
   })
-
   revalidatePath(PATHS.PANEL.ROOT)
   revalidatePath(PATHS.PANEL.SERVICES)
+  return created
 }
