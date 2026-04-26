@@ -38,7 +38,7 @@ enum PaymentStatus {
 }
 
 model User {
-  id            String       @id
+  id            String       @id @default(uuid())
   name          String
   email         String?      @unique
   emailVerified Boolean
@@ -51,25 +51,32 @@ model User {
   owner         Barbershop[] @relation("OwnerBarbershops")
 
   // TODO: Add ratings for barbers and barbershops
-  ratings Rating[]
+  ratings     Rating[]
+  teammembers TeamMember[]
+  members     Member[]
+  invitations Invitation[]
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String   @id @default(uuid())
+  expiresAt            DateTime
+  token                String
+  createdAt            DateTime
+  updatedAt            DateTime
+  ipAddress            String?
+  userAgent            String?
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeOrganizationId String?
+  activeTeamId         String?
+
   @@unique([token])
+  @@index([userId])
   @@map("session")
 }
 
 model Account {
-  id                    String    @id
+  id                    String    @id @default(uuid())
   accountId             String
   providerId            String
   userId                String
@@ -83,16 +90,18 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+
   @@map("account")
 }
 
 model Verification {
-  id         String    @id
+  id         String    @id @default(uuid())
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime?
   updatedAt  DateTime?
+
   @@map("verification")
 }
 
@@ -114,21 +123,96 @@ model Booking {
 
 // Barbershop
 model Barbershop {
-  id          String               @id @default(uuid())
-  name        String
-  slug        String               @unique
-  address     String
-  phones      String[]
-  description String
-  imageUrl    String
-  owners      User[]               @relation("OwnerBarbershops")
-  services    BarbershopService[]
-  ratings       Rating[]
-  schedules     BarbershopSchedule[]
-  breaks        BarbershopBreak[]
+  id             String               @id @default(uuid())
+  name           String
+  slug           String               @unique
+  address        String
+  phones         String[]
+  description    String
+  imageUrl       String
+  owners         User[]               @relation("OwnerBarbershops")
+  services       BarbershopService[]
+  ratings        Rating[]
+  schedules      BarbershopSchedule[]
+  breaks         BarbershopBreak[]
+  organizationId String?              @unique
+  organization   Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Organization {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  logo        String?
+  createdAt   DateTime
+  metadata    String?
+  teams       Team[]
+  members     Member[]
+  invitations Invitation[]
+  barbershop  Barbershop?
+
+  @@map("organization")
+}
+
+model Team {
+  id             String       @id @default(uuid())
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime
+  updatedAt      DateTime?    @updatedAt
+  teammembers    TeamMember[]
+
+  @@index([organizationId])
+  @@map("team")
+}
+
+model TeamMember {
+  id        String    @id @default(uuid())
+  teamId    String
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime?
+
+  @@index([teamId])
+  @@index([userId])
+  @@map("teamMember")
+}
+
+model Member {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String       @default("member")
+  createdAt      DateTime
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  teamId         String?
+  status         String       @default("pending")
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  inviterId      String
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
 }
 
 model BarbershopService {

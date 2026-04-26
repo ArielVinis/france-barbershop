@@ -8,10 +8,9 @@ async function seedDatabase() {
     await prisma.booking.deleteMany()
     await prisma.rating.deleteMany()
     await prisma.barbershopSchedule.deleteMany()
-    await prisma.barber.deleteMany()
+    await prisma.user.deleteMany()
     await prisma.barbershopService.deleteMany()
     await prisma.barbershop.deleteMany()
-    await prisma.user.deleteMany()
     console.log("Criando novos dados...")
 
     const images = [
@@ -200,15 +199,17 @@ async function seedDatabase() {
         data: {
           name: barberData.name,
           email: barberData.email,
+          emailVerified: true,
           phone: barberData.phone,
           role: "BARBER",
+          image: null,
         },
       })
 
-      await prisma.barber.create({
+      await prisma.barbershop.update({
+        where: { id: barbershop.id },
         data: {
-          userId: user.id,
-          barbershopId: barbershop.id,
+          owners: { connect: { id: user.id } },
         },
       })
 
@@ -284,6 +285,8 @@ async function seedDatabase() {
         email: "dono@francebarber.com",
         phone: "(11) 99999-0000",
         role: "OWNER",
+        emailVerified: true,
+        image: null,
       },
     })
     await prisma.barbershop.update({
