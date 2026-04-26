@@ -16,7 +16,8 @@ export const signIn = async (email: string, password: string) => {
 
     return {
       success: false,
-      message: e.message || "An unknown error occurred",
+      message:
+        e.message || "Algo de errado aconteceu, tente novamente mais tarde.",
     }
   }
 }
@@ -37,13 +38,14 @@ export const signUp = async (
       },
       asResponse: true,
     })
-    return { success: true, message: "Sign up successful" }
+    return { success: true, message: "Cadastro realizado com sucesso" }
   } catch (error) {
     const e = error as Error
 
     return {
       success: false,
-      message: e.message || "An unknown error occurred",
+      message:
+        e.message || "Algo de errado aconteceu, tente novamente mais tarde.",
     }
   }
 }
