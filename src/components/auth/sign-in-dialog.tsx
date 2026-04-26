@@ -1,11 +1,11 @@
-import { signIn } from "next-auth/react"
+import { signIn } from "@/src/lib/auth-client"
 import { Button } from "../ui/button"
 import { DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog"
 import Image from "next/image"
 
 const SignInDialog = ({ callbackUrl }: { callbackUrl?: string }) => {
   const handleLoginWithGoogleClick = () =>
-    signIn("google", callbackUrl ? { callbackUrl } : undefined)
+    signIn.social({ provider: "google", callbackURL: callbackUrl })
 
   return (
     <>

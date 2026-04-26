@@ -1,8 +1,13 @@
 export const PATHS = Object.freeze({
   ROOT: "/",
   NOT_AUTHENTICATED: "/not-authenticated",
-  SIGN_IN: "/api/auth/signin",
   NOT_AUTHORIZED: "/not-authorized",
+
+  AUTH: {
+    LOGIN: "/auth/login",
+    SIGN_UP: "/auth/signup",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+  },
 
   DEV: {
     PANEL: "/dev/panel",
@@ -10,6 +15,7 @@ export const PATHS = Object.freeze({
 
   PANEL: {
     ROOT: "/panel",
+    ORGANIZATION: "/panel/organization",
     SUBSCRIPTION: "/panel/subscription",
     BARBERS: "/panel/barbers",
     BARBER_SCHEDULE: (barberId: string) =>
