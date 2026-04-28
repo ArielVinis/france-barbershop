@@ -5,6 +5,11 @@ import { db } from "./prisma"
 import { headers } from "next/headers"
 import { nextCookies } from "better-auth/next-js"
 import { ac, admin, member, myCustomRole, owner } from "./auth/permissions"
+import { ResetPasswordEmail } from "../components/emails/reset-password"
+
+// import { resend } from "@/src/lib/resend"
+// Passar para a /lib
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -12,7 +17,19 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      resend.emails.send({
+        from: "noreply@example.com",
+        to: user.email,
+        subject: "Reset your password",
+        react: ResetPasswordEmail({
+          userName: user.name,
+          resetUrl: url,
+        }),
+      })
+    },
   },
+
   trustedOrigins: [process.env.BETTER_AUTH_URL as string],
 
   socialProviders: {
@@ -21,6 +38,7 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
+
   plugins: [
     nextCookies(),
     organization({
