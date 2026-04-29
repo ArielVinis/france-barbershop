@@ -1,71 +1,21 @@
+import * as React from "react"
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Link,
+  Preview,
+  Section,
+  Tailwind,
+  Text,
+} from "@react-email/components"
+
 type ResetPasswordEmailProps = {
   userName: string
   resetUrl: string
-}
-
-const styles = {
-  page: {
-    margin: 0,
-    padding: "24px",
-    backgroundColor: "#f4f4f5",
-    fontFamily: "Arial, Helvetica, sans-serif",
-    color: "#18181b",
-  },
-  container: {
-    maxWidth: "560px",
-    margin: "0 auto",
-    backgroundColor: "#ffffff",
-    border: "1px solid #e4e4e7",
-    borderRadius: "12px",
-    padding: "24px",
-  },
-  title: {
-    margin: "0 0 16px",
-    fontSize: "24px",
-    lineHeight: "32px",
-    color: "#09090b",
-  },
-  text: {
-    margin: "0 0 16px",
-    fontSize: "16px",
-    lineHeight: "24px",
-    color: "#3f3f46",
-  },
-  buttonWrapper: {
-    margin: "24px 0",
-    textAlign: "center" as const,
-  },
-  button: {
-    display: "inline-block",
-    backgroundColor: "#18181b",
-    color: "#ffffff",
-    textDecoration: "none",
-    borderRadius: "10px",
-    padding: "12px 20px",
-    fontSize: "16px",
-    fontWeight: 700,
-  },
-  urlBox: {
-    margin: "16px 0 20px",
-    padding: "12px",
-    borderRadius: "8px",
-    backgroundColor: "#fafafa",
-    border: "1px solid #e4e4e7",
-    wordBreak: "break-all" as const,
-    fontSize: "14px",
-    color: "#52525b",
-  },
-  divider: {
-    border: "none",
-    borderTop: "1px solid #e4e4e7",
-    margin: "24px 0",
-  },
-  footer: {
-    margin: 0,
-    fontSize: "13px",
-    lineHeight: "20px",
-    color: "#71717a",
-  },
 }
 
 export function ResetPasswordEmail({
@@ -73,35 +23,66 @@ export function ResetPasswordEmail({
   resetUrl,
 }: ResetPasswordEmailProps) {
   return (
-    <html lang="pt-BR">
-      <body style={styles.page}>
-        <main style={styles.container}>
-          <h1 style={styles.title}>Redefinição de senha</h1>
+    <Html lang="pt-BR" dir="ltr">
+      <Head />
+      <Preview>Redefina sua senha para continuar acessando sua conta</Preview>
+      <Tailwind>
+        <Body className="bg-gray-100 py-[40px] font-sans">
+          <Container className="mx-auto max-w-[600px] rounded-[8px] bg-white p-[40px] shadow-sm">
+            <Section>
+              <Heading className="mb-[24px] text-center text-[24px] font-bold text-gray-900">
+                Redefinição de senha
+              </Heading>
 
-          <p style={styles.text}>
-            Olá{userName ? `, ${userName}` : ""}! Recebemos uma solicitação para
-            redefinir a senha da sua conta.
-          </p>
+              <Text className="mb-[16px] text-[16px] text-gray-700">
+                Olá{userName ? `, ${userName}` : ""}!
+              </Text>
 
-          <div style={styles.buttonWrapper}>
-            <a href={resetUrl} style={styles.button}>
-              Redefinir senha
-            </a>
-          </div>
+              <Text className="mb-[16px] text-[16px] text-gray-700">
+                Recebemos uma solicitação para redefinir a senha da sua conta.
+                Clique no botão abaixo para criar uma nova senha com segurança.
+              </Text>
 
-          <p style={styles.text}>
-            Se o botão nao funcionar, copie e cole este link no navegador:
-          </p>
-          <p style={styles.urlBox}>{resetUrl}</p>
+              <Section className="my-[32px] text-center">
+                <Button
+                  href={resetUrl}
+                  className="box-border rounded-[6px] bg-blue-600 px-[32px] py-[12px] text-[16px] font-medium text-white no-underline"
+                >
+                  Redefinir senha
+                </Button>
+              </Section>
 
-          <hr style={styles.divider} />
+              <Text className="mb-[16px] text-[14px] text-gray-600">
+                Se o botão acima não funcionar, você também pode copiar e colar
+                o link abaixo no seu navegador:
+              </Text>
 
-          <p style={styles.footer}>
-            Se voce nao solicitou essa alteracao, pode ignorar este e-mail com
-            seguranca. Sua senha atual continuara a mesma.
-          </p>
-        </main>
-      </body>
-    </html>
+              <Text className="mb-[24px] break-all text-[14px] text-blue-600">
+                {resetUrl}
+              </Text>
+
+              <Text className="mb-[16px] text-[14px] text-gray-600">
+                Se você não solicitou a redefinição, ignore este email. Sua
+                senha atual permanecerá a mesma.
+              </Text>
+            </Section>
+
+            <Section className="mt-[32px] border-t border-gray-200 pt-[24px]">
+              <Text className="m-0 text-center text-[12px] text-gray-500">
+                © 2026 Seu Nome da Empresa. Todos os direitos reservados.
+              </Text>
+              <Text className="m-0 text-center text-[12px] text-gray-500">
+                123 Rua da Empresa, São José, BR
+              </Text>
+              <Text className="m-0 text-center text-[12px] text-gray-500">
+                <Link href="#" className="text-gray-500 no-underline">
+                  Desinscrever
+                </Link>
+              </Text>
+            </Section>
+          </Container>
+        </Body>
+      </Tailwind>
+    </Html>
   )
 }
