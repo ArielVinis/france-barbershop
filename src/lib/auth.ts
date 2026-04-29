@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth"
+import { betterAuth, User } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { organization } from "better-auth/plugins"
 import { db } from "./prisma"
@@ -6,9 +6,10 @@ import { headers } from "next/headers"
 import { nextCookies } from "better-auth/next-js"
 import { ac, admin, member, myCustomRole, owner } from "./auth/permissions"
 import { ResetPasswordEmail } from "../components/emails/reset-password"
+import { VerifyEmail } from "../components/emails/verify-email"
+import { Resend } from "resend"
 
-// import { resend } from "@/src/lib/resend"
-// Passar para a /lib
+// Passar para a /lib depois
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export const auth = betterAuth({
@@ -17,9 +18,29 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+
+    sendVerificationEmail: async ({
+      user,
+      url,
+    }: {
+      user: User
+      url: string
+    }) => {
+      resend.emails.send({
+        from: "noreply@francebarber.com",
+        to: user.email,
+        subject: "Verifique seu email",
+        react: VerifyEmail({
+          userName: user.name,
+          verificationUrl: url,
+        }),
+      })
+    },
+    sendOnSignUp: true,
+
     sendResetPassword: async ({ user, url }) => {
       resend.emails.send({
-        from: "noreply@example.com",
+        from: "noreply@francebarber.com",
         to: user.email,
         subject: "Reset your password",
         react: ResetPasswordEmail({
@@ -28,6 +49,7 @@ export const auth = betterAuth({
         }),
       })
     },
+    requireEmailVerification: true,
   },
 
   trustedOrigins: [process.env.BETTER_AUTH_URL as string],
