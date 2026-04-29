@@ -60,7 +60,7 @@ export function SignupForm({
         data.confirmPassword,
       )
       if (success) {
-        toast.success(message)
+        toast.success(`${message}. Verifique seu email para ativar sua conta.`)
         router.push(PATHS.PANEL.ROOT)
       } else {
         toast.error(message)
