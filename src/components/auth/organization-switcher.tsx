@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/src/components/ui/select"
 import { authClient } from "@/src/lib/auth-client"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 type OrganizationSwitcherProps = {
@@ -18,6 +19,7 @@ type OrganizationSwitcherProps = {
 export function OrganizationSwitcher({
   organizations,
 }: OrganizationSwitcherProps) {
+  const router = useRouter()
   const { data: activeOrganization } = authClient.useActiveOrganization()
 
   const handleChangeOrganization = async (organizationId: string) => {
@@ -30,6 +32,7 @@ export function OrganizationSwitcher({
         return
       }
 
+      router.refresh()
       toast.success("Barbearia alterada com sucesso")
     } catch (error) {
       console.error(error)
