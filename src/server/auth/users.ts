@@ -1,6 +1,35 @@
 "use server"
 
+import { PATHS } from "@/src/constants/PATHS"
 import { auth } from "@/src/lib/auth"
+import { db } from "@/src/lib/prisma"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+
+export async function getCurrentUser() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session) {
+    redirect(PATHS.AUTH.LOGIN)
+  }
+
+  const user = await db.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+  })
+
+  if (!user) {
+    redirect(PATHS.AUTH.LOGIN)
+  }
+
+  return {
+    ...session,
+    user,
+  }
+}
 
 export const signIn = async (email: string, password: string) => {
   try {
