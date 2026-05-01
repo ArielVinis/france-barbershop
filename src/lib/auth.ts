@@ -2,12 +2,12 @@ import { betterAuth, User } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { organization } from "better-auth/plugins"
 import { db } from "./prisma"
-import { headers } from "next/headers"
 import { nextCookies } from "better-auth/next-js"
 import { ac, admin, member, myCustomRole, owner } from "./auth/permissions"
 import { ResetPasswordEmail } from "../components/emails/reset-password"
 import { VerifyEmail } from "../components/emails/verify-email"
 import { Resend } from "resend"
+import { getActiveOrganization } from "../server/organizations/organizations"
 
 // Passar para a /lib depois
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -16,17 +16,42 @@ export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const organization = await getActiveOrganization(session.userId)
+          return {
+            data: {
+              ...session,
+              activeOrganizationId: organization?.id,
+            },
+          }
+        },
+      },
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
+    async sendResetPassword({ user, url }) {
+      await resend.emails.send({
+        from: "noreply@francebarber.com",
+        to: user.email,
+        subject: "Redefina sua senha",
+        react: ResetPasswordEmail({
+          userName: user.name,
+          resetUrl: url,
+        }),
+      })
+    },
+    requireEmailVerification: true,
+  },
 
-    sendVerificationEmail: async ({
-      user,
-      url,
-    }: {
-      user: User
-      url: string
-    }) => {
-      resend.emails.send({
+  emailVerification: {
+    sendOnSignUp: true,
+    async sendVerificationEmail({ user, url }: { user: User; url: string }) {
+      await resend.emails.send({
         from: "noreply@francebarber.com",
         to: user.email,
         subject: "Verifique seu email",
@@ -36,20 +61,6 @@ export const auth = betterAuth({
         }),
       })
     },
-    sendOnSignUp: true,
-
-    sendResetPassword: async ({ user, url }) => {
-      resend.emails.send({
-        from: "noreply@francebarber.com",
-        to: user.email,
-        subject: "Reset your password",
-        react: ResetPasswordEmail({
-          userName: user.name,
-          resetUrl: url,
-        }),
-      })
-    },
-    requireEmailVerification: true,
   },
 
   trustedOrigins: [process.env.BETTER_AUTH_URL as string],
@@ -81,50 +92,22 @@ export const auth = betterAuth({
         maximumMembersPerTeam: 50,
         allowRemovingAllTeams: false,
       },
-      sendInvitationEmail: sendOrganizationInviteEmail,
+
+      // async sendInvitationEmail(data) {
+      //   await resend.emails.send({
+      //     from: "noreply@francebarber.com",
+      //     to: data.email,
+      //     subject: `Convite para a barbearia ${organization.name}`,
+      //     react: InvitationEmail({
+      //       inviteUrl,
+      //       inviterName: data.inviter.user.name,
+      //       inviterEmail: data.inviter.user.email,
+      //       organizationName: data.organization.name,
+      //       role: data.role,
+      //       appName: "France Barber",
+      //     }),
+      //   })
+      // },
     }),
   ],
 })
-
-async function sendOrganizationInviteEmail(data: {
-  email: string
-  organization: { name: string }
-  invitation: { id: string }
-  inviter: { user: { name: string } }
-}) {
-  const acceptUrl = new URL(
-    process.env.BETTER_AUTH_INVITATION_ACCEPT_URL ??
-      `${process.env.BETTER_AUTH_URL}/organization/invitations/accept`,
-  )
-  acceptUrl.searchParams.set("invitationId", data.invitation.id)
-
-  const payload = {
-    to: data.email,
-    subject: `Convite para a barbearia ${data.organization.name}`,
-    text: `${data.inviter.user.name} convidou você para entrar na organização ${data.organization.name}. Acesse: ${acceptUrl.toString()}`,
-    html: `<p>${data.inviter.user.name} convidou você para entrar na organização <strong>${data.organization.name}</strong>.</p><p><a href="${acceptUrl.toString()}">Aceitar convite</a></p>`,
-  }
-
-  if (process.env.BETTER_AUTH_INVITATION_WEBHOOK_URL) {
-    await fetch(process.env.BETTER_AUTH_INVITATION_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-    return
-  }
-
-  console.info(
-    `[better-auth] Convite pronto para envio (${data.email}): ${acceptUrl.toString()}`,
-  )
-}
-
-export async function getCurrentUser() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-
-  if (!session) throw new Error("Faça login para continuar")
-
-  return session.user
-}
