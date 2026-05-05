@@ -8,14 +8,17 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
+  DialogDescription,
 } from "@/src/components/ui/dialog"
 import { getOrganizationById } from "@/src/server/organizations/organizations"
 import { PlusIcon } from "lucide-react"
 import { MembersTable } from "./members-table"
 import { getCurrentUser } from "@/src/server/auth/users"
+import { addMember } from "@/src/server/organizations/member"
+import { Role } from "@/prisma/generated/prisma/enums"
 
 export async function All() {
-  const { session } = await getCurrentUser()
+  const { session, user } = await getCurrentUser()
 
   const organization = await getOrganizationById(
     session?.activeOrganizationId ?? "",
@@ -41,6 +44,29 @@ export async function All() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
+      <div className="grid gap-4 py-4">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              onClick={() =>
+                addMember(user.id, organization?.id ?? "", Role.MEMBER)
+              }
+            >
+              <PlusIcon className="size-4" />
+              Adicionar membro
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar membro</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              Adicione um novo membro à organização.
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
       </div>
       <MembersTable members={organization?.members || []} />
     </>

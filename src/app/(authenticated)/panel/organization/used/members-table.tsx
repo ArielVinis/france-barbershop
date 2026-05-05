@@ -7,6 +7,7 @@ import {
   TableCell,
   Table,
 } from "@/src/components/ui/table"
+import { removeMember } from "@/src/server/organizations/member"
 import { PencilIcon, TrashIcon } from "lucide-react"
 
 type MembersTableProps = {
@@ -52,7 +53,10 @@ export function MembersTable({ members }: { members: MembersTableProps[] }) {
                 <PencilIcon className="size-4" />
                 Editar
               </Button>
-              <Button variant="destructive">
+              <Button
+                variant="destructive"
+                onClick={() => removeMember(member.id)}
+              >
                 <TrashIcon className="size-4" />
                 Excluir
               </Button>
