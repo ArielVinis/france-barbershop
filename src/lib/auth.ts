@@ -3,7 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import { organization } from "better-auth/plugins"
 import { db } from "./prisma"
 import { nextCookies } from "better-auth/next-js"
-import { ac, admin, member, myCustomRole, owner } from "./auth/permissions"
+import { ac, ADMIN, OWNER, MANAGER, MEMBER, CLIENT } from "./auth/permissions"
 import { ResetPasswordEmail } from "../components/emails/reset-password"
 import { VerifyEmail } from "../components/emails/verify-email"
 import { Resend } from "resend"
@@ -78,22 +78,12 @@ export const auth = betterAuth({
     organization({
       ac,
       roles: {
-        owner,
-        admin,
-        member,
-        myCustomRole,
+        ADMIN,
+        OWNER,
+        MANAGER,
+        MEMBER,
+        CLIENT,
       },
-      allowUserToCreateOrganization: true,
-      invitationExpiresIn: 60 * 60 * 24 * 7,
-      invitationLimit: 50,
-      cancelPendingInvitationsOnReInvite: true,
-      teams: {
-        enabled: true,
-        maximumTeams: 20,
-        maximumMembersPerTeam: 50,
-        allowRemovingAllTeams: false,
-      },
-
       // async sendInvitationEmail(data) {
       //   await resend.emails.send({
       //     from: "noreply@francebarber.com",
