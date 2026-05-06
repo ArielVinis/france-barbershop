@@ -20,7 +20,7 @@ import { Calendar } from "../ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { useEffect, useMemo, useState } from "react"
 import { set } from "date-fns"
-import { useSession } from "next-auth/react"
+import { useSession } from "@/src/lib/auth-client"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "../ui/dialog"
 import SignInDialog from "../auth/sign-in-dialog"
@@ -212,7 +212,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
     )
 
     const barberBookings = dayBookings.filter(
-      (b) => b.barberId === selectedBarberId,
+      (b) => b.userId === selectedBarber?.id,
     )
     return filterAvailableTimes(timeSlots, barberBookings, selectedDay)
   }, [

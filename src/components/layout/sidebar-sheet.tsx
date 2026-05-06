@@ -18,7 +18,7 @@ import {
 import { quickSearchOptions } from "../../constants/search"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
-import { signOut, useSession } from "next-auth/react"
+import { signOut, useSession } from "@/src/lib/auth-client"
 import { Avatar, AvatarImage } from "../ui/avatar"
 import SignInDialog from "../auth/sign-in-dialog"
 import { PATHS } from "@/src/constants/PATHS"
@@ -29,7 +29,6 @@ import { useRouter } from "next/navigation"
 const SidebarSheet = () => {
   const { data } = useSession()
   const router = useRouter()
-  const handleLogoutClick = () => signOut()
 
   const [signInDialogIsOpen, setSignInDialogIsOpen] = useState(false)
   const handleBookingsClick = () => {
@@ -65,8 +64,8 @@ const SidebarSheet = () => {
               </Avatar>
 
               <div>
-                <p className="font-bold">{data.user.name}</p>
-                <p className="text-xs">{data.user.email}</p>
+                <p className="font-bold">{data?.user.name}</p>
+                <p className="text-xs">{data?.user.email}</p>
               </div>
             </div>
           ) : (
@@ -103,16 +102,14 @@ const SidebarSheet = () => {
             <CalendarIcon size={18} />
             Agendamentos
           </Button>
-          {(data?.user?.role === "BARBER" || data?.user?.role === "OWNER") && (
-            <SheetClose asChild>
-              <Button className="justify-start gap-2" variant="ghost" asChild>
-                <Link href={PATHS.PANEL.ROOT}>
-                  <SquareScissors size={18} />
-                  Painel interno
-                </Link>
-              </Button>
-            </SheetClose>
-          )}
+          <SheetClose asChild>
+            <Button className="justify-start gap-2" variant="ghost" asChild>
+              <Link href={PATHS.PANEL.ROOT}>
+                <SquareScissors size={18} />
+                Painel interno
+              </Link>
+            </Button>
+          </SheetClose>
         </div>
 
         <div className="flex flex-col gap-2 border-b border-solid py-5">
@@ -138,7 +135,7 @@ const SidebarSheet = () => {
             <Button
               variant="ghost"
               className="justify-start gap-2"
-              onClick={handleLogoutClick}
+              onClick={() => signOut()}
             >
               <LogOutIcon size={18} />
               Sair da conta
