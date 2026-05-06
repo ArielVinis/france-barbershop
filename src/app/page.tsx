@@ -7,13 +7,16 @@ import { quickSearchOptions } from "../constants/search"
 import BookingItem from "../components/booking/booking-item"
 import Search from "../components/common/search"
 import Link from "next/link"
-import { getSession } from "../lib/auth"
+import { auth } from "../lib/auth"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { getConfirmedBookings } from "../features/bookings/_data/get-confirmed-bookings"
+import { headers } from "next/headers"
 
 const Home = async () => {
-  const session = await getSession()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   const barbershops = await db.barbershop.findMany({})
   const popularBarbershops = await db.barbershop.findMany({
     orderBy: {
