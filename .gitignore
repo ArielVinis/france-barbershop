@@ -47,3 +47,5 @@ package-lock.json
 .cursor
 src/app/__(example)
 bun.lock
+.agents
+skills-lock.json
