@@ -4,7 +4,7 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
 
-vi.mock("@/src/lib/auth", () => ({
+vi.mock("@/src/server/auth/users", () => ({
   getCurrentUser: vi.fn(),
 }))
 
@@ -22,7 +22,7 @@ vi.mock("@/src/lib/prisma", () => ({
 }))
 
 import { createBarberOwner } from "@/src/features/owner/_actions/create-barber-owner"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 
@@ -35,7 +35,9 @@ describe("createBarberOwner (integração com authz)", () => {
   })
 
   it("lança quando a barbearia não existe", async () => {
-    vi.mocked(getCurrentUser).mockResolvedValue({ id: "owner-1" } as never)
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never)
     vi.mocked(requireBarbershopForOwner).mockRejectedValue(
       new Error("Barbearia não encontrada"),
     )
