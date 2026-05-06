@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
 import Header from "@/src/components/layout/header"
 import { DevPanelForm } from "./panel/dev-panel-form"
@@ -13,7 +13,7 @@ export default async function DevPage() {
     redirect("/")
   }
 
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
 
   const barbershops = await db.barbershop.findMany({
     orderBy: { name: "asc" },
@@ -32,16 +32,10 @@ export default async function DevPage() {
             Define seu usuário como OWNER e vincula a uma barbearia. Só funciona
             em desenvolvimento.
           </p>
-          {!user ? (
-            <p className="mt-4 text-sm text-amber-600">
-              Faça login para usar esta página.
-            </p>
-          ) : (
-            <DevPanelForm
-              user={{ name: user.name, email: user.email, role: user.role }}
-              barbershops={barbershops}
-            />
-          )}
+          <DevPanelForm
+            user={{ name: user.name, email: user.email, role: user.role }}
+            barbershops={barbershops}
+          />
         </div>
       </main>
     </div>
