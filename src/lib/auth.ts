@@ -4,6 +4,7 @@ import { organization } from "better-auth/plugins"
 import { db } from "./prisma"
 import { nextCookies } from "better-auth/next-js"
 import { ac, ADMIN, OWNER, MANAGER, MEMBER, CLIENT } from "./auth/permissions"
+import { OrganizationInvitationEmail } from "../components/emails/organization-invitation"
 import { ResetPasswordEmail } from "../components/emails/reset-password"
 import { VerifyEmail } from "../components/emails/verify-email"
 import { Resend } from "resend"
@@ -11,6 +12,19 @@ import { getActiveOrganization } from "../server/organizations/organizations"
 
 // Passar para a /lib depois
 const resend = new Resend(process.env.RESEND_API_KEY)
+const emailNoReply = process.env.EMAIL_NO_REPLY as string
+
+function invitationAcceptUrl(invitationId: string) {
+  const baseRaw =
+    process.env.BETTER_AUTH_INVITATION_ACCEPT_URL ?? process.env.BETTER_AUTH_URL
+  if (!baseRaw?.trim()) {
+    throw new Error(
+      "Defina BETTER_AUTH_URL (ou BETTER_AUTH_INVITATION_ACCEPT_URL) para montar o link do convite.",
+    )
+  }
+  const base = baseRaw.trim().replace(/\/$/, "")
+  return `${base}/organization/invitations/accept?invitationId=${encodeURIComponent(invitationId)}`
+}
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -37,7 +51,7 @@ export const auth = betterAuth({
     enabled: true,
     async sendResetPassword({ user, url }) {
       await resend.emails.send({
-        from: "noreply@francebarber.com",
+        from: emailNoReply,
         to: user.email,
         subject: "Redefina sua senha",
         react: ResetPasswordEmail({
@@ -53,7 +67,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     async sendVerificationEmail({ user, url }: { user: User; url: string }) {
       await resend.emails.send({
-        from: "noreply@francebarber.com",
+        from: emailNoReply,
         to: user.email,
         subject: "Verifique seu email",
         react: VerifyEmail({
@@ -84,21 +98,21 @@ export const auth = betterAuth({
         MEMBER,
         CLIENT,
       },
-      // async sendInvitationEmail(data) {
-      //   await resend.emails.send({
-      //     from: "noreply@francebarber.com",
-      //     to: data.email,
-      //     subject: `Convite para a barbearia ${organization.name}`,
-      //     react: InvitationEmail({
-      //       inviteUrl,
-      //       inviterName: data.inviter.user.name,
-      //       inviterEmail: data.inviter.user.email,
-      //       organizationName: data.organization.name,
-      //       role: data.role,
-      //       appName: "France Barber",
-      //     }),
-      //   })
-      // },
+      async sendInvitationEmail(data) {
+        const inviteUrl = invitationAcceptUrl(data.id)
+        await resend.emails.send({
+          from: emailNoReply,
+          to: data.email,
+          subject: `Convite para a barbearia ${data.organization.name}`,
+          react: OrganizationInvitationEmail({
+            inviteUrl,
+            inviterName: data.inviter.user.name,
+            inviterEmail: data.inviter.user.email,
+            organizationName: data.organization.name,
+            role: data.role,
+          }),
+        })
+      },
     }),
   ],
 })
