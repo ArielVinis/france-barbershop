@@ -16,6 +16,7 @@ import { MembersTable } from "./members-table"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { addMember } from "@/src/server/organizations/member"
 import { Role } from "@/prisma/generated/prisma/enums"
+import { sendInvitationMember } from "@/src/server/organizations/member"
 
 export async function All() {
   const { session, user } = await getCurrentUser()
@@ -65,6 +66,24 @@ export async function All() {
             <DialogDescription>
               Adicione um novo membro à organização.
             </DialogDescription>
+          </DialogContent>
+        </Dialog>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <PlusIcon className="size-4" />
+              Enviar convite de membro
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enviar convite de membro</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              Envie um convite de membro para um novo membro.
+            </DialogDescription>
+            {/* TODO: Add SendInvitationMemberForm */}
+            <SendInvitationMemberForm onSubmit={sendInvitationMember} />
           </DialogContent>
         </Dialog>
       </div>
