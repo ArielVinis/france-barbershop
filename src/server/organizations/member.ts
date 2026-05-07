@@ -4,6 +4,7 @@ import { Role } from "@/prisma/generated/prisma/enums"
 import { auth } from "../../lib/auth"
 import { db } from "@/src/lib/prisma"
 import { isAdmin } from "../auth/permissions"
+import { headers } from "next/headers"
 
 export const addMember = async (
   userId: string,
@@ -18,9 +19,15 @@ export const addMember = async (
         organizationId,
       },
     })
+    return {
+      success: true,
+      message: "Member added successfully",
+    }
   } catch (error) {
-    console.error(error)
-    throw new Error("Failed to add member")
+    return {
+      success: false,
+      error: error || "Failed to add member",
+    }
   }
 }
 
@@ -47,6 +54,33 @@ export const removeMember = async (memberId: string) => {
     return {
       success: false,
       error: error || "Failed to remove member",
+    }
+  }
+}
+
+export const sendInvitationMember = async (
+  email: string,
+  role: Role,
+  organizationId: string,
+) => {
+  try {
+    await auth.api.createInvitation({
+      body: {
+        email,
+        role,
+        organizationId,
+        resend: true,
+      },
+      headers: await headers(),
+    })
+    return {
+      success: true,
+      message: "Invitation sent successfully",
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error || "Failed to send invitation member",
     }
   }
 }
