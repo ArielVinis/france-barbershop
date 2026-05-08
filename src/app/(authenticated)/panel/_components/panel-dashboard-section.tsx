@@ -18,7 +18,6 @@ import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner
 import { DashboardContent } from "@/src/app/(authenticated)/panel/dashboard/used/dashboard-content"
 import { PATHS } from "@/src/constants/PATHS"
 import { getBarberForUser } from "@/src/lib/authz"
-import type { AuthUser } from "@/src/lib/auth"
 import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
 import {
   normalizePanelDashboardPeriod,
@@ -26,9 +25,10 @@ import {
 } from "@/src/lib/panel/dashboard-params"
 import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
 import type { PanelDashboardStats } from "@/src/types/panel-dashboard"
+import { Role, User } from "@/prisma/generated/prisma/client"
 
 type Props = {
-  user: AuthUser
+  user: User
   searchParams: { period?: string; shopId?: string }
 }
 
@@ -82,7 +82,7 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
   const periodLabel = PANEL_DASHBOARD_PERIOD_LABELS[period]
   const date = new Date()
 
-  if (user.role === "OWNER") {
+  if (user.role === Role.OWNER) {
     const owner = await getOwnerByUserId(user.id)
     if (!owner) return null
 
@@ -126,7 +126,7 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <DashboardContent
-              viewerRole="OWNER"
+              viewerRole={Role.OWNER}
               stats={mapDashboardStats(stats)}
               periodLabel={periodLabel}
               chartRevenue={chartRevenue}
@@ -139,7 +139,7 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
     )
   }
 
-  if (user.role === "BARBER") {
+  if (user.role === Role.MEMBER) {
     const barber = await getBarberForUser(user.id)
     if (!barber) return null
 
@@ -177,7 +177,7 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <DashboardContent
-              viewerRole="BARBER"
+              viewerRole={Role.MEMBER}
               stats={mapDashboardStats(stats)}
               periodLabel={periodLabel}
               chartRevenue={chartRevenue}
