@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
 import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { PATHS } from "@/src/constants/PATHS"
@@ -18,7 +18,7 @@ export async function createBarbershopBreakOwner(
   barbershopId: string,
   input: CreateBarbershopBreakInput,
 ) {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
   const shop = await requireBarbershopForOwner(user.id, barbershopId)
 
   if (input.dayOfWeek < 0 || input.dayOfWeek > 6) {

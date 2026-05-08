@@ -1,13 +1,13 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { ForbiddenError, NotFoundError, requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
 export async function deleteServiceOwner(serviceId: string) {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
 
   const service = await db.barbershopService.findUnique({
     where: { id: serviceId },

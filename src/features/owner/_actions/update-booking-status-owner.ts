@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { ForbiddenError, NotFoundError, requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import type {
@@ -24,7 +24,7 @@ export async function updateBookingStatusOwner(
   status: BookingStatus,
   options?: UpdateBookingStatusOwnerOptions,
 ) {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },

@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { ForbiddenError, NotFoundError, requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
@@ -16,7 +16,7 @@ export interface UpdateServiceOwnerInput {
 }
 
 export async function updateServiceOwner(input: UpdateServiceOwnerInput) {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
 
   const service = await db.barbershopService.findUnique({
     where: { id: input.serviceId },

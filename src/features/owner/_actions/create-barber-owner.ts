@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { requireBarbershopForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
@@ -10,7 +10,7 @@ export async function createBarberOwner(
   barbershopId: string,
   userEmail: string,
 ) {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
 
   const ownerBarbershop = await requireBarbershopForOwner(user.id, barbershopId)
 
