@@ -9,18 +9,19 @@ import {
   CardTitle,
 } from "@/src/components/ui/card"
 import type { PanelDashboardStats } from "@/src/types/panel-dashboard"
+import { Role } from "@/prisma/generated/prisma/enums"
 
 type SectionCardsProps = {
   stats: PanelDashboardStats
   periodLabel?: string
   /** Ajusta textos do cartão “Barbeiros” para vista do próprio barbeiro. */
-  viewerRole?: "OWNER" | "BARBER"
+  viewerRole?: Role | null
 }
 
 export function SectionCards({
   stats,
   periodLabel,
-  viewerRole = "OWNER",
+  viewerRole = Role.OWNER,
 }: SectionCardsProps) {
   const periodText = periodLabel ?? "no período"
 
@@ -79,7 +80,7 @@ export function SectionCards({
       <Card className="@container/card">
         <CardHeader className="relative">
           <CardDescription>
-            {viewerRole === "BARBER" ? "No seu perfil" : "Barbeiros ativos"}
+            {viewerRole === Role.MEMBER ? "No seu perfil" : "Barbeiros ativos"}
           </CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
             {stats.activeBarbersCount}
@@ -90,7 +91,7 @@ export function SectionCards({
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
           <div className="text-muted-foreground">
-            {viewerRole === "BARBER"
+            {viewerRole === Role.MEMBER
               ? "Apenas os seus agendamentos nesta barbearia"
               : "Cadastrados na(s) barbearia(s)"}
           </div>
