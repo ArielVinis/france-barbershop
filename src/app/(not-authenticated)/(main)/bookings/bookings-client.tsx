@@ -1,10 +1,14 @@
 "use client"
 
-import { Session } from "next-auth"
 import BookingItem from "@/src/components/booking/booking-item"
 
+/** Sessão Better Auth (`auth.api.getSession`) — apenas o que a UI usa. */
+type BookingsClientSession = {
+  user: { id: string; name?: string | null; email?: string | null }
+} | null
+
 interface BookingsClientProps {
-  session: Session | null
+  session: BookingsClientSession
   confirmedBookings: any[]
   concludedBookings: any[]
 }

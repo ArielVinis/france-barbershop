@@ -6,6 +6,7 @@ import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-i
 import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
 import { OrganizationSwitcher } from "@/src/components/auth/organization-switcher"
 import { getOrganizations } from "@/src/server/organizations/organizations"
+import { Role } from "@/prisma/generated/prisma/enums"
 
 export default async function PanelLayout({
   children,
@@ -15,7 +16,7 @@ export default async function PanelLayout({
   const { user } = await getCurrentUser()
   const organizations = await getOrganizations()
 
-  if (user.role === "OWNER") {
+  if (user.role === Role.OWNER || Role.MANAGER) {
     const owner = await getOwnerByUserId(user.id)
     if (!owner) return null
 
@@ -23,7 +24,7 @@ export default async function PanelLayout({
       <SidebarProvider className="h-full !min-h-0">
         <AppSidebar
           variant="inset"
-          userRole="OWNER"
+          userRole={Role.OWNER || Role.MANAGER}
           user={owner.user}
           barbershops={owner.barbershops}
         />
@@ -40,7 +41,7 @@ export default async function PanelLayout({
     )
   }
 
-  if (user.role === "BARBER") {
+  if (user.role === Role.MEMBER) {
     const barber = await getBarberByUserId(user.id)
     if (!barber) return null
 
@@ -57,12 +58,12 @@ export default async function PanelLayout({
       <SidebarProvider className="h-full !min-h-0">
         <AppSidebar
           variant="inset"
-          userRole="BARBER"
+          userRole={Role.MEMBER}
           user={barber.user}
           barbershops={barbershops}
         />
         <SidebarInset>
-          <SiteHeader title="Painel do barbeiro" rightContent={null} />
+          <SiteHeader title="Painel do barbeiro" />
           <div className="flex flex-1 flex-col">{children}</div>
         </SidebarInset>
       </SidebarProvider>

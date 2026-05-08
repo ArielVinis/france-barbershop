@@ -13,6 +13,7 @@ import type {
   PanelDashboardRevenueSeries,
   PanelDashboardStats,
 } from "@/src/types/panel-dashboard"
+import { Role } from "@/prisma/generated/prisma/enums"
 
 type DashboardContentProps = {
   stats: PanelDashboardStats
@@ -20,7 +21,7 @@ type DashboardContentProps = {
   chartRevenue: PanelDashboardRevenueSeries
   chartBookings: PanelDashboardBookingsSeries
   chartDistribution: PanelDashboardDistribution
-  viewerRole?: "OWNER" | "BARBER"
+  viewerRole?: Role | null
 }
 
 export function DashboardContent({
@@ -29,7 +30,7 @@ export function DashboardContent({
   chartRevenue,
   chartBookings,
   chartDistribution,
-  viewerRole = "OWNER",
+  viewerRole = Role.OWNER,
 }: DashboardContentProps) {
   return (
     <>

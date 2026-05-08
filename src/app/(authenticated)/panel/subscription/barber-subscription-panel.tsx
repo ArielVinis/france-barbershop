@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { getBarberForUser } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-barbershop-subscription-access"
@@ -15,7 +15,7 @@ import {
 } from "@/src/components/ui/card"
 
 export async function BarberSubscriptionPanel() {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
   const barber = await getBarberForUser(user.id)
   if (!barber) return null
 
