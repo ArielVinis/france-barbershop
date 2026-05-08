@@ -6,9 +6,14 @@ import {
   WrenchIcon,
   CalendarDaysIcon,
   ClockIcon,
+  Building2Icon,
 } from "lucide-react"
+import { Role } from "@/prisma/generated/prisma/enums"
 
-export type PanelNavRole = "OWNER" | "BARBER"
+export type PanelNavRole =
+  | typeof Role.OWNER
+  | typeof Role.MANAGER
+  | typeof Role.MEMBER
 
 export type PanelNavMainItemDef = {
   name: string
@@ -29,31 +34,37 @@ export const sidebarItems: PanelNavMainItemDef[] = [
     name: "Dashboard",
     url: PATHS.PANEL.ROOT,
     icon: LayoutDashboardIcon,
-    roles: ["OWNER", "BARBER"],
+    roles: [Role.OWNER, Role.MANAGER, Role.MEMBER],
   },
   {
     name: "Agendamentos",
     url: PATHS.PANEL.SCHEDULE,
     icon: CalendarDaysIcon,
-    roles: ["OWNER", "BARBER"],
+    roles: [Role.OWNER, Role.MANAGER, Role.MEMBER],
+  },
+  {
+    name: "Organização",
+    url: PATHS.PANEL.ORGANIZATION,
+    icon: Building2Icon,
+    roles: [Role.OWNER, Role.MANAGER],
   },
   {
     name: "Barbeiros",
     url: PATHS.PANEL.BARBERS,
     icon: UserPlusIcon,
-    roles: ["OWNER"],
+    roles: [Role.OWNER, Role.MANAGER],
   },
   {
     name: "Serviços",
     url: PATHS.PANEL.SERVICES,
     icon: WrenchIcon,
-    roles: ["OWNER"],
+    roles: [Role.OWNER, Role.MANAGER],
   },
   {
     name: "Horários de trabalho",
     url: PATHS.PANEL.WORKED_HOURS,
     icon: ClockIcon,
-    roles: ["OWNER"],
+    roles: [Role.OWNER, Role.MANAGER],
   },
 ]
 
