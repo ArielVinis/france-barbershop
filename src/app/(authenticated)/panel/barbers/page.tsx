@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { redirect } from "next/navigation"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
@@ -16,7 +16,7 @@ export default async function OwnerBarbersPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
   redirectBarberFromOwnerOnlyRoutes(user)
   const owner = await getOwnerByUserId(user.id)
   if (!owner) return null
