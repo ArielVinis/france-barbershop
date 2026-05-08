@@ -1,6 +1,6 @@
 "use client"
 
-import type { Prisma } from "@/prisma/generated/prisma/client"
+import type { Prisma } from "@/prisma/generated/prisma/browser"
 import { Avatar, AvatarImage } from "../ui/avatar"
 import { Badge } from "../ui/badge"
 import { Card, CardContent } from "../ui/card"
@@ -151,8 +151,8 @@ const BookingItem = ({ booking }: BookingItemProps) => {
               service={booking.service}
               selectedDate={booking.date}
               barber={
-                booking.barber?.user
-                  ? { name: booking.barber.user.name ?? "Barbeiro" }
+                booking.member?.user
+                  ? { name: booking.member.user.name ?? "Barbeiro" }
                   : undefined
               }
             />

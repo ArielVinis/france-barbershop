@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
 
 /**
@@ -13,7 +13,7 @@ export async function setCurrentUserAsOwner(barbershopId: string) {
     throw new Error("Disponível apenas em desenvolvimento")
   }
 
-  const user = await getCurrentUser("Faça login para continuar")
+  const { user } = await getCurrentUser()
 
   const barbershop = await db.barbershop.findUnique({
     where: { id: barbershopId },

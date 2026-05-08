@@ -1,6 +1,6 @@
 "use client"
 
-import { Organization } from "@/prisma/generated/prisma/client"
+import type { Organization } from "@/prisma/generated/prisma/browser"
 import {
   Select,
   SelectContent,

@@ -23,6 +23,7 @@ import { useTransition } from "react"
 import { Loader2 } from "lucide-react"
 import { authClient } from "@/src/lib/auth-client"
 import Image from "next/image"
+import { Badge } from "../ui/badge"
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -35,6 +36,7 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"form">) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const lastMethod = authClient.getLastUsedLoginMethod()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,7 +82,17 @@ export function LoginForm({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Endereço de e-mail</FormLabel>
+                  <FormLabel className="relative">
+                    Endereço de e-mail
+                    {lastMethod === "email" && (
+                      <Badge
+                        variant="secondary"
+                        className="absolute right-1 top-[-9px] text-xs"
+                      >
+                        Último uso
+                      </Badge>
+                    )}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       id="email"
@@ -130,7 +142,7 @@ export function LoginForm({
           </div>
           <Button
             variant="outline"
-            className="w-full"
+            className="relative w-full"
             type="button"
             onClick={signInWithGoogle}
           >
@@ -141,6 +153,14 @@ export function LoginForm({
               height={18}
             />
             Login com Google
+            {lastMethod === "google" && (
+              <Badge
+                variant="secondary"
+                className="absolute right-1 top-[-9px] text-xs"
+              >
+                Último uso
+              </Badge>
+            )}
           </Button>
         </div>
         <div className="text-center text-sm">

@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { getBarberByUserId } from "./get-barber-by-user-id"
 
 /**
@@ -6,7 +6,7 @@ import { getBarberByUserId } from "./get-barber-by-user-id"
  * O `id` da sessão é User.id; Booking e demais tabelas usam Barber.id.
  */
 export async function requireBarberForSession() {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
   const barber = await getBarberByUserId(user.id)
   if (!barber) {
     throw new Error("Barbeiro não encontrado")

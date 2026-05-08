@@ -1,15 +1,15 @@
 "use server"
 
-import { getSession } from "@/src/lib/auth"
 import { db } from "../../../lib/prisma"
+import { getCurrentUser } from "@/src/server/auth/users"
 
 export const getConcludedBookings = async () => {
-  const session = await getSession()
-  if (!session?.user) return []
+  const { user } = await getCurrentUser()
+  if (!user) return []
   const now = new Date()
   return db.booking.findMany({
     where: {
-      userId: session.user.id,
+      userId: user.id,
       OR: [
         { date: { lt: now } },
         { status: { in: ["FINISHED", "CANCELLED", "NO_SHOW"] } },
@@ -19,11 +19,6 @@ export const getConcludedBookings = async () => {
       service: {
         include: {
           barbershop: true,
-        },
-      },
-      barber: {
-        include: {
-          user: true,
         },
       },
     },

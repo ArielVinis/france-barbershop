@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 import { db } from "../../../lib/prisma"
-import { getSession } from "@/src/lib/auth"
+import { auth } from "@/src/lib/auth"
+import { headers } from "next/headers"
 
 interface CreateBookingParams {
   serviceId: string
@@ -11,7 +12,9 @@ interface CreateBookingParams {
 }
 
 export const createBooking = async (params: CreateBookingParams) => {
-  const session = await getSession()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user) {
     throw new Error("Usuário não autenticado")
   }

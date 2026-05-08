@@ -5,7 +5,7 @@ import type {
   BarbershopService,
   Booking,
   BarbershopSchedule,
-} from "@/prisma/generated/prisma/client"
+} from "@/prisma/generated/prisma/browser"
 import Image from "next/image"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
