@@ -59,7 +59,7 @@ model User {
   members     Member[]
   invitations Invitation[]
 
-  @@map("user")
+  @@map("User")
 }
 
 model Session {
@@ -126,7 +126,7 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("booking")
+  @@map("Booking")
 }
 
 // Barbershop
@@ -149,7 +149,8 @@ model Barbershop {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("barbershop")
+  // Nome físico no Postgres é "Barbershop" (PascalCase); minúsculas não resolvem a mesma relação.
+  @@map("Barbershop")
 }
 
 model Organization {
