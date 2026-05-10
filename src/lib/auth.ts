@@ -9,27 +9,29 @@ import { ResetPasswordEmail } from "../components/emails/reset-password"
 import { VerifyEmail } from "../components/emails/verify-email"
 import { Resend } from "resend"
 import { getActiveOrganization } from "../server/organizations/organizations"
+import { PATHS } from "../constants/PATHS"
+
+const baseUrl = process.env.BETTER_AUTH_URL as string
+const invitationAcceptUrl = (invitationId: string) =>
+  `${baseUrl}${PATHS.API.ACCEPT_INVITATION(invitationId)}`
 
 // Passar para a /lib depois
 const resend = new Resend(process.env.RESEND_API_KEY)
 const emailNoReply = process.env.EMAIL_NO_REPLY as string
 
-function invitationAcceptUrl(invitationId: string) {
-  const baseRaw =
-    process.env.BETTER_AUTH_INVITATION_ACCEPT_URL ?? process.env.BETTER_AUTH_URL
-  if (!baseRaw?.trim()) {
-    throw new Error(
-      "Defina BETTER_AUTH_URL (ou BETTER_AUTH_INVITATION_ACCEPT_URL) para montar o link do convite.",
-    )
-  }
-  const base = baseRaw.trim().replace(/\/$/, "")
-  return `${base}/organization/invitations/accept?invitationId=${encodeURIComponent(invitationId)}`
-}
-
 export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
+
+  trustedOrigins: [baseUrl],
+
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
 
   databaseHooks: {
     session: {
@@ -75,15 +77,6 @@ export const auth = betterAuth({
           verificationUrl: url,
         }),
       })
-    },
-  },
-
-  trustedOrigins: [process.env.BETTER_AUTH_URL as string],
-
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
 
