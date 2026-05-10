@@ -10,6 +10,20 @@ export const PATHS = Object.freeze({
     RESET_PASSWORD: "/auth/reset-password",
   },
 
+  BARBERSHOP: {
+    ROOT: (slug: string) => `/${slug}`,
+    SEARCH: (title: string) => `/barbershops?title=${title}`,
+  },
+
+  BOOKINGS: {
+    ROOT: "/bookings",
+  },
+
+  STRIPE: {
+    PAYMENT_CONFIRMATION:
+      "/payment-confirmation?session_id={CHECKOUT_SESSION_ID}",
+  },
+
   DEV: {
     PANEL: "/dev/panel",
   },
@@ -26,17 +40,8 @@ export const PATHS = Object.freeze({
     WORKED_HOURS: "/panel/worked-hours",
   },
 
-  BARBERSHOP: {
-    ROOT: (slug: string) => `/${slug}`,
-    SEARCH: (title: string) => `/barbershops?title=${title}`,
-  },
-
-  BOOKINGS: {
-    ROOT: "/bookings",
-  },
-
-  STRIPE: {
-    PAYMENT_CONFIRMATION:
-      "/payment-confirmation?session_id={CHECKOUT_SESSION_ID}",
+  API: {
+    ACCEPT_INVITATION: (invitationId: string) =>
+      `/api/accept-invitation/${invitationId}`,
   },
 })
