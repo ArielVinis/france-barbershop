@@ -52,11 +52,17 @@ Padronizar autenticação e multi-tenant com Better Auth, usando `organization` 
 Como a base já possui dados, rode em ambiente de desenvolvimento com revisão humana:
 
 1. Validar schema:
-   - `npx prisma validate --schema prisma/schema.prisma`
+
+- `npx prisma validate`
+
 2. Formatar:
-   - `npx prisma format --schema prisma/schema.prisma`
+
+- `npx prisma format`
+
 3. Gerar SQL de diff para revisão antes de aplicar:
-   - `npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/<timestamp>_better_auth_org_teams/migration.sql`
+
+- `npx prisma migrate diff`
+
 4. Revisar SQL para evitar drops indevidos em tabelas já populadas.
 5. Aplicar somente após revisão em ambiente de staging.
 
