@@ -105,6 +105,7 @@ model Verification {
   identifier String
   value      String
   expiresAt  DateTime @db.Timestamptz(3)
+  
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -158,12 +159,14 @@ model Organization {
   name        String
   slug        String       @unique
   logo        String?
-  createdAt   DateTime     @default(now())
   metadata    String?
   teams       Team[]
   members     Member[]
   invitations Invitation[]
   barbershop  Barbershop?
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@map("organization")
 }
@@ -173,9 +176,10 @@ model Team {
   name           String
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  teammembers    TeamMember[]
+
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  teammembers    TeamMember[]
 
   @@index([organizationId])
   @@map("team")
@@ -187,6 +191,7 @@ model TeamMember {
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   createdAt DateTime @default(now())
 
   @@index([teamId])
@@ -201,7 +206,9 @@ model Member {
   userId         String
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   role           Role         @default(MEMBER)
+
   createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@index([organizationId])
   @@index([userId])
@@ -216,10 +223,11 @@ model Invitation {
   role           String?
   teamId         String?
   status         String       @default("pending")
-  expiresAt      DateTime     @db.Timestamptz(3)
-  createdAt      DateTime     @default(now())
   inviterId      String
   user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime     @db.Timestamptz(3)
 
   @@index([organizationId])
   @@index([email])
