@@ -26,7 +26,7 @@ export async function BarberSubscriptionPanel() {
 
   const shop = await db.barbershop.findUnique({
     where: { id: barber.barbershopId },
-    select: { name: true },
+    select: { organization: { select: { name: true } } },
   })
 
   return (
@@ -35,8 +35,10 @@ export async function BarberSubscriptionPanel() {
         <Card className="max-w-lg">
           <CardHeader>
             <CardTitle>Assinatura inativa</CardTitle>
-            {shop?.name ? (
-              <CardDescription>Barbearia: {shop.name}</CardDescription>
+            {shop?.organization?.name ? (
+              <CardDescription>
+                Barbearia: {shop.organization.name}
+              </CardDescription>
             ) : null}
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">

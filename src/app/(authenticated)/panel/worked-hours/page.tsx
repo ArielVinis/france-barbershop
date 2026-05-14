@@ -65,16 +65,11 @@ export default async function OwnerHorariosPage({
           barbershopId={barbershop.id}
           barbershops={owner.barbershops.map((b) => ({
             id: b.id,
-            name: b.name,
+            name: b.organization.name,
           }))}
           initialSchedules={barbershop.schedules}
           initialBreaks={barbershop.breaks}
-          initialBlockedSlots={barbershop.blockedSlots.map((s) => ({
-            id: s.id,
-            startAt: s.startAt,
-            endAt: s.endAt,
-            reason: s.reason,
-          }))}
+          initialBlockedSlots={[]}
         />
       </div>
     </div>
