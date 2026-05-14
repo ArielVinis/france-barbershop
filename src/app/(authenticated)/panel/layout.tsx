@@ -16,17 +16,24 @@ export default async function PanelLayout({
   const { user } = await getCurrentUser()
   const organizations = await getOrganizations()
 
-  if (user.role === Role.OWNER || Role.MANAGER) {
+  if (user.role === Role.OWNER || user.role === Role.MANAGER) {
     const owner = await getOwnerByUserId(user.id)
     if (!owner) return null
+
+    const barbershopsForNav = owner.barbershops.map((b) => ({
+      id: b.id,
+      name: b.organization.name,
+      slug: b.organization.slug,
+      imageUrl: b.organization.logo ?? undefined,
+    }))
 
     return (
       <SidebarProvider className="h-full !min-h-0">
         <AppSidebar
           variant="inset"
-          userRole={Role.OWNER || Role.MANAGER}
+          userRole={user.role === Role.MANAGER ? Role.MANAGER : Role.OWNER}
           user={owner.user}
-          barbershops={owner.barbershops}
+          barbershops={barbershopsForNav}
         />
         <SidebarInset>
           <SiteHeader
@@ -48,9 +55,9 @@ export default async function PanelLayout({
     const barbershops = [
       {
         id: barber.barbershop.id,
-        name: barber.barbershop.name,
-        slug: barber.barbershop.slug,
-        imageUrl: barber.barbershop.imageUrl ?? undefined,
+        name: barber.barbershop.organization.name,
+        slug: barber.barbershop.organization.slug,
+        imageUrl: barber.barbershop.organization.logo ?? undefined,
       },
     ]
 
