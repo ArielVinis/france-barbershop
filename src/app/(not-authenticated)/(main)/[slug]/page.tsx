@@ -20,24 +20,15 @@ interface BarbershopPageProps {
 const BarbershopPage = async ({ params }: BarbershopPageProps) => {
   const { slug } = await params
 
-  const barbershop = await db.barbershop.findUnique({
+  const barbershop = await db.barbershop.findFirst({
     where: {
-      slug,
+      organization: { slug },
     },
     include: {
+      organization: true,
       services: true,
-      barbers: {
-        where: { isActive: true },
-        include: {
-          user: true,
-          breaks: true,
-          schedules: { orderBy: { dayOfWeek: "asc" } },
-          blockedSlots: { orderBy: { startAt: "asc" } },
-        },
-      },
       schedules: true,
       breaks: true,
-      blockedSlots: true,
     },
   })
 
@@ -50,8 +41,8 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
       {/* IMAGEM */}
       <div className="relative h-[250px] w-full">
         <Image
-          alt={barbershop.name}
-          src={barbershop?.imageUrl}
+          alt={barbershop.organization.name}
+          src={barbershop.organization.logo ?? "/banner.png"}
           fill
           priority
           sizes="100vw"
@@ -84,7 +75,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
 
       {/* TÍTULO */}
       <div className="border-b border-solid p-5">
-        <h1 className="mb-3 text-xl font-bold">{barbershop.name}</h1>
+        <h1 className="mb-3 text-xl font-bold">{barbershop.organization.name}</h1>
         <div className="mb-2 flex items-center gap-2">
           <MapPinIcon className="text-primary" size={18} />
           <p className="text-sm">{barbershop?.address}</p>
@@ -111,7 +102,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
               key={service.id}
               barbershop={JSON.parse(JSON.stringify(barbershop))}
               service={JSON.parse(JSON.stringify(service))}
-              barbers={JSON.parse(JSON.stringify(barbershop.barbers))}
+              barbers={[]}
             />
           ))}
         </div>

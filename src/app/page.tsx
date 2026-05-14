@@ -17,10 +17,13 @@ const Home = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  const barbershops = await db.barbershop.findMany({})
+  const barbershops = await db.barbershop.findMany({
+    include: { organization: true },
+  })
   const popularBarbershops = await db.barbershop.findMany({
+    include: { organization: true },
     orderBy: {
-      name: "desc",
+      organization: { name: "desc" },
     },
   })
   const confirmedBookings = await getConfirmedBookings()
