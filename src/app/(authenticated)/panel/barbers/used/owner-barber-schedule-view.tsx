@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/src/components/ui/card"
 import { PATHS } from "@/src/constants/PATHS"
+import type { BarberForOwner } from "@/src/features/owner/types/barber-for-owner"
 
 const DAY_NAMES = [
   "Domingo",
@@ -23,14 +24,6 @@ const DAY_NAMES = [
   "Sexta",
   "Sábado",
 ]
-
-export type BarberForOwner = NonNullable<
-  Awaited<
-    ReturnType<
-      typeof import("@/src/features/owner/_data/get-barber-for-owner").getBarberForOwner
-    >
-  >
->
 
 type OwnerBarberScheduleViewProps = {
   barber: BarberForOwner

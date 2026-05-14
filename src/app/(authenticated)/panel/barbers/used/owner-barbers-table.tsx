@@ -48,10 +48,8 @@ import { createBarberOwner } from "@/src/features/owner/_actions/create-barber-o
 import { deleteBarberOwner } from "@/src/features/owner/_actions/delete-barber-owner"
 import { toggleBarberActiveOwner } from "@/src/features/owner/_actions/toggle-barber-active-owner"
 import { getBarberScheduleForOwner } from "@/src/features/owner/_actions/get-barber-schedule-for-owner"
-import {
-  OwnerBarberScheduleContent,
-  type BarberForOwner,
-} from "./owner-barber-schedule-view"
+import type { BarberForOwner } from "@/src/features/owner/types/barber-for-owner"
+import { OwnerBarberScheduleContent } from "./owner-barber-schedule-view"
 
 type BarberRow = Awaited<
   ReturnType<
