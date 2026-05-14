@@ -17,7 +17,10 @@ import { PATHS } from "@/src/constants/PATHS"
 
 type DevPanelFormProps = {
   user: { name?: string | null; email?: string | null; role?: string }
-  barbershops: { id: string; name: string; slug: string }[]
+  barbershops: {
+    id: string
+    organization: { name: string; slug: string }
+  }[]
 }
 
 export function DevPanelForm({ user, barbershops }: DevPanelFormProps) {
@@ -69,7 +72,7 @@ export function DevPanelForm({ user, barbershops }: DevPanelFormProps) {
           <SelectContent>
             {barbershops.map((b) => (
               <SelectItem key={b.id} value={b.id}>
-                {b.name}
+                {b.organization.name}
               </SelectItem>
             ))}
           </SelectContent>
