@@ -18,12 +18,21 @@ export async function deleteBarberOwner(barberId: string) {
 
   const barber = await db.member.findUnique({
     where: { id: barberId },
-    select: { organizationId: true },
+    select: {
+      organization: {
+        select: { barbershop: { select: { id: true } } },
+      },
+    },
   })
   if (!barber) throw new NotFoundError("Barbeiro não encontrado")
 
+  const barbershopId = barber.organization.barbershop?.id
+  if (!barbershopId) {
+    throw new NotFoundError("Barbearia não encontrada para esta organização")
+  }
+
   try {
-    await requireBarbershopForOwner(user.id, barber.organizationId)
+    await requireBarbershopForOwner(user.id, barbershopId)
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw new ForbiddenError("Você não tem acesso a este barbeiro")
