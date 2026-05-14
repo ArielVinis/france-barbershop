@@ -6,7 +6,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { MoreVerticalIcon, XCircleIcon, UserXIcon } from "lucide-react"
 import { toast } from "sonner"
-import type { PaymentMethod } from "@/prisma/generated/prisma/client"
+import type { PaymentMethod } from "@/prisma/generated/prisma/enums"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import {
@@ -153,7 +153,7 @@ export function BarberBookingsTable({ bookings }: BarberBookingsTableProps) {
             {bookings.map((b) => (
               <TableRow key={b.id}>
                 <TableCell>
-                  <div className="font-medium">{b.user.name}</div>
+                  <div className="font-medium">{b.name}</div>
                   {b.user.phone && (
                     <div className="text-xs text-muted-foreground">
                       {b.user.phone}

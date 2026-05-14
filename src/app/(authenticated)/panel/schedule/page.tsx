@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { getCurrentUser } from "@/src/lib/auth"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { getBarberForUser } from "@/src/lib/authz"
 import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookings"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
@@ -17,6 +17,7 @@ import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-
 import { PATHS } from "@/src/constants/PATHS"
 import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
 import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
+import { Role } from "@/prisma/generated/prisma/enums"
 
 export default async function OwnerSchedulePage({
   searchParams,
@@ -28,9 +29,9 @@ export default async function OwnerSchedulePage({
     viewDate?: string
   }>
 }) {
-  const user = await getCurrentUser()
+  const { user } = await getCurrentUser()
 
-  if (user.role === "BARBER") {
+  if (user.role === Role.MEMBER) {
     const barber = await getBarberForUser(user.id)
     if (!barber) return null
 
