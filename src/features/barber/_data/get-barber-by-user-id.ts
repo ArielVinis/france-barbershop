@@ -9,9 +9,7 @@ export const getBarberByUserId = cache(async (userId: string) => {
       barbershop: {
         select: {
           id: true,
-          name: true,
-          slug: true,
-          imageUrl: true,
+          organization: { select: { name: true, slug: true, logo: true } },
           schedules: { orderBy: { dayOfWeek: "asc" } },
         },
       },

@@ -54,7 +54,11 @@ export async function getBarberDashboardStats(
             select: {
               price: true,
               barbershopId: true,
-              barbershop: { select: { name: true } },
+              barbershop: {
+                select: {
+                  organization: { select: { name: true } },
+                },
+              },
             },
           },
         },
@@ -65,7 +69,7 @@ export async function getBarberDashboardStats(
       }),
       db.barbershop.findUnique({
         where: { id: barbershopId },
-        select: { name: true },
+        select: { organization: { select: { name: true } } },
       }),
       db.booking.groupBy({
         by: ["serviceId"],
@@ -79,7 +83,7 @@ export async function getBarberDashboardStats(
     0,
   )
 
-  const shopName = shopNameRow?.name ?? "Barbearia"
+  const shopName = shopNameRow?.organization?.name ?? "Barbearia"
   const revenueBreakdown = [
     {
       barbershopId,
