@@ -8,9 +8,15 @@ async function seedDatabase() {
     await prisma.booking.deleteMany()
     await prisma.rating.deleteMany()
     await prisma.barbershopSchedule.deleteMany()
-    await prisma.user.deleteMany()
+    await prisma.barbershopBreak.deleteMany()
     await prisma.barbershopService.deleteMany()
     await prisma.barbershop.deleteMany()
+    await prisma.member.deleteMany()
+    await prisma.invitation.deleteMany()
+    await prisma.teamMember.deleteMany()
+    await prisma.team.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
     console.log("Criando novos dados...")
 
     const images = [
@@ -177,12 +183,18 @@ async function seedDatabase() {
       const address = addresses[i]
       const imageUrl = images[i]
 
-      const barbershop = await prisma.barbershop.create({
+      const organization = await prisma.organization.create({
         data: {
           name,
           slug,
+          logo: imageUrl,
+        },
+      })
+
+      const barbershop = await prisma.barbershop.create({
+        data: {
+          organizationId: organization.id,
           address,
-          imageUrl: imageUrl,
           phones: ["(11) 99999-9999", "(11) 88888-8888"],
           description: `
             Aqui fica a descrição da barbearia.
@@ -201,15 +213,16 @@ async function seedDatabase() {
           email: barberData.email,
           emailVerified: true,
           phone: barberData.phone,
-          role: "BARBER",
+          role: "MEMBER",
           image: null,
         },
       })
 
-      await prisma.barbershop.update({
-        where: { id: barbershop.id },
+      await prisma.member.create({
         data: {
-          owners: { connect: { id: user.id } },
+          organizationId: organization.id,
+          userId: user.id,
+          role: "MEMBER",
         },
       })
 
@@ -289,10 +302,11 @@ async function seedDatabase() {
         image: null,
       },
     })
-    await prisma.barbershop.update({
-      where: { id: barbershops[0].id },
+    await prisma.member.create({
       data: {
-        owners: { connect: { id: ownerUser.id } },
+        organizationId: barbershops[0].organizationId,
+        userId: ownerUser.id,
+        role: "OWNER",
       },
     })
 
