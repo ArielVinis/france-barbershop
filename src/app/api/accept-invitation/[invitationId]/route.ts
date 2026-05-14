@@ -5,9 +5,9 @@ import { PATHS } from "@/src/constants/PATHS"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { invitationId: string } },
+  { params }: { params: Promise<{ invitationId: string }> },
 ) {
-  const { invitationId } = params
+  const { invitationId } = await params
 
   try {
     await auth.api.acceptInvitation({
