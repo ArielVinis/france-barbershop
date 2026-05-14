@@ -16,8 +16,11 @@ export default async function DevPage() {
   const { user } = await getCurrentUser()
 
   const barbershops = await db.barbershop.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true },
+    orderBy: { organization: { name: "asc" } },
+    select: {
+      id: true,
+      organization: { select: { name: true, slug: true } },
+    },
   })
 
   return (
