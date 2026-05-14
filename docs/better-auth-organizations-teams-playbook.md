@@ -43,9 +43,8 @@ Padronizar autenticação e multi-tenant com Better Auth, usando `organization` 
 ## Convenções de ID e slug
 
 - `Organization.id`: ID técnico do tenant.
-- `Organization.slug`: slug único e estável para URL/contexto.
-- `Barbershop.organizationId`: chave para isolamento por tenant.
-- Recomendação: reutilizar slug da barbearia no slug da organização quando possível.
+- `Organization.slug`: slug único e estável; usado na URL pública da loja (`/{slug}`) com `Barbershop` ligado por `organizationId`.
+- `Barbershop.organizationId`: obrigatório; 1:1 com `Organization`. Nome, slug e logo da marca vivem só em `Organization`; `Barbershop` mantém endereço, telefones, descrição e relações de negócio.
 
 ## Migração Prisma (segura)
 
