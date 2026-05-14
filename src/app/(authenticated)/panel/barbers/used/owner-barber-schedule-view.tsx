@@ -171,7 +171,7 @@ export function OwnerBarberScheduleView({
             Agenda — {barber.user.name ?? "Barbeiro"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {barber.barbershop.name}
+            {barber.barbershop.organization.name}
           </p>
         </div>
       </div>

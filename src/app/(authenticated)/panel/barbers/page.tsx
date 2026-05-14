@@ -60,7 +60,7 @@ export default async function OwnerBarbersPage({
             barbers={JSON.parse(JSON.stringify(barbers))}
             barbershops={owner.barbershops.map((b) => ({
               id: b.id,
-              name: b.name,
+              name: b.organization.name,
             }))}
             selectedBarbershopId={shopId}
           />

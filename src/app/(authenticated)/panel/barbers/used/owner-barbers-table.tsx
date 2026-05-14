@@ -193,7 +193,7 @@ export function OwnerBarbersTable({
                       {b.user.name ?? "—"}
                     </TableCell>
                     <TableCell>{b.user.email ?? "—"}</TableCell>
-                    <TableCell>{b.barbershop.name}</TableCell>
+                    <TableCell>{b.barbershop.organization.name}</TableCell>
                     <TableCell>
                       <Badge variant={b.isActive ? "default" : "secondary"}>
                         {b.isActive ? "Ativo" : "Inativo"}
@@ -321,7 +321,7 @@ export function OwnerBarbersTable({
                 : "Agenda"}
             </DialogTitle>
             <DialogDescription>
-              {scheduleData?.barbershop.name ?? "Carregando…"}
+              {scheduleData?.barbershop.organization.name ?? "Carregando…"}
             </DialogDescription>
           </DialogHeader>
           <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">
