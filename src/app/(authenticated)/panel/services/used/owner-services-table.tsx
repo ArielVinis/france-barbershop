@@ -248,7 +248,7 @@ export function OwnerServicesTable({
                     </TableCell>
                     <TableCell>{formatPrice(Number(s.price))}</TableCell>
                     <TableCell>{s.durationMinutes} min</TableCell>
-                    <TableCell>{s.barbershop.name}</TableCell>
+                    <TableCell>{s.barbershop.organization.name}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button
