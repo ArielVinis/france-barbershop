@@ -39,12 +39,7 @@ interface BookingItemProps {
     include: {
       service: {
         include: {
-          barbershop: true
-        }
-      }
-      barber: {
-        include: {
-          user: true
+          barbershop: { include: { organization: true } }
         }
       }
     }
@@ -87,9 +82,16 @@ const BookingItem = ({ booking }: BookingItemProps) => {
 
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={booking.service.barbershop.imageUrl} />
+                  <AvatarImage
+                    src={
+                      booking.service.barbershop.organization.logo ??
+                      "/banner.png"
+                    }
+                  />
                 </Avatar>
-                <p className="text-sm">{booking.service.barbershop.name}</p>
+                <p className="text-sm">
+                  {booking.service.barbershop.organization.name}
+                </p>
               </div>
             </div>
             {/* DIREITA */}
@@ -117,7 +119,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
 
         <div className="relative mt-6 flex h-[180px] w-full items-end">
           <Image
-            alt={`Mapa da barbearia ${booking.service.barbershop.name}`}
+            alt={`Mapa da barbearia ${booking.service.barbershop.organization.name}`}
             src="/map.png"
             fill
             sizes="85vw"
@@ -127,10 +129,14 @@ const BookingItem = ({ booking }: BookingItemProps) => {
           <Card className="z-50 mx-5 mb-3 w-full rounded-xl">
             <CardContent className="flex items-center gap-3 px-5 py-3">
               <Avatar>
-                <AvatarImage src={barbershop.imageUrl} />
+                <AvatarImage
+                  src={
+                    barbershop.organization.logo ?? "/banner.png"
+                  }
+                />
               </Avatar>
               <div>
-                <h3 className="font-bold">{barbershop.name}</h3>
+                <h3 className="font-bold">{barbershop.organization.name}</h3>
                 <p className="text-xs">{barbershop.address}</p>
               </div>
             </CardContent>
@@ -150,11 +156,6 @@ const BookingItem = ({ booking }: BookingItemProps) => {
               barbershop={barbershop}
               service={booking.service}
               selectedDate={booking.date}
-              barber={
-                booking.member?.user
-                  ? { name: booking.member.user.name ?? "Barbeiro" }
-                  : undefined
-              }
             />
           </div>
 
