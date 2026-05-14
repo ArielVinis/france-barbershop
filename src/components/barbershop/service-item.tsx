@@ -1,7 +1,6 @@
 "use client"
 
 import type {
-  Barbershop,
   BarbershopService,
   Booking,
   BarbershopSchedule,
@@ -53,10 +52,11 @@ type BarberWithAgenda = {
 
 interface ServiceItemProps {
   service: BarbershopService
-  barbershop: Pick<Barbershop, "name"> & {
+  barbershop: {
     schedules: BarbershopSchedule[]
     breaks?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>
     blockedSlots?: Array<{ startAt: Date | string; endAt: Date | string }>
+    organization: { name: string }
   }
   barbers: BarberWithAgenda[]
 }
