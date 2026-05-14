@@ -72,7 +72,11 @@ export async function getOwnerDashboardStats(
             select: {
               price: true,
               barbershopId: true,
-              barbershop: { select: { name: true } },
+              barbershop: {
+                select: {
+                  organization: { select: { name: true } },
+                },
+              },
             },
           },
         },
@@ -108,7 +112,7 @@ export async function getOwnerDashboardStats(
   >()
   for (const b of paidBookings) {
     const id = b.service.barbershopId
-    const name = b.service.barbershop.name
+    const name = b.service.barbershop.organization.name
     const prev = revenueByShop.get(id)
     const add = Number(b.service.price)
     revenueByShop.set(id, {

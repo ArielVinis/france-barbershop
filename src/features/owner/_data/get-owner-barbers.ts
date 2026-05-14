@@ -17,10 +17,18 @@ export const getOwnerBarbers = cache(
       where: {
         barbershopId: { in: scopedShopIds },
       },
-      orderBy: [{ barbershop: { name: "asc" } }, { createdAt: "asc" }],
+      orderBy: [
+        { barbershop: { organization: { name: "asc" } } },
+        { createdAt: "asc" },
+      ],
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
-        barbershop: { select: { id: true, name: true, slug: true } },
+        barbershop: {
+          select: {
+            id: true,
+            organization: { select: { name: true, slug: true } },
+          },
+        },
       },
     })
     return barbers

@@ -22,9 +22,17 @@ export const getOwnerServices = cache(
       where: {
         barbershopId: { in: scopedShopIds },
       },
-      orderBy: [{ barbershop: { name: "asc" } }, { name: "asc" }],
+      orderBy: [
+        { barbershop: { organization: { name: "asc" } } },
+        { name: "asc" },
+      ],
       include: {
-        barbershop: { select: { id: true, name: true, slug: true } },
+        barbershop: {
+          select: {
+            id: true,
+            organization: { select: { name: true, slug: true } },
+          },
+        },
       },
     })
     return services

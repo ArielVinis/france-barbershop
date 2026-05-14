@@ -11,8 +11,7 @@ export const getBarberForOwner = cache(
         barbershop: {
           select: {
             id: true,
-            name: true,
-            slug: true,
+            organization: { select: { name: true, slug: true } },
             schedules: { orderBy: { dayOfWeek: "asc" } },
           },
         },

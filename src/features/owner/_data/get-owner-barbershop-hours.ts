@@ -11,7 +11,6 @@ export const getOwnerBarbershopHours = cache(
       include: {
         schedules: { orderBy: { dayOfWeek: "asc" } },
         breaks: { orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }] },
-        blockedSlots: { orderBy: { startAt: "asc" } },
       },
     })
     return barbershop
