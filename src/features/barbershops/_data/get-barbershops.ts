@@ -16,9 +16,11 @@ export const getBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
       OR: [
         params?.title
           ? {
-              name: {
-                contains: params?.title,
-                mode: "insensitive",
+              organization: {
+                name: {
+                  contains: params?.title,
+                  mode: "insensitive",
+                },
               },
             }
           : {},
@@ -36,5 +38,6 @@ export const getBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
           : {},
       ],
     },
+    include: { organization: true },
   })
 }
