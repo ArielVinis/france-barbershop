@@ -1,8 +1,9 @@
 "use client"
 
 import { CreditCard, LogOutIcon, MoreVerticalIcon } from "lucide-react"
-import { signOut } from "next-auth/react"
 import Link from "next/link"
+
+import { signOut } from "@/src/lib/auth-client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -88,10 +89,11 @@ export function NavUser({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => signOut({ callbackUrl: PATHS.ROOT })}
+              onClick={() => {
+                signOut({ query: { redirectTo: PATHS.ROOT } })
+              }}
             >
-              <LogOutIcon />
-              Sair
+              <LogOutIcon /> Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
