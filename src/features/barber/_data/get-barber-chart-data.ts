@@ -19,15 +19,15 @@ import type {
   RevenueChartPoint,
 } from "@/src/features/owner/_data/get-owner-chart-data"
 
-function bookingScopeWhere(barbershopId: string, barberId: string) {
-  return { barberId, service: { barbershopId } }
+function bookingScopeWhere(organizationId: string, memberId: string) {
+  return { memberId, service: { organizationId } }
 }
 
 export async function getBarberChartDataRevenue(
-  scope: { barbershopId: string; barberId: string },
+  scope: { organizationId: string; memberId: string },
   options: { period: OwnerChartPeriod; date: Date },
 ): Promise<RevenueChartPoint[]> {
-  const { barbershopId, barberId } = scope
+  const { organizationId, memberId } = scope
   const { period, date } = options
 
   const start =
@@ -46,7 +46,7 @@ export async function getBarberChartDataRevenue(
   const days = eachDayOfInterval({ start, end })
   const bookings = await db.booking.findMany({
     where: {
-      ...bookingScopeWhere(barbershopId, barberId),
+      ...bookingScopeWhere(organizationId, memberId),
       date: { gte: start, lte: end },
       paymentStatus: "PAID",
     },
@@ -69,10 +69,10 @@ export async function getBarberChartDataRevenue(
 }
 
 export async function getBarberChartDataBookings(
-  scope: { barbershopId: string; barberId: string },
+  scope: { organizationId: string; memberId: string },
   options: { period: OwnerChartPeriod; date: Date },
 ): Promise<BookingsChartPoint[]> {
-  const { barbershopId, barberId } = scope
+  const { organizationId, memberId } = scope
   const { period, date } = options
 
   const start =
@@ -90,7 +90,7 @@ export async function getBarberChartDataBookings(
 
   const bookings = await db.booking.findMany({
     where: {
-      ...bookingScopeWhere(barbershopId, barberId),
+      ...bookingScopeWhere(organizationId, memberId),
       date: { gte: start, lte: end },
     },
     select: { date: true },
@@ -110,13 +110,13 @@ export async function getBarberChartDataBookings(
 }
 
 export async function getBarberChartDataDistribution(
-  scope: { barbershopId: string; barberId: string },
+  scope: { organizationId: string; memberId: string },
   options: { period: OwnerChartPeriod; date: Date },
 ): Promise<{
   byService: DistributionByService[]
   byBarber: DistributionByBarber[]
 }> {
-  const { barbershopId, barberId } = scope
+  const { organizationId, memberId } = scope
   const { period, date } = options
 
   const start =
@@ -136,13 +136,13 @@ export async function getBarberChartDataDistribution(
     db.booking.groupBy({
       by: ["serviceId"],
       where: {
-        ...bookingScopeWhere(barbershopId, barberId),
+        ...bookingScopeWhere(organizationId, memberId),
         date: { gte: start, lte: end },
       },
       _count: { id: true },
     }),
-    db.barber.findUnique({
-      where: { id: barberId },
+    db.member.findUnique({
+      where: { id: memberId },
       select: { user: { select: { name: true } } },
     }),
   ])
@@ -150,7 +150,7 @@ export async function getBarberChartDataDistribution(
   const serviceIds = byServiceAgg.map((s) => s.serviceId).filter(Boolean)
   const services =
     serviceIds.length > 0
-      ? await db.barbershopService.findMany({
+      ? await db.organizationService.findMany({
           where: { id: { in: serviceIds } },
           select: { id: true, name: true },
         })

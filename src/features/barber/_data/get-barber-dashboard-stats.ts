@@ -15,15 +15,13 @@ import type {
 } from "@/src/features/owner/_data/get-owner-dashboard-stats"
 
 /**
- * Estatísticas do dashboard escopadas a um barbeiro (mesma forma que o dono,
- * com `activeBarbersCount` = 1 e breakdown da única loja do vínculo).
- * `barberId` e `barbershopId` devem vir de `getBarberForUser` / contexto já validado.
+ * Estatísticas do dashboard escopadas ao barbeiro (Member) e à organização.
  */
 export async function getBarberDashboardStats(
-  scope: { barbershopId: string; barberId: string },
+  scope: { organizationId: string; memberId: string },
   options: { period: OwnerStatsPeriod; date: Date },
 ): Promise<OwnerDashboardStats> {
-  const { barbershopId, barberId } = scope
+  const { organizationId, memberId } = scope
   const { period, date } = options
 
   const start =
@@ -40,8 +38,8 @@ export async function getBarberDashboardStats(
         : endOfMonth(date)
 
   const baseBookingWhere = {
-    barberId,
-    service: { barbershopId },
+    memberId,
+    service: { organizationId },
     date: { gte: start, lte: end },
   }
 
@@ -53,12 +51,8 @@ export async function getBarberDashboardStats(
           service: {
             select: {
               price: true,
-              barbershopId: true,
-              barbershop: {
-                select: {
-                  organization: { select: { name: true } },
-                },
-              },
+              organizationId: true,
+              organization: { select: { name: true } },
             },
           },
         },
@@ -67,9 +61,9 @@ export async function getBarberDashboardStats(
         where: baseBookingWhere,
         select: { id: true },
       }),
-      db.barbershop.findUnique({
-        where: { id: barbershopId },
-        select: { organization: { select: { name: true } } },
+      db.organization.findUnique({
+        where: { id: organizationId },
+        select: { name: true },
       }),
       db.booking.groupBy({
         by: ["serviceId"],
@@ -83,10 +77,10 @@ export async function getBarberDashboardStats(
     0,
   )
 
-  const shopName = shopNameRow?.organization?.name ?? "Barbearia"
+  const shopName = shopNameRow?.name ?? "Barbearia"
   const revenueBreakdown = [
     {
-      barbershopId,
+      organizationId,
       barbershopName: shopName,
       revenue,
     },
@@ -95,7 +89,7 @@ export async function getBarberDashboardStats(
   const serviceIds = servicesAgg.map((s) => s.serviceId)
   const services =
     serviceIds.length > 0
-      ? await db.barbershopService.findMany({
+      ? await db.organizationService.findMany({
           where: { id: { in: serviceIds } },
           select: { id: true, name: true },
         })

@@ -11,7 +11,7 @@ import { db } from "@/src/lib/prisma"
 type Period = "day" | "week" | "month"
 
 export async function getBarberBookings(
-  barberId: string,
+  memberId: string,
   period: Period,
   date: Date,
 ) {
@@ -30,7 +30,7 @@ export async function getBarberBookings(
 
   return db.booking.findMany({
     where: {
-      barberId,
+      memberId,
       date: {
         gte: start,
         lte: end,

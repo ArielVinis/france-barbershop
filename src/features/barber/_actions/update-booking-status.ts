@@ -24,7 +24,7 @@ export async function updateBookingStatus(
   const barber = await requireBarberForSession()
 
   const booking = await db.booking.findFirst({
-    where: { id: bookingId, barberId: barber.id },
+    where: { id: bookingId, memberId: barber.id },
   })
   if (!booking) {
     throw new Error("Agendamento não encontrado")

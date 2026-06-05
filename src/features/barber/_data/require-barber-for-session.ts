@@ -2,8 +2,8 @@ import { getCurrentUser } from "@/src/server/auth/users"
 import { getBarberByUserId } from "./get-barber-by-user-id"
 
 /**
- * Resolve o registro Barber do usuário logado.
- * O `id` da sessão é User.id; Booking e demais tabelas usam Barber.id.
+ * Resolve o Member (barbeiro) do usuário logado.
+ * O `id` retornado é Member.id, usado em Booking.memberId.
  */
 export async function requireBarberForSession() {
   const { user } = await getCurrentUser()

@@ -1,25 +1,37 @@
+import { Role } from "@/prisma/generated/prisma/enums"
 import { db } from "@/src/lib/prisma"
 import { cache } from "react"
 
 export const getBarberByUserId = cache(async (userId: string) => {
-  const barber = await db.barber.findUnique({
-    where: { userId },
+  const member = await db.member.findFirst({
+    where: { userId, role: Role.MEMBER },
     include: {
       user: { select: { name: true, image: true, email: true } },
-      barbershop: {
+      organization: {
         select: {
           id: true,
-          organization: { select: { name: true, slug: true, logo: true } },
+          name: true,
+          slug: true,
+          logo: true,
           schedules: { orderBy: { dayOfWeek: "asc" } },
+          breaks: true,
+          blockedSlots: { orderBy: { startAt: "asc" } },
         },
       },
-      schedules: { orderBy: { dayOfWeek: "asc" } },
-      breaks: true,
-      blockedSlots: { orderBy: { startAt: "asc" } },
     },
   })
 
-  if (!barber) return null
+  if (!member) return null
 
-  return barber
+  return {
+    id: member.id,
+    userId: member.userId,
+    isActive: member.isActive,
+    organizationId: member.organizationId,
+    user: member.user,
+    organization: member.organization,
+    schedules: member.organization.schedules,
+    breaks: member.organization.breaks,
+    blockedSlots: member.organization.blockedSlots,
+  }
 })
