@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Suspense } from "react"
 import { PATHS } from "@/src/constants/PATHS"
 import Image from "next/image"
 import { ResetPasswordForm } from "@/src/components/auth/reset-password-form"
@@ -26,7 +27,9 @@ export default function ResetPasswordPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <ResetPasswordForm />
+            <Suspense fallback={<div className="h-64 animate-pulse rounded-md bg-muted" />}>
+              <ResetPasswordForm />
+            </Suspense>
           </div>
         </div>
       </div>
