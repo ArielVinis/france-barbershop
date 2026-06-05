@@ -6,21 +6,20 @@ import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
 
 /**
- * Apenas em desenvolvimento: define o usuário logado como OWNER e vincula à barbearia
- * via Member OWNER na organização da loja.
+ * Apenas em desenvolvimento: define o usuário logado como OWNER e vincula à organização.
  */
-export async function setCurrentUserAsOwner(barbershopId: string) {
+export async function setCurrentUserAsOwner(organizationId: string) {
   if (process.env.NODE_ENV !== "development") {
     throw new Error("Disponível apenas em desenvolvimento")
   }
 
   const { user } = await getCurrentUser()
 
-  const barbershop = await db.barbershop.findUnique({
-    where: { id: barbershopId },
-    select: { id: true, organizationId: true },
+  const organization = await db.organization.findUnique({
+    where: { id: organizationId },
+    select: { id: true },
   })
-  if (!barbershop) {
+  if (!organization) {
     throw new Error("Barbearia não encontrada")
   }
 
@@ -32,7 +31,7 @@ export async function setCurrentUserAsOwner(barbershopId: string) {
 
     const existing = await tx.member.findFirst({
       where: {
-        organizationId: barbershop.organizationId,
+        organizationId: organization.id,
         userId: user.id,
       },
     })
@@ -45,7 +44,7 @@ export async function setCurrentUserAsOwner(barbershopId: string) {
     } else {
       await tx.member.create({
         data: {
-          organizationId: barbershop.organizationId,
+          organizationId: organization.id,
           userId: user.id,
           role: Role.OWNER,
         },
