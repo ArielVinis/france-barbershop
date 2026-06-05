@@ -17,26 +17,23 @@ import { PATHS } from "@/src/constants/PATHS"
 
 type DevPanelFormProps = {
   user: { name?: string | null; email?: string | null; role?: string }
-  barbershops: {
-    id: string
-    organization: { name: string; slug: string }
-  }[]
+  barbershops: { id: string; name: string; slug: string }[]
 }
 
 export function DevPanelForm({ user, barbershops }: DevPanelFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [barbershopId, setBarbershopId] = useState<string>("")
+  const [organizationId, setBarbershopId] = useState<string>("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!barbershopId) {
+    if (!organizationId) {
       toast.error("Selecione uma barbearia")
       return
     }
     startTransition(async () => {
       try {
-        await setCurrentUserAsOwner(barbershopId)
+        await setCurrentUserAsOwner(organizationId)
         toast.success("Pronto! Você é dono desta barbearia. Redirecionando…")
         router.push(PATHS.PANEL.ROOT)
         router.refresh()
@@ -62,7 +59,7 @@ export function DevPanelForm({ user, barbershops }: DevPanelFormProps) {
       <div className="space-y-2">
         <Label htmlFor="barbershop">Barbearia</Label>
         <Select
-          value={barbershopId}
+          value={organizationId}
           onValueChange={setBarbershopId}
           disabled={isPending}
         >
@@ -72,7 +69,7 @@ export function DevPanelForm({ user, barbershops }: DevPanelFormProps) {
           <SelectContent>
             {barbershops.map((b) => (
               <SelectItem key={b.id} value={b.id}>
-                {b.organization.name}
+                {b.name}
               </SelectItem>
             ))}
           </SelectContent>
