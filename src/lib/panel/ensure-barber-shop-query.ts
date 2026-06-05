@@ -1,20 +1,20 @@
 import { redirect } from "next/navigation"
-import { SHOP_QUERY_PARAM } from "@/src/lib/panel/shop-query"
+import { ORGANIZATION_QUERY_PARAM } from "@/src/lib/panel/organization-query"
 
 export function ensureBarberShopIdMatchesUrl(
   pathname: string,
   searchParams: Record<string, string | undefined>,
-  linkedBarbershopId: string,
+  linkedOrganizationId: string,
 ) {
-  const raw = searchParams[SHOP_QUERY_PARAM]?.trim()
-  if (raw === linkedBarbershopId) return
+  const raw = searchParams[ORGANIZATION_QUERY_PARAM]?.trim()
+  if (raw === linkedOrganizationId) return
 
   const query = new URLSearchParams()
   for (const [k, v] of Object.entries(searchParams)) {
     if (v === undefined || v === "") continue
-    if (k === SHOP_QUERY_PARAM) continue
+    if (k === ORGANIZATION_QUERY_PARAM) continue
     query.set(k, v)
   }
-  query.set(SHOP_QUERY_PARAM, linkedBarbershopId)
+  query.set(ORGANIZATION_QUERY_PARAM, linkedOrganizationId)
   redirect(`${pathname}?${query.toString()}`)
 }
