@@ -9,28 +9,28 @@ import {
   endOfMonth,
 } from "date-fns"
 import { db } from "@/src/lib/prisma"
-import { resolveOwnerShopIdsForQueries } from "@/src/lib/panel/resolve-owner-shop-ids"
-import type { OwnerBarbershopIdList } from "@/src/types/panel-data-scope"
+import { resolveOwnerOrganizationIdsForQueries } from "@/src/lib/panel/resolve-owner-organization-ids"
+import type { OwnerOrganizationIdList } from "@/src/types/panel-data-scope"
 
 export type OwnerBookingsPeriod = "day" | "week" | "month"
 
 /**
  * Lista agendamentos das barbearias do dono.
  *
- * @param barbershopIds - Conjunto de lojas do dono (`OwnerBarbershopIdList`).
- * @param options.barbershopId - Filtro opcional; só aplica se estiver em `barbershopIds`.
+ * @param organizationIds - Conjunto de lojas do dono (`OwnerOrganizationIdList`).
+ * @param options.organizationId - Filtro opcional; só aplica se estiver em `organizationIds`.
  */
 export async function getOwnerBookings(
-  barbershopIds: OwnerBarbershopIdList,
+  organizationIds: OwnerOrganizationIdList,
   options: {
-    barbershopId?: string | null
-    barberId?: string | null
+    organizationId?: string | null
+    memberId?: string | null
     period: OwnerBookingsPeriod
     date: Date
   },
 ) {
-  const { period, date, barbershopId, barberId } = options
-  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
+  const { period, date, organizationId, memberId } = options
+  const shopIds = resolveOwnerOrganizationIdsForQueries(organizationIds, organizationId)
   if (shopIds.length === 0) return []
 
   const start =
@@ -48,8 +48,8 @@ export async function getOwnerBookings(
 
   return db.booking.findMany({
     where: {
-      service: { barbershopId: { in: shopIds } },
-      ...(barberId ? { barberId } : {}),
+      service: { organizationId: { in: shopIds } },
+      ...(memberId ? { memberId } : {}),
       date: { gte: start, lte: end },
     },
     include: {
@@ -62,10 +62,10 @@ export async function getOwnerBookings(
           name: true,
           durationMinutes: true,
           price: true,
-          barbershopId: true,
+          organizationId: true,
         },
       },
-      barber: {
+      member: {
         select: {
           id: true,
           user: { select: { name: true } },

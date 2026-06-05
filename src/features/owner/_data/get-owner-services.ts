@@ -1,40 +1,31 @@
 import { db } from "@/src/lib/prisma"
 import { cache } from "react"
 import {
-  getBarbershopsForUser,
-  requireBarbershopForOwner,
+  getOrganizationsForOwner,
+  requireOrganizationForOwner,
 } from "@/src/lib/authz"
 
 /**
- * Lista serviços das barbearias do dono.
+ * Lista serviços das organizações (barbearias) do dono.
  *
- * `barbershopId` opcional restringe por ID validado em `authz`.
+ * `organizationId` opcional restringe por ID validado em `authz`.
  */
 export const getOwnerServices = cache(
-  async (ownerUserId: string, barbershopId?: string) => {
-    const scopedShopIds = barbershopId
-      ? [(await requireBarbershopForOwner(ownerUserId, barbershopId)).id]
-      : (await getBarbershopsForUser(ownerUserId)).map((shop) => shop.id)
+  async (ownerUserId: string, organizationId?: string) => {
+    const scopedOrganizationIds = organizationId
+      ? [(await requireOrganizationForOwner(ownerUserId, organizationId)).id]
+      : (await getOrganizationsForOwner(ownerUserId)).map((org) => org.id)
 
-    if (scopedShopIds.length === 0) return []
+    if (scopedOrganizationIds.length === 0) return []
 
-    const services = await db.barbershopService.findMany({
+    return db.organizationService.findMany({
       where: {
-        barbershopId: { in: scopedShopIds },
+        organizationId: { in: scopedOrganizationIds },
       },
-      orderBy: [
-        { barbershop: { organization: { name: "asc" } } },
-        { name: "asc" },
-      ],
+      orderBy: [{ organization: { name: "asc" } }, { name: "asc" }],
       include: {
-        barbershop: {
-          select: {
-            id: true,
-            organization: { select: { name: true, slug: true } },
-          },
-        },
+        organization: { select: { id: true, name: true, slug: true } },
       },
     })
-    return services
   },
 )

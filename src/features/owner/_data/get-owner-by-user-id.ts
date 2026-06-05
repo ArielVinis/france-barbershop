@@ -1,6 +1,6 @@
 import { db } from "@/src/lib/prisma"
 import { cache } from "react"
-import { getBarbershopsForUser } from "@/src/lib/authz"
+import { getOrganizationsForOwner } from "@/src/lib/authz"
 
 export const getOwnerByUserId = cache(async (userId: string) => {
   const userPromise = db.user.findUnique({
@@ -8,14 +8,14 @@ export const getOwnerByUserId = cache(async (userId: string) => {
     select: { name: true, image: true, email: true },
   })
 
-  const barbershopsPromise = getBarbershopsForUser(userId)
+  const organizationsPromise = getOrganizationsForOwner(userId)
 
-  const [user, barbershops] = await Promise.all([
+  const [user, organizations] = await Promise.all([
     userPromise,
-    barbershopsPromise,
+    organizationsPromise,
   ])
 
   if (!user) return null
 
-  return { user, barbershops }
+  return { user, organizations }
 })

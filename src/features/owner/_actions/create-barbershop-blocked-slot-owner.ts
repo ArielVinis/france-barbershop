@@ -3,23 +3,23 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
-import { requireBarbershopForOwner } from "@/src/lib/authz"
+import { requireOrganizationForOwner } from "@/src/lib/authz"
 import { PATHS } from "@/src/constants/PATHS"
 
 export async function createBarbershopBlockedSlotOwner(
-  barbershopId: string,
+  organizationId: string,
   input: { startAt: Date; endAt: Date; reason: string | null },
 ) {
   const { user } = await getCurrentUser()
-  const shop = await requireBarbershopForOwner(user.id, barbershopId)
+  const shop = await requireOrganizationForOwner(user.id, organizationId)
 
   if (input.startAt >= input.endAt) {
     throw new Error("Data de fim deve ser após o início")
   }
 
-  const created = await db.barbershopBlockedSlot.create({
+  const created = await db.organizationBlockedSlot.create({
     data: {
-      barbershopId,
+      organizationId,
       startAt: input.startAt,
       endAt: input.endAt,
       reason: input.reason,

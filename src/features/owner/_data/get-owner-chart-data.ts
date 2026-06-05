@@ -11,8 +11,8 @@ import {
   format,
 } from "date-fns"
 import { db } from "@/src/lib/prisma"
-import { resolveOwnerShopIdsForQueries } from "@/src/lib/panel/resolve-owner-shop-ids"
-import type { OwnerBarbershopIdList } from "@/src/types/panel-data-scope"
+import { resolveOwnerOrganizationIdsForQueries } from "@/src/lib/panel/resolve-owner-organization-ids"
+import type { OwnerOrganizationIdList } from "@/src/types/panel-data-scope"
 
 export type OwnerChartPeriod = "day" | "week" | "month"
 
@@ -27,15 +27,15 @@ export type BookingsChartPoint = { date: string; count: number }
  * Considera apenas bookings com paymentStatus PAID.
  */
 export async function getOwnerChartDataRevenue(
-  barbershopIds: OwnerBarbershopIdList,
+  organizationIds: OwnerOrganizationIdList,
   options: {
-    barbershopId?: string | null
+    organizationId?: string | null
     period: OwnerChartPeriod
     date: Date
   },
 ): Promise<RevenueChartPoint[]> {
-  const { period, date, barbershopId } = options
-  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
+  const { period, date, organizationId } = options
+  const shopIds = resolveOwnerOrganizationIdsForQueries(organizationIds, organizationId)
   if (shopIds.length === 0) return []
 
   const start =
@@ -54,7 +54,7 @@ export async function getOwnerChartDataRevenue(
   const days = eachDayOfInterval({ start, end })
   const bookings = await db.booking.findMany({
     where: {
-      service: { barbershopId: { in: shopIds } },
+      service: { organizationId: { in: shopIds } },
       date: { gte: start, lte: end },
       paymentStatus: "PAID",
     },
@@ -80,15 +80,15 @@ export async function getOwnerChartDataRevenue(
  * Dados para gráfico de quantidade de agendamentos ao longo do tempo (por dia).
  */
 export async function getOwnerChartDataBookings(
-  barbershopIds: OwnerBarbershopIdList,
+  organizationIds: OwnerOrganizationIdList,
   options: {
-    barbershopId?: string | null
+    organizationId?: string | null
     period: OwnerChartPeriod
     date: Date
   },
 ): Promise<BookingsChartPoint[]> {
-  const { period, date, barbershopId } = options
-  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
+  const { period, date, organizationId } = options
+  const shopIds = resolveOwnerOrganizationIdsForQueries(organizationIds, organizationId)
   if (shopIds.length === 0) return []
 
   const start =
@@ -106,7 +106,7 @@ export async function getOwnerChartDataBookings(
 
   const bookings = await db.booking.findMany({
     where: {
-      service: { barbershopId: { in: shopIds } },
+      service: { organizationId: { in: shopIds } },
       date: { gte: start, lte: end },
     },
     select: { date: true },
@@ -132,9 +132,9 @@ export type DistributionByBarber = { name: string; count: number }
  * Distribuição de agendamentos por serviço e por barbeiro no período.
  */
 export async function getOwnerChartDataDistribution(
-  barbershopIds: OwnerBarbershopIdList,
+  organizationIds: OwnerOrganizationIdList,
   options: {
-    barbershopId?: string | null
+    organizationId?: string | null
     period: OwnerChartPeriod
     date: Date
   },
@@ -142,8 +142,8 @@ export async function getOwnerChartDataDistribution(
   byService: DistributionByService[]
   byBarber: DistributionByBarber[]
 }> {
-  const { period, date, barbershopId } = options
-  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
+  const { period, date, organizationId } = options
+  const shopIds = resolveOwnerOrganizationIdsForQueries(organizationIds, organizationId)
   if (shopIds.length === 0) {
     return { byService: [], byBarber: [] }
   }
@@ -161,48 +161,50 @@ export async function getOwnerChartDataDistribution(
         ? endOfWeek(date, { weekStartsOn: 0 })
         : endOfMonth(date)
 
-  const [byServiceAgg, byBarberAgg] = await Promise.all([
+  const [byServiceAgg, byMemberAgg] = await Promise.all([
     db.booking.groupBy({
       by: ["serviceId"],
       where: {
-        service: { barbershopId: { in: shopIds } },
+        service: { organizationId: { in: shopIds } },
         date: { gte: start, lte: end },
       },
       _count: { id: true },
     }),
     db.booking.groupBy({
-      by: ["barberId"],
+      by: ["memberId"],
       where: {
-        service: { barbershopId: { in: shopIds } },
+        service: { organizationId: { in: shopIds } },
         date: { gte: start, lte: end },
-        barberId: { not: null },
+        memberId: { not: null },
       },
       _count: { id: true },
     }),
   ])
 
   const serviceIds = byServiceAgg.map((s) => s.serviceId).filter(Boolean)
-  const barberIds = byBarberAgg
-    .map((b) => b.barberId)
+  const memberIds = byMemberAgg
+    .map((b) => b.memberId)
     .filter(Boolean) as string[]
 
-  const [services, barbers] = await Promise.all([
+  const [services, members] = await Promise.all([
     serviceIds.length > 0
-      ? db.barbershopService.findMany({
+      ? db.organizationService.findMany({
           where: { id: { in: serviceIds } },
           select: { id: true, name: true },
         })
       : [],
-    barberIds.length > 0
-      ? db.barber.findMany({
-          where: { id: { in: barberIds } },
+    memberIds.length > 0
+      ? db.member.findMany({
+          where: { id: { in: memberIds } },
           select: { id: true, user: { select: { name: true } } },
         })
       : [],
   ])
 
   const serviceNames = new Map(services.map((s) => [s.id, s.name]))
-  const barberNames = new Map(barbers.map((b) => [b.id, b.user?.name ?? "—"]))
+  const memberNames = new Map(
+    members.map((m) => [m.id, m.user?.name ?? "—"]),
+  )
 
   const byService = byServiceAgg
     .map((s) => ({
@@ -211,9 +213,9 @@ export async function getOwnerChartDataDistribution(
     }))
     .sort((a, b) => b.count - a.count)
 
-  const byBarber = byBarberAgg
+  const byBarber = byMemberAgg
     .map((b) => ({
-      name: barberNames.get(b.barberId!) ?? "—",
+      name: memberNames.get(b.memberId!) ?? "—",
       count: b._count.id,
     }))
     .sort((a, b) => b.count - a.count)

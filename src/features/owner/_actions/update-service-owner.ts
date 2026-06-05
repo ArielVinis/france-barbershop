@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { ForbiddenError, NotFoundError, requireBarbershopForOwner } from "@/src/lib/authz"
+import { ForbiddenError, NotFoundError, requireOrganizationForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
@@ -18,13 +18,13 @@ export interface UpdateServiceOwnerInput {
 export async function updateServiceOwner(input: UpdateServiceOwnerInput) {
   const { user } = await getCurrentUser()
 
-  const service = await db.barbershopService.findUnique({
+  const service = await db.organizationService.findUnique({
     where: { id: input.serviceId },
   })
   if (!service) throw new NotFoundError("Serviço não encontrado")
 
   try {
-    await requireBarbershopForOwner(user.id, service.barbershopId)
+    await requireOrganizationForOwner(user.id, service.organizationId)
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw new ForbiddenError("Você não tem acesso a este serviço")
@@ -42,7 +42,7 @@ export async function updateServiceOwner(input: UpdateServiceOwnerInput) {
   if (input.durationMinutes !== undefined && input.durationMinutes < 1)
     throw new Error("Duração mínima é 1 minuto")
 
-  await db.barbershopService.update({
+  await db.organizationService.update({
     where: { id: input.serviceId },
     data: {
       ...(name !== undefined && { name }),

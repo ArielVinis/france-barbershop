@@ -9,22 +9,18 @@ import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner
  * (Member OWNER na organização da loja).
  */
 export async function hasBarbershopSubscriptionAccess(
-  barbershopId: string,
+  organizationId: string,
 ): Promise<boolean> {
-  const shop = await db.barbershop.findUnique({
-    where: { id: barbershopId },
+  const shop = await db.organization.findUnique({
+    where: { id: organizationId },
     select: {
-      organization: {
-        select: {
-          members: {
-            where: { role: Role.OWNER },
-            take: 1,
-            select: { user: { select: { email: true } } },
-          },
-        },
+      members: {
+        where: { role: Role.OWNER },
+        take: 1,
+        select: { user: { select: { email: true } } },
       },
     },
   })
-  const email = shop?.organization.members[0]?.user.email ?? null
+  const email = shop?.members[0]?.user.email ?? null
   return hasOwnerSubscriptionAccess(email)
 }

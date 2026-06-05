@@ -1,8 +1,9 @@
 "use server"
 
+import { Role } from "@/prisma/generated/prisma/enums"
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { ForbiddenError, NotFoundError, requireBarbershopForOwner } from "@/src/lib/authz"
+import { ForbiddenError, NotFoundError, requireOrganizationForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
@@ -20,14 +21,14 @@ export async function rescheduleBookingOwner(
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
-      service: { select: { barbershopId: true } },
+      service: { select: { organizationId: true } },
     },
   })
 
   if (!booking) throw new NotFoundError("Agendamento não encontrado")
 
   try {
-    await requireBarbershopForOwner(user.id, booking.service.barbershopId)
+    await requireOrganizationForOwner(user.id, booking.service.organizationId)
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw new ForbiddenError("Você não tem acesso a este agendamento")
@@ -43,12 +44,16 @@ export async function rescheduleBookingOwner(
   }
 
   if (barberId) {
-    const barber = await db.barber.findUnique({
-      where: { id: barberId },
-      select: { barbershopId: true },
+    const barber = await db.member.findFirst({
+      where: {
+        id: barberId,
+        role: Role.MEMBER,
+        isActive: true,
+      },
+      select: { organizationId: true },
     })
     if (!barber) throw new NotFoundError("Barbeiro não encontrado")
-    if (barber.barbershopId !== booking.service.barbershopId) {
+    if (barber.organizationId !== booking.service.organizationId) {
       throw new ForbiddenError(
         "Você não tem acesso ao barbeiro informado para este agendamento",
       )
@@ -59,7 +64,9 @@ export async function rescheduleBookingOwner(
     where: { id: bookingId },
     data: {
       date: newDate,
-      ...(barberId !== undefined ? { barberId: barberId || null } : {}),
+      ...(barberId !== undefined
+        ? { memberId: barberId || null }
+        : {}),
     },
   })
 

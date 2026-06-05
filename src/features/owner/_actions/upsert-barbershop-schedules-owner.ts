@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
-import { requireBarbershopForOwner } from "@/src/lib/authz"
+import { requireOrganizationForOwner } from "@/src/lib/authz"
 import { PATHS } from "@/src/constants/PATHS"
 
 export type BarbershopScheduleInput = {
@@ -36,11 +36,11 @@ function validateSchedule(input: BarbershopScheduleInput): string | null {
 }
 
 export async function upsertBarbershopSchedulesOwner(
-  barbershopId: string,
+  organizationId: string,
   inputs: BarbershopScheduleInput[],
 ) {
   const { user } = await getCurrentUser()
-  const shop = await requireBarbershopForOwner(user.id, barbershopId)
+  const shop = await requireOrganizationForOwner(user.id, organizationId)
 
   for (const input of inputs) {
     if (input.isActive) {
@@ -49,20 +49,20 @@ export async function upsertBarbershopSchedulesOwner(
     }
   }
 
-  const existing = await db.barbershopSchedule.findMany({
-    where: { barbershopId },
+  const existing = await db.organizationSchedule.findMany({
+    where: { organizationId },
     select: { dayOfWeek: true },
   })
   const existingDays = new Set(existing.map((s) => s.dayOfWeek))
 
   for (const input of inputs) {
     if (input.isActive) {
-      await db.barbershopSchedule.upsert({
+      await db.organizationSchedule.upsert({
         where: {
-          barbershopId_dayOfWeek: { barbershopId, dayOfWeek: input.dayOfWeek },
+          organizationId_dayOfWeek: { organizationId, dayOfWeek: input.dayOfWeek },
         },
         create: {
-          barbershopId,
+          organizationId,
           dayOfWeek: input.dayOfWeek,
           startTime: input.startTime,
           endTime: input.endTime,
@@ -75,9 +75,9 @@ export async function upsertBarbershopSchedulesOwner(
         },
       })
     } else if (existingDays.has(input.dayOfWeek)) {
-      await db.barbershopSchedule.update({
+      await db.organizationSchedule.update({
         where: {
-          barbershopId_dayOfWeek: { barbershopId, dayOfWeek: input.dayOfWeek },
+          organizationId_dayOfWeek: { organizationId, dayOfWeek: input.dayOfWeek },
         },
         data: { isActive: false },
       })

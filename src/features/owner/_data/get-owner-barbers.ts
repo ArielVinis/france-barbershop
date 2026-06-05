@@ -1,36 +1,32 @@
+import { Role } from "@/prisma/generated/prisma/enums"
 import { db } from "@/src/lib/prisma"
 import { cache } from "react"
 import {
-  getBarbershopsForUser,
-  requireBarbershopForOwner,
+  getOrganizationsForOwner,
+  requireOrganizationForOwner,
 } from "@/src/lib/authz"
 
 export const getOwnerBarbers = cache(
-  async (ownerUserId: string, barbershopId?: string) => {
-    const scopedShopIds = barbershopId
-      ? [(await requireBarbershopForOwner(ownerUserId, barbershopId)).id]
-      : (await getBarbershopsForUser(ownerUserId)).map((shop) => shop.id)
+  async (ownerUserId: string, organizationId?: string) => {
+    const scopedOrganizationIds = organizationId
+      ? [(await requireOrganizationForOwner(ownerUserId, organizationId)).id]
+      : (await getOrganizationsForOwner(ownerUserId)).map((org) => org.id)
 
-    if (scopedShopIds.length === 0) return []
+    if (scopedOrganizationIds.length === 0) return []
 
-    const barbers = await db.barber.findMany({
+    return db.member.findMany({
       where: {
-        barbershopId: { in: scopedShopIds },
+        organizationId: { in: scopedOrganizationIds },
+        role: Role.MEMBER,
       },
       orderBy: [
-        { barbershop: { organization: { name: "asc" } } },
+        { organization: { name: "asc" } },
         { createdAt: "asc" },
       ],
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
-        barbershop: {
-          select: {
-            id: true,
-            organization: { select: { name: true, slug: true } },
-          },
-        },
+        organization: { select: { id: true, name: true, slug: true } },
       },
     })
-    return barbers
   },
 )

@@ -9,15 +9,15 @@ import {
   endOfMonth,
 } from "date-fns"
 import { db } from "@/src/lib/prisma"
-import { resolveOwnerShopIdsForQueries } from "@/src/lib/panel/resolve-owner-shop-ids"
-import type { OwnerBarbershopIdList } from "@/src/types/panel-data-scope"
+import { resolveOwnerOrganizationIdsForQueries } from "@/src/lib/panel/resolve-owner-organization-ids"
+import type { OwnerOrganizationIdList } from "@/src/types/panel-data-scope"
 
 export type OwnerStatsPeriod = "day" | "week" | "month"
 
 export type OwnerDashboardStats = {
   revenue: number
   revenueBreakdown: {
-    barbershopId: string
+    organizationId: string
     barbershopName: string
     revenue: number
   }[]
@@ -27,15 +27,15 @@ export type OwnerDashboardStats = {
 }
 
 export async function getOwnerDashboardStats(
-  barbershopIds: OwnerBarbershopIdList,
+  organizationIds: OwnerOrganizationIdList,
   options: {
-    barbershopId?: string | null
+    organizationId?: string | null
     period: OwnerStatsPeriod
     date: Date
   },
 ): Promise<OwnerDashboardStats> {
-  const { period, date, barbershopId } = options
-  const shopIds = resolveOwnerShopIdsForQueries(barbershopIds, barbershopId)
+  const { period, date, organizationId } = options
+  const shopIds = resolveOwnerOrganizationIdsForQueries(organizationIds, organizationId)
   if (shopIds.length === 0) {
     return {
       revenue: 0,
@@ -63,7 +63,7 @@ export async function getOwnerDashboardStats(
     await Promise.all([
       db.booking.findMany({
         where: {
-          service: { barbershopId: { in: shopIds } },
+          service: { organizationId: { in: shopIds } },
           date: { gte: start, lte: end },
           paymentStatus: "PAID",
         },
@@ -71,30 +71,30 @@ export async function getOwnerDashboardStats(
           service: {
             select: {
               price: true,
-              barbershopId: true,
-              barbershop: {
-                select: {
-                  organization: { select: { name: true } },
-                },
-              },
+              organizationId: true,
+              organization: { select: { name: true } },
             },
           },
         },
       }),
       db.booking.findMany({
         where: {
-          service: { barbershopId: { in: shopIds } },
+          service: { organizationId: { in: shopIds } },
           date: { gte: start, lte: end },
         },
         select: { id: true },
       }),
-      db.barber.count({
-        where: { barbershopId: { in: shopIds } },
+      db.member.count({
+        where: {
+          organizationId: { in: shopIds },
+          role: "MEMBER",
+          isActive: true,
+        },
       }),
       db.booking.groupBy({
         by: ["serviceId"],
         where: {
-          service: { barbershopId: { in: shopIds } },
+          service: { organizationId: { in: shopIds } },
           date: { gte: start, lte: end },
         },
         _count: { id: true },
@@ -111,8 +111,8 @@ export async function getOwnerDashboardStats(
     { barbershopName: string; revenue: number }
   >()
   for (const b of paidBookings) {
-    const id = b.service.barbershopId
-    const name = b.service.barbershop.organization.name
+    const id = b.service.organizationId
+    const name = b.service.organization.name
     const prev = revenueByShop.get(id)
     const add = Number(b.service.price)
     revenueByShop.set(id, {
@@ -121,8 +121,8 @@ export async function getOwnerDashboardStats(
     })
   }
   const revenueBreakdown = Array.from(revenueByShop.entries()).map(
-    ([barbershopId, v]) => ({
-      barbershopId,
+    ([organizationId, v]) => ({
+      organizationId,
       barbershopName: v.barbershopName,
       revenue: v.revenue,
     }),
@@ -131,7 +131,7 @@ export async function getOwnerDashboardStats(
   const serviceIds = servicesAgg.map((s) => s.serviceId)
   const services =
     serviceIds.length > 0
-      ? await db.barbershopService.findMany({
+      ? await db.organizationService.findMany({
           where: { id: { in: serviceIds } },
           select: { id: true, name: true },
         })

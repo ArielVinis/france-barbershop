@@ -1,7 +1,5 @@
 /**
  * Forma mínima dos dados de agenda do barbeiro (painel do dono).
- * Definido explicitamente para uso em Client Components; não depender de
- * `ReturnType<typeof getBarberForOwner>` via import dinâmico (perde inferência).
  */
 export type OwnerScheduleDayRow = {
   dayOfWeek: number
@@ -26,9 +24,10 @@ export type OwnerBarberBlockedSlotRow = {
 
 export type BarberForOwner = {
   user: { name: string | null; email: string | null }
-  barbershop: {
+  organization: {
     id: string
-    organization: { name: string; slug: string }
+    name: string
+    slug: string
     schedules: OwnerScheduleDayRow[]
   }
   schedules: OwnerScheduleDayRow[]

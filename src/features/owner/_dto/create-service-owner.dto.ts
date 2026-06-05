@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const CreateServiceOwnerInputSchema = z.object({
-  barbershopId: z.string().min(1, "Barbearia é obrigatória"),
+  organizationId: z.string().min(1, "Barbearia é obrigatória"),
   name: z.string().trim().min(1, "Nome do serviço é obrigatório"),
   description: z.string().trim().optional() ?? "",
   imageUrl: z.string().trim() ?? "/banner.png",

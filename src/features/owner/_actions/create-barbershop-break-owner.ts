@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
-import { requireBarbershopForOwner } from "@/src/lib/authz"
+import { requireOrganizationForOwner } from "@/src/lib/authz"
 import { PATHS } from "@/src/constants/PATHS"
 
 const TIME_REGEX = /^([01]?\d|2[0-3]):([0-5]\d)$/
@@ -15,11 +15,11 @@ export type CreateBarbershopBreakInput = {
 }
 
 export async function createBarbershopBreakOwner(
-  barbershopId: string,
+  organizationId: string,
   input: CreateBarbershopBreakInput,
 ) {
   const { user } = await getCurrentUser()
-  const shop = await requireBarbershopForOwner(user.id, barbershopId)
+  const shop = await requireOrganizationForOwner(user.id, organizationId)
 
   if (input.dayOfWeek < 0 || input.dayOfWeek > 6) {
     throw new Error("Dia da semana inválido (0-6)")
@@ -35,9 +35,9 @@ export async function createBarbershopBreakOwner(
     throw new Error("Horário de fim da pausa deve ser após o início")
   }
 
-  const created = await db.barbershopBreak.create({
+  const created = await db.organizationBreak.create({
     data: {
-      barbershopId,
+      organizationId,
       dayOfWeek: input.dayOfWeek,
       startTime: input.startTime,
       endTime: input.endTime,

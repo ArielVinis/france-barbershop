@@ -8,7 +8,7 @@ import {
 } from "@/src/features/owner/_dto/create-service-owner.dto"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { ValidationError } from "@/src/lib/authz/errors"
-import { requireBarbershopForOwner } from "@/src/lib/authz/require-barbershop-for-owner"
+import { requireOrganizationForOwner } from "@/src/lib/authz/require-organization-for-owner"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
@@ -26,11 +26,11 @@ export async function createServiceOwner(
   const data = parsed.data
   const { user } = await getCurrentUser()
 
-  const shop = await requireBarbershopForOwner(user.id, data.barbershopId)
+  const shop = await requireOrganizationForOwner(user.id, data.organizationId)
 
-  const created = await db.barbershopService.create({
+  const created = await db.organizationService.create({
     data: {
-      barbershopId: shop.id,
+      organizationId: shop.id,
       name: data.name.trim(),
       description: data.description?.trim() ?? "",
       imageUrl: data.imageUrl,
