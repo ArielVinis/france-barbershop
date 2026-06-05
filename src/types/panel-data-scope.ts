@@ -1,1 +1,1 @@
-export type OwnerBarbershopIdList = readonly string[]
+export type OwnerOrganizationIdList = readonly string[]
