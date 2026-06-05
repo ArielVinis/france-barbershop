@@ -17,14 +17,9 @@ const Home = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  const barbershops = await db.barbershop.findMany({
-    include: { organization: true },
-  })
-  const popularBarbershops = await db.barbershop.findMany({
-    include: { organization: true },
-    orderBy: {
-      organization: { name: "desc" },
-    },
+  const barbershops = await db.organization.findMany()
+  const popularBarbershops = await db.organization.findMany({
+    orderBy: { name: "desc" },
   })
   const confirmedBookings = await getConfirmedBookings()
 
