@@ -11,16 +11,14 @@ export interface GetBarbershopsProps {
 
 export const getBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
   const params = await searchParams
-  return db.barbershop.findMany({
+  return db.organization.findMany({
     where: {
       OR: [
         params?.title
           ? {
-              organization: {
-                name: {
-                  contains: params?.title,
-                  mode: "insensitive",
-                },
+              name: {
+                contains: params?.title,
+                mode: "insensitive",
               },
             }
           : {},
@@ -38,6 +36,5 @@ export const getBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
           : {},
       ],
     },
-    include: { organization: true },
   })
 }
