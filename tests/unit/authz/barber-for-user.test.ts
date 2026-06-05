@@ -1,48 +1,39 @@
 import { describe, it, expect, vi, beforeEach, Mock } from "vitest"
+import { Role } from "@/prisma/generated/prisma/enums"
+import { getBarberMemberForUser } from "@/src/lib/authz/get-barber-member-for-user"
+import { db } from "@/src/lib/prisma"
 
-vi.mock("react", async (importOriginal) => {
-  const React = await importOriginal<typeof import("react")>()
-  return {
-    ...React,
-    cache: <T extends (..._args: never[]) => unknown>(fn: T) => fn,
-  }
-})
+vi.mock("react", () => ({
+  cache: (fn: unknown) => fn,
+}))
 
 vi.mock("@/src/lib/prisma", () => ({
   db: {
-    barber: {
-      findUnique: vi.fn(),
+    member: {
+      findFirst: vi.fn(),
     },
   },
 }))
 
-import { getBarberForUser } from "@/src/lib/authz/get-barber-for-user"
-import { db } from "@/src/lib/prisma"
+const findFirst = db.member.findFirst as Mock
 
-const findUnique = db.barber.findUnique as Mock
-
-describe("getBarberForUser", () => {
+describe("getBarberMemberForUser", () => {
   beforeEach(() => {
-    findUnique.mockReset()
+    findFirst.mockReset()
   })
 
-  it("resolve barberId e barbershopId pelo userId", async () => {
-    findUnique.mockResolvedValue({ id: "barber-1", barbershopId: "shop-1" })
-
-    const result = await getBarberForUser("user-99")
-
-    expect(findUnique).toHaveBeenCalledWith({
-      where: { userId: "user-99" },
-      select: { id: true, barbershopId: true },
+  it("consulta member com role MEMBER", async () => {
+    findFirst.mockResolvedValue({
+      id: "m-1",
+      organizationId: "org-1",
     })
-    expect(result).toEqual({ id: "barber-1", barbershopId: "shop-1" })
-  })
 
-  it("devolve null quando não existe registo Barber", async () => {
-    findUnique.mockResolvedValue(null)
+    const result = await getBarberMemberForUser("user-1")
 
-    const result = await getBarberForUser("user-sem-barber")
-
-    expect(result).toBeNull()
+    expect(findFirst).toHaveBeenCalledWith({
+      where: { userId: "user-1", role: Role.MEMBER },
+      select: { id: true, organizationId: true },
+    })
+    expect(result).toEqual({ id: "m-1", organizationId: "org-1" })
   })
 })

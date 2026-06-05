@@ -9,7 +9,7 @@ vi.mock("@/src/server/auth/users", () => ({
 }))
 
 vi.mock("@/src/lib/authz", () => ({
-  requireBarbershopForOwner: vi.fn(),
+  requireOrganizationForOwner: vi.fn(),
 }))
 
 vi.mock("@/src/lib/prisma", () => ({
@@ -23,13 +23,13 @@ vi.mock("@/src/lib/prisma", () => ({
 
 import { createBarberOwner } from "@/src/features/owner/_actions/create-barber-owner"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { requireBarbershopForOwner } from "@/src/lib/authz"
+import { requireOrganizationForOwner } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 
 describe("createBarberOwner (integração com authz)", () => {
   beforeEach(() => {
     vi.mocked(getCurrentUser).mockReset()
-    vi.mocked(requireBarbershopForOwner).mockReset()
+    vi.mocked(requireOrganizationForOwner).mockReset()
     vi.mocked(db.user.findUnique).mockReset()
     vi.mocked(db.$transaction).mockReset()
   })
@@ -38,7 +38,7 @@ describe("createBarberOwner (integração com authz)", () => {
     vi.mocked(getCurrentUser).mockResolvedValue({
       user: { id: "owner-1" },
     } as never)
-    vi.mocked(requireBarbershopForOwner).mockRejectedValue(
+    vi.mocked(requireOrganizationForOwner).mockRejectedValue(
       new Error("Barbearia não encontrada"),
     )
 
