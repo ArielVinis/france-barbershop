@@ -19,6 +19,7 @@ import {
 import { Button } from "@/src/components/ui/button"
 import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
 import { PATHS } from "@/src/constants/PATHS"
+import { Role } from "@/prisma/generated/prisma/enums"
 
 function formatCurrency(amount: number | null | undefined, currency = "brl") {
   if (amount == null) return "-"
@@ -40,7 +41,7 @@ export default async function OwnerSubscriptionPage({
 }) {
   const { user } = await getCurrentUser()
   if (!user) return null
-  if (user.role === "BARBER") {
+  if (user.role === Role.MEMBER) {
     const barber = await getBarberMemberForUser(user.id)
     if (!barber) return null
 
