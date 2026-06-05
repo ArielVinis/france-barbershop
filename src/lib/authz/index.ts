@@ -1,7 +1,7 @@
 export {
-  getBarbershopForUser,
-  getBarbershopsForUser,
-} from "./get-barbershops-for-user"
-export { getBarberForUser } from "./get-barber-for-user"
-export { requireBarbershopForOwner } from "./require-barbershop-for-owner"
+  getOrganizationForOwner,
+  getOrganizationsForOwner,
+} from "./get-organizations-for-owner"
+export { getBarberMemberForUser } from "./get-barber-member-for-user"
+export { requireOrganizationForOwner } from "./require-organization-for-owner"
 export { ForbiddenError, NotFoundError, ValidationError } from "./errors"
