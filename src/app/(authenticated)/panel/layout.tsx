@@ -20,11 +20,11 @@ export default async function PanelLayout({
     const owner = await getOwnerByUserId(user.id)
     if (!owner) return null
 
-    const barbershopsForNav = owner.barbershops.map((b) => ({
-      id: b.id,
-      name: b.organization.name,
-      slug: b.organization.slug,
-      imageUrl: b.organization.logo ?? undefined,
+    const barbershopsForNav = owner.organizations.map((org) => ({
+      id: org.id,
+      name: org.name,
+      slug: org.slug,
+      imageUrl: org.logo ?? undefined,
     }))
 
     return (
@@ -54,10 +54,10 @@ export default async function PanelLayout({
 
     const barbershops = [
       {
-        id: barber.barbershop.id,
-        name: barber.barbershop.organization.name,
-        slug: barber.barbershop.organization.slug,
-        imageUrl: barber.barbershop.organization.logo ?? undefined,
+        id: barber.organization.id,
+        name: barber.organization.name,
+        slug: barber.organization.slug,
+        imageUrl: barber.organization.logo ?? undefined,
       },
     ]
 

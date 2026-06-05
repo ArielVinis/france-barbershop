@@ -4,7 +4,7 @@ import { PanelDashboardSection } from "@/src/app/(authenticated)/panel/_componen
 export default async function PanelDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string; shopId?: string }>
+  searchParams: Promise<{ period?: string; organizationId?: string }>
 }) {
   const { user } = await getCurrentUser()
   const params = await searchParams
