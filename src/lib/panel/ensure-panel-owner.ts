@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
-import type { AuthUser } from "@/src/lib/auth"
+import { Role, User } from "@/prisma/generated/prisma/client"
 import { PATHS } from "@/src/constants/PATHS"
 
-export function redirectBarberFromOwnerOnlyRoutes(user: AuthUser) {
-  if (user.role === "BARBER") redirect(PATHS.PANEL.ROOT)
+export function redirectBarberFromOwnerOnlyRoutes(user: User) {
+  if (user.role === Role.MEMBER) redirect(PATHS.PANEL.ROOT)
 }

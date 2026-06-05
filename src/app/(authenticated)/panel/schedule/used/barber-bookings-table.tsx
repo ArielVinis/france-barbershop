@@ -153,7 +153,7 @@ export function BarberBookingsTable({ bookings }: BarberBookingsTableProps) {
             {bookings.map((b) => (
               <TableRow key={b.id}>
                 <TableCell>
-                  <div className="font-medium">{b.name}</div>
+                  <div className="font-medium">{b.user.name}</div>
                   {b.user.phone && (
                     <div className="text-xs text-muted-foreground">
                       {b.user.phone}
