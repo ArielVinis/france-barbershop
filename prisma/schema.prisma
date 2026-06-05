@@ -52,13 +52,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // TODO: Add ratings for barbers and barbershops
   ratings     Rating[]
   teammembers TeamMember[]
   members     Member[]
   invitations Invitation[]
-
-  @@map("User")
 }
 
 model Session {
@@ -76,7 +73,6 @@ model Session {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
-  @@map("session")
 }
 
 model Account {
@@ -95,8 +91,6 @@ model Account {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@map("account")
 }
 
 model Verification {
@@ -104,49 +98,29 @@ model Verification {
   identifier String
   value      String
   expiresAt  DateTime @db.Timestamptz(3)
-  
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
 
-  @@map("verification")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Booking {
-  id            String            @id @default(uuid())
+  id            String              @id @default(uuid())
   userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceId     String
-  service       BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  date          DateTime          @db.Timestamptz(3)
-  status        BookingStatus     @default(CONFIRMED)
+  service       OrganizationService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  memberId      String?
+  member        Member?             @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  date          DateTime            @db.Timestamptz(3)
+  status        BookingStatus       @default(CONFIRMED)
   observations  String?
   paymentMethod PaymentMethod?
-  paymentStatus PaymentStatus     @default(PENDING)
+  paymentStatus PaymentStatus       @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("Booking")
-}
-
-// Barbershop — identidade pública (nome, slug, logo) vive em Organization (Better Auth).
-model Barbershop {
-  id             String         @id @default(uuid())
-  address        String
-  phones         String[]
-  description    String
-  services       BarbershopService[]
-  ratings        Rating[]
-  schedules      BarbershopSchedule[]
-  breaks         BarbershopBreak[]
-  organizationId String         @unique
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Nome físico no Postgres é "Barbershop" (PascalCase); minúsculas não resolvem a mesma relação.
-  @@map("Barbershop")
+  @@index([memberId])
 }
 
 model Organization {
@@ -155,15 +129,20 @@ model Organization {
   slug        String       @unique
   logo        String?
   metadata    String?
+  address     String
+  phones      String[]
+  description String
+  services    OrganizationService[]
+  ratings     Rating[]
+  schedules   OrganizationSchedule[]
+  breaks      OrganizationBreak[]
+  blockedSlots OrganizationBlockedSlot[]
   teams       Team[]
   members     Member[]
   invitations Invitation[]
-  barbershop  Barbershop?
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  @@map("organization")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Team {
@@ -173,25 +152,23 @@ model Team {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   teammembers    TeamMember[]
 
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
-  @@map("team")
 }
 
 model TeamMember {
-  id        String   @id @default(uuid())
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(uuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
   @@index([teamId])
   @@index([userId])
-  @@map("teamMember")
 }
 
 model Member {
@@ -202,13 +179,13 @@ model Member {
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   role           Role         @default(MEMBER)
   isActive       Boolean      @default(true)
+  bookings       Booking[]
 
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
   @@index([userId])
-  @@map("member")
 }
 
 model Invitation {
@@ -222,65 +199,75 @@ model Invitation {
   inviterId      String
   user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
-  createdAt      DateTime     @default(now())
-  expiresAt      DateTime     @db.Timestamptz(3)
+  createdAt DateTime @default(now())
+  expiresAt DateTime @db.Timestamptz(3)
 
   @@index([organizationId])
   @@index([email])
-  @@map("invitation")
 }
 
-model BarbershopService {
-  id              String     @id @default(uuid())
+model OrganizationService {
+  id              String       @id @default(uuid())
   name            String
   description     String
   imageUrl        String
-  price           Decimal    @db.Decimal(10, 2)
+  price           Decimal      @db.Decimal(10, 2)
   durationMinutes Int
-  barbershopId    String
-  barbershop      Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   bookings        Booking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model BarbershopSchedule {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
-  startTime    String // "08:00" formato HH:mm
-  endTime      String // "18:00" formato HH:mm
-  isActive     Boolean    @default(true)
+model OrganizationSchedule {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  isActive       Boolean      @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([barbershopId, dayOfWeek])
+  @@unique([organizationId, dayOfWeek])
 }
 
-model BarbershopBreak {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int // 0 = Domingo, …, 6 = Sábado
-  startTime    String // "12:00" formato HH:mm
-  endTime      String // "13:00" formato HH:mm
+model OrganizationBreak {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// Rating
+model OrganizationBlockedSlot {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  startAt        DateTime     @db.Timestamptz(3)
+  endAt          DateTime     @db.Timestamptz(3)
+  reason         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Rating {
-  id           String     @id @default(uuid())
-  userId       String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  stars        Int
-  comment      String?
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stars          Int
+  comment        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
