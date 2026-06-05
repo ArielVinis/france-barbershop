@@ -8,26 +8,30 @@ export type CalendarEvent = {
   resource?: { bookingId: string }
 }
 
+/** Dados mínimos de um booking para montar o título do evento no calendário. */
+export type BookingForCalendarEvent = {
+  id: string
+  date: Date | string
+  user: { name: string | null }
+  service: { name: string; durationMinutes: number }
+  member?: { user: { name: string | null } } | null
+}
+
 /**
  * Converte bookings em eventos para o React Big Calendar.
  * Função pura, segura para uso em Server Components.
  */
 export function bookingsToCalendarEvents(
-  bookings: {
-    id: string
-    date: Date
-    user: { name: string }
-    service: { name: string; durationMinutes: number }
-    barber?: { user: { name: string } } | null
-  }[],
+  bookings: BookingForCalendarEvent[],
 ): CalendarEvent[] {
   return bookings.map((b) => {
     const start = new Date(b.date)
     const end = addMinutes(start, b.service.durationMinutes)
-    const barberName = b.barber?.user.name
+    const clientName = b.user.name ?? "Cliente"
+    const barberName = b.member?.user.name
     const title = barberName
-      ? `${b.user.name} — ${b.service.name} (${barberName})`
-      : `${b.user.name} — ${b.service.name}`
+      ? `${clientName} — ${b.service.name} (${barberName})`
+      : `${clientName} — ${b.service.name}`
     return {
       id: b.id,
       title,
