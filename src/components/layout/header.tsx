@@ -13,13 +13,14 @@ const Header = () => {
   return (
     <Card>
       <CardContent className="flex flex-row items-center justify-between p-5">
-        <Link href={PATHS.HOME}>
+        <Link href={PATHS.ROOT}>
           <Image
             alt="France Barber"
             src="/logo.png"
             width={100}
             height={100}
             style={{ width: "auto", height: "auto" }}
+            loading="eager"
           />
         </Link>
 

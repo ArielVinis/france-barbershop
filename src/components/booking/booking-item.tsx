@@ -1,6 +1,6 @@
 "use client"
 
-import type { Prisma } from "@/prisma/generated/prisma/client"
+import type { Prisma } from "@/prisma/generated/prisma/browser"
 import { Avatar, AvatarImage } from "../ui/avatar"
 import { Badge } from "../ui/badge"
 import { Card, CardContent } from "../ui/card"
@@ -39,12 +39,7 @@ interface BookingItemProps {
     include: {
       service: {
         include: {
-          barbershop: true
-        }
-      }
-      barber: {
-        include: {
-          user: true
+          organization: true
         }
       }
     }
@@ -53,9 +48,7 @@ interface BookingItemProps {
 
 const BookingItem = ({ booking }: BookingItemProps) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const {
-    service: { barbershop },
-  } = booking
+  const { organization } = booking.service
   const isConfirmed = isFuture(booking.date)
   const handleCancelBooking = async () => {
     try {
@@ -75,7 +68,6 @@ const BookingItem = ({ booking }: BookingItemProps) => {
       <SheetTrigger className="w-full min-w-[90%]">
         <Card className="min-w-[90%]">
           <CardContent className="flex justify-between p-0">
-            {/* ESQUERDA */}
             <div className="flex flex-col gap-2 py-5 pl-5">
               <Badge
                 className="w-fit"
@@ -87,12 +79,13 @@ const BookingItem = ({ booking }: BookingItemProps) => {
 
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={booking.service.barbershop.imageUrl} />
+                  <AvatarImage
+                    src={organization.logo ?? "/banner.png"}
+                  />
                 </Avatar>
-                <p className="text-sm">{booking.service.barbershop.name}</p>
+                <p className="text-sm">{organization.name}</p>
               </div>
             </div>
-            {/* DIREITA */}
             <div className="flex flex-col items-center justify-center border-l-2 border-solid px-5">
               <p className="text-sm capitalize">
                 {format(booking.date, "MMMM", { locale: ptBR })}
@@ -117,7 +110,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
 
         <div className="relative mt-6 flex h-[180px] w-full items-end">
           <Image
-            alt={`Mapa da barbearia ${booking.service.barbershop.name}`}
+            alt={`Mapa da barbearia ${organization.name}`}
             src="/map.png"
             fill
             sizes="85vw"
@@ -127,11 +120,11 @@ const BookingItem = ({ booking }: BookingItemProps) => {
           <Card className="z-50 mx-5 mb-3 w-full rounded-xl">
             <CardContent className="flex items-center gap-3 px-5 py-3">
               <Avatar>
-                <AvatarImage src={barbershop.imageUrl} />
+                <AvatarImage src={organization.logo ?? "/banner.png"} />
               </Avatar>
               <div>
-                <h3 className="font-bold">{barbershop.name}</h3>
-                <p className="text-xs">{barbershop.address}</p>
+                <h3 className="font-bold">{organization.name}</h3>
+                <p className="text-xs">{organization.address}</p>
               </div>
             </CardContent>
           </Card>
@@ -147,19 +140,14 @@ const BookingItem = ({ booking }: BookingItemProps) => {
 
           <div className="mb-3 mt-6">
             <BookingSummary
-              barbershop={barbershop}
+              organization={organization}
               service={booking.service}
               selectedDate={booking.date}
-              barber={
-                booking.barber?.user
-                  ? { name: booking.barber.user.name ?? "Barbeiro" }
-                  : undefined
-              }
             />
           </div>
 
           <div className="space-y-3">
-            {barbershop.phones.map((phone, index) => (
+            {organization.phones.map((phone, index) => (
               <PhoneItem key={index} phone={phone} />
             ))}
           </div>

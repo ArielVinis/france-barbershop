@@ -5,6 +5,7 @@ import { Button, buttonVariants } from "@/src/components/ui/button"
 import { Sheet, SheetTrigger } from "@/src/components/ui/sheet"
 import { cn } from "@/src/lib/utils"
 import { PATHS } from "@/src/constants/PATHS"
+import { Role } from "@/prisma/generated/prisma/enums"
 import { db } from "@/src/lib/prisma"
 import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
@@ -20,38 +21,55 @@ interface BarbershopPageProps {
 const BarbershopPage = async ({ params }: BarbershopPageProps) => {
   const { slug } = await params
 
-  const barbershop = await db.barbershop.findUnique({
-    where: {
-      slug,
-    },
+  const organization = await db.organization.findFirst({
+    where: { slug },
     include: {
       services: true,
-      barbers: {
-        where: { isActive: true },
-        include: {
-          user: true,
-          breaks: true,
-          schedules: { orderBy: { dayOfWeek: "asc" } },
-          blockedSlots: { orderBy: { startAt: "asc" } },
-        },
-      },
       schedules: true,
       breaks: true,
       blockedSlots: true,
     },
   })
 
-  if (!barbershop) {
+  if (!organization) {
     return notFound()
   }
 
+  const barberMembers = await db.member.findMany({
+    where: {
+      organizationId: organization.id,
+      role: Role.MEMBER,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      user: { select: { name: true } },
+    },
+  })
+
+  const barbers = barberMembers.map((m) => ({
+    id: m.id,
+    user: { name: m.user.name ?? "Barbeiro" },
+    schedules: [] as Array<{
+      dayOfWeek: number
+      startTime: string
+      endTime: string
+      isActive: boolean
+    }>,
+    breaks: [] as Array<{
+      dayOfWeek: number
+      startTime: string
+      endTime: string
+    }>,
+    blockedSlots: [] as Array<{ startAt: Date; endAt: Date }>,
+  }))
+
   return (
     <div>
-      {/* IMAGEM */}
       <div className="relative h-[250px] w-full">
         <Image
-          alt={barbershop.name}
-          src={barbershop?.imageUrl}
+          alt={organization.name}
+          src={organization.logo ?? "/banner.png"}
           fill
           priority
           sizes="100vw"
@@ -64,7 +82,7 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
           className="absolute left-4 top-4"
           asChild
         >
-          <Link href={PATHS.HOME}>
+          <Link href={PATHS.ROOT}>
             <ChevronLeftIcon />
           </Link>
         </Button>
@@ -82,12 +100,11 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
         </Sheet>
       </div>
 
-      {/* TÍTULO */}
       <div className="border-b border-solid p-5">
-        <h1 className="mb-3 text-xl font-bold">{barbershop.name}</h1>
+        <h1 className="mb-3 text-xl font-bold">{organization.name}</h1>
         <div className="mb-2 flex items-center gap-2">
           <MapPinIcon className="text-primary" size={18} />
-          <p className="text-sm">{barbershop?.address}</p>
+          <p className="text-sm">{organization.address}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -96,30 +113,27 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
         </div>
       </div>
 
-      {/* DESCRIÇÃO */}
       <div className="space-y-2 border-b border-solid p-5">
         <h2 className="text-xs font-bold uppercase text-gray-400">Sobre nós</h2>
-        <p className="text-justify text-sm">{barbershop?.description}</p>
+        <p className="text-justify text-sm">{organization.description}</p>
       </div>
 
-      {/* SERVIÇOS */}
       <div className="space-y-3 border-b border-solid p-5">
         <h2 className="text-xs font-bold uppercase text-gray-400">Serviços</h2>
         <div className="space-y-3">
-          {barbershop.services.map((service) => (
+          {organization.services.map((service) => (
             <ServiceItem
               key={service.id}
-              barbershop={JSON.parse(JSON.stringify(barbershop))}
+              organization={JSON.parse(JSON.stringify(organization))}
               service={JSON.parse(JSON.stringify(service))}
-              barbers={JSON.parse(JSON.stringify(barbershop.barbers))}
+              barbers={barbers}
             />
           ))}
         </div>
       </div>
 
-      {/* CONTATO */}
       <div className="space-y-3 p-5">
-        {barbershop.phones.map((phone) => (
+        {organization.phones.map((phone) => (
           <PhoneItem key={phone} phone={phone} />
         ))}
       </div>

@@ -11,7 +11,7 @@ export interface GetBarbershopsProps {
 
 export const getBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
   const params = await searchParams
-  return db.barbershop.findMany({
+  return db.organization.findMany({
     where: {
       OR: [
         params?.title

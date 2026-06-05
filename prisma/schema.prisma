@@ -8,9 +8,11 @@ datasource db {
 }
 
 enum Role {
-  CLIENT
-  BARBER
+  ADMIN
+  MEMBER
   OWNER
+  MANAGER
+  CLIENT
 }
 
 enum BookingStatus {
@@ -36,215 +38,236 @@ enum PaymentStatus {
 }
 
 model User {
-  id            String       @id @default(cuid())
+  id            String       @id @default(uuid())
   name          String
   email         String?      @unique
-  emailVerified DateTime?
+  emailVerified Boolean
   role          Role         @default(CLIENT)
   image         String?
   phone         String?      @unique
   accounts      Account[]
   sessions      Session[]
   bookings      Booking[]
-  barber        Barber?
-  owner         Barbershop[] @relation("OwnerBarbershops")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // TODO: Add ratings for barbers and barbershops
-  ratings Rating[]
-}
-
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@id([provider, providerAccountId])
+  ratings     Rating[]
+  teammembers TeamMember[]
+  members     Member[]
+  invitations Invitation[]
 }
 
 model Session {
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String
+  token                String   @unique
+  expiresAt            DateTime @db.Timestamptz(3)
+  ipAddress            String?
+  userAgent            String?
+  activeOrganizationId String?
+  activeTeamId         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
-model VerificationToken {
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Verification {
+  id         String   @id @default(uuid())
   identifier String
-  token      String
-  expires    DateTime
-
-  @@id([identifier, token])
-}
-
-model Barbershop {
-  id          String               @id @default(uuid())
-  name        String
-  slug        String               @unique
-  address     String
-  phones      String[]
-  description String
-  imageUrl    String
-  owners      User[]               @relation("OwnerBarbershops")
-  barbers     Barber[]
-  services    BarbershopService[]
-  ratings       Rating[]
-  schedules     BarbershopSchedule[]
-  breaks        BarbershopBreak[]
-  blockedSlots  BarbershopBlockedSlot[]
+  value      String
+  expiresAt  DateTime @db.Timestamptz(3)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Barber {
-  id             String              @id @default(uuid())
-  userId         String              @unique
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  barbershopId   String
-  barbershop     Barbershop          @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  isActive       Boolean             @default(true)
-  bookings       Booking[]
-  schedules      BarberSchedule[]
-  breaks         BarberBreak[]
-  blockedSlots   BarberBlockedSlot[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model BarberSchedule {
-  id        String  @id @default(uuid())
-  barberId  String
-  barber    Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
-  dayOfWeek Int     // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
-  startTime String  // "08:00" formato HH:mm
-  endTime   String  // "18:00" formato HH:mm
-  isActive  Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([barberId, dayOfWeek])
-}
-
-model BarberBreak {
-  id        String @id @default(uuid())
-  barberId  String
-  barber    Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
-  dayOfWeek Int    // 0 = Domingo, ..., 6 = Sábado
-  startTime String // "12:00" formato HH:mm
-  endTime   String // "13:00" formato HH:mm
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model BarberBlockedSlot {
-  id       String   @id @default(uuid())
-  barberId String
-  barber   Barber   @relation(fields: [barberId], references: [id], onDelete: Cascade)
-  startAt  DateTime
-  endAt    DateTime
-  reason   String?  // ex: "Férias", "Consulta médica"
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model BarbershopService {
-  id              String     @id @default(uuid())
-  name            String
-  description     String
-  imageUrl        String
-  price           Decimal    @db.Decimal(10, 2)
-  durationMinutes Int
-  barbershopId    String
-  barbershop      Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  bookings        Booking[]
 }
 
 model Booking {
-  id            String            @id @default(uuid())
+  id            String              @id @default(uuid())
   userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceId     String
-  service       BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  barberId      String?
-  barber        Barber?           @relation(fields: [barberId], references: [id], onDelete: SetNull)
-  date          DateTime
-  status        BookingStatus     @default(CONFIRMED)
+  service       OrganizationService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  memberId      String?
+  member        Member?             @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  date          DateTime            @db.Timestamptz(3)
+  status        BookingStatus       @default(CONFIRMED)
   observations  String?
   paymentMethod PaymentMethod?
-  paymentStatus PaymentStatus     @default(PENDING)
+  paymentStatus PaymentStatus       @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+}
+
+model Organization {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  logo        String?
+  metadata    String?
+  address     String
+  phones      String[]
+  description String
+  services    OrganizationService[]
+  ratings     Rating[]
+  schedules   OrganizationSchedule[]
+  breaks      OrganizationBreak[]
+  blockedSlots OrganizationBlockedSlot[]
+  teams       Team[]
+  members     Member[]
+  invitations Invitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model BarbershopSchedule {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
-  startTime    String // "08:00" formato HH:mm
-  endTime      String // "18:00" formato HH:mm
-  isActive     Boolean    @default(true)
+model Team {
+  id             String       @id @default(uuid())
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  teammembers    TeamMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([barbershopId, dayOfWeek])
+  @@index([organizationId])
 }
 
-model BarbershopBreak {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int // 0 = Domingo, …, 6 = Sábado
-  startTime    String // "12:00" formato HH:mm
-  endTime      String // "13:00" formato HH:mm
+model TeamMember {
+  id     String @id @default(uuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([teamId])
+  @@index([userId])
+}
+
+model Member {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           Role         @default(MEMBER)
+  isActive       Boolean      @default(true)
+  bookings       Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model Invitation {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  teamId         String?
+  status         String       @default("pending")
+  inviterId      String
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime @db.Timestamptz(3)
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+model OrganizationService {
+  id              String       @id @default(uuid())
+  name            String
+  description     String
+  imageUrl        String
+  price           Decimal      @db.Decimal(10, 2)
+  durationMinutes Int
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model BarbershopBlockedSlot {
-  id           String     @id @default(uuid())
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  startAt      DateTime
-  endAt        DateTime
-  reason       String? // ex.: Feriado, Reforma
+model OrganizationSchedule {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  isActive       Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, dayOfWeek])
+}
+
+model OrganizationBreak {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrganizationBlockedSlot {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  startAt        DateTime     @db.Timestamptz(3)
+  endAt          DateTime     @db.Timestamptz(3)
+  reason         String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Rating {
-  id           String     @id @default(uuid())
-  userId       String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  stars        Int
-  comment      String?
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stars          Int
+  comment        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

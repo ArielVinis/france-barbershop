@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { Toaster } from "sonner"
 import Footer from "../components/layout/footer"
-import AuthProvider from "../providers/authProvider"
 
 export const metadata: Metadata = {
   title: "France Barber",
@@ -18,12 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body>
-        <AuthProvider>
-          <div className="flex h-full flex-col">
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </div>
-        </AuthProvider>
+        <div className="flex h-full flex-col">
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </div>
         <Toaster />
       </body>
     </html>

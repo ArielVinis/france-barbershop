@@ -7,10 +7,15 @@ async function seedDatabase() {
     console.log("Limpando dados existentes...")
     await prisma.booking.deleteMany()
     await prisma.rating.deleteMany()
-    await prisma.barbershopSchedule.deleteMany()
-    await prisma.barber.deleteMany()
-    await prisma.barbershopService.deleteMany()
-    await prisma.barbershop.deleteMany()
+    await prisma.organizationSchedule.deleteMany()
+    await prisma.organizationBreak.deleteMany()
+    await prisma.organizationBlockedSlot.deleteMany()
+    await prisma.organizationService.deleteMany()
+    await prisma.member.deleteMany()
+    await prisma.invitation.deleteMany()
+    await prisma.teamMember.deleteMany()
+    await prisma.team.deleteMany()
+    await prisma.organization.deleteMany()
     await prisma.user.deleteMany()
     console.log("Criando novos dados...")
 
@@ -171,19 +176,19 @@ async function seedDatabase() {
     ]
 
     // Criar 10 barbearias com nomes e endereços fictícios
-    const barbershops = []
+    const organizations = []
     for (let i = 0; i < 10; i++) {
       const name = creativeNames[i]
       const slug = slugify(name)
       const address = addresses[i]
       const imageUrl = images[i]
 
-      const barbershop = await prisma.barbershop.create({
+      const organization = await prisma.organization.create({
         data: {
           name,
           slug,
+          logo: imageUrl,
           address,
-          imageUrl: imageUrl,
           phones: ["(11) 99999-9999", "(11) 88888-8888"],
           description: `
             Aqui fica a descrição da barbearia.
@@ -200,15 +205,18 @@ async function seedDatabase() {
         data: {
           name: barberData.name,
           email: barberData.email,
+          emailVerified: true,
           phone: barberData.phone,
-          role: "BARBER",
+          role: "MEMBER",
+          image: null,
         },
       })
 
-      await prisma.barber.create({
+      await prisma.member.create({
         data: {
+          organizationId: organization.id,
           userId: user.id,
-          barbershopId: barbershop.id,
+          role: "MEMBER",
         },
       })
 
@@ -251,9 +259,9 @@ async function seedDatabase() {
       ]
 
       for (const weekday of weekdays) {
-        await prisma.barbershopSchedule.create({
+        await prisma.organizationSchedule.create({
           data: {
-            barbershopId: barbershop.id,
+            organizationId: organization.id,
             dayOfWeek: weekday.dayOfWeek,
             startTime: weekday.startTime,
             endTime: weekday.endTime,
@@ -263,19 +271,19 @@ async function seedDatabase() {
       }
 
       for (const service of services) {
-        await prisma.barbershopService.create({
+        await prisma.organizationService.create({
           data: {
             name: service.name,
             description: service.description,
             price: service.price,
-            barbershopId: barbershop.id,
+            organizationId: organization.id,
             imageUrl: service.imageUrl,
             durationMinutes: service.durationMinutes,
           },
         })
       }
 
-      barbershops.push(barbershop)
+      organizations.push(organization)
     }
 
     const ownerUser = await prisma.user.create({
@@ -284,12 +292,15 @@ async function seedDatabase() {
         email: "dono@francebarber.com",
         phone: "(11) 99999-0000",
         role: "OWNER",
+        emailVerified: true,
+        image: null,
       },
     })
-    await prisma.barbershop.update({
-      where: { id: barbershops[0].id },
+    await prisma.member.create({
       data: {
-        owners: { connect: { id: ownerUser.id } },
+        organizationId: organizations[0].id,
+        userId: ownerUser.id,
+        role: "OWNER",
       },
     })
 

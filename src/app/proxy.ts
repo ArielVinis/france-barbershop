@@ -1,33 +1,24 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getCurrentUser } from "@/src/lib/auth"
+import { Role } from "@/prisma/generated/prisma/enums"
 import { PATHS } from "@/src/constants/PATHS"
+import { getCurrentUser } from "../server/auth/users"
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
-  let user
 
-  try {
-    user = await getCurrentUser()
-  } catch {
-    const notAuthenticated = new URL(PATHS.NOT_AUTHENTICATED, req.url)
-    notAuthenticated.searchParams.set("callbackUrl", pathname)
-    return NextResponse.redirect(notAuthenticated)
-  }
+  const { user } = await getCurrentUser()
+  const isPanelRoute =
+    pathname.startsWith(PATHS.PANEL.ROOT) ||
+    pathname.startsWith(PATHS.DEV.PANEL)
 
-  // /owner/* - requer role OWNER (matcher já exclui /dev/owner)
-  if (pathname.startsWith(PATHS.OWNER.HOME)) {
-    const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
-    if (user.role !== "OWNER") {
-      return NextResponse.redirect(notAuthorized)
-    }
-  }
-
-  // /barber/* - requer role BARBER
-  if (pathname.startsWith(PATHS.BARBER.HOME)) {
-    const notAuthorized = new URL(PATHS.NOT_AUTHORIZED, req.url)
-    if (user.role !== "BARBER") {
-      return NextResponse.redirect(notAuthorized)
+  if (isPanelRoute) {
+    const canAccessPanel =
+      user.role === Role.OWNER ||
+      user.role === Role.MEMBER ||
+      user.role === Role.MANAGER
+    if (!canAccessPanel) {
+      return NextResponse.redirect(PATHS.NOT_AUTHORIZED)
     }
   }
 
@@ -35,5 +26,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/owner/:path*", "/barber/:path*"],
+  matcher: ["/panel/:path*", "/dev/:path*"],
 }

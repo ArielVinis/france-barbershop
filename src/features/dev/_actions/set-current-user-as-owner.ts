@@ -1,38 +1,56 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/src/lib/auth"
+import { Role } from "@/prisma/generated/prisma/enums"
+import { getCurrentUser } from "@/src/server/auth/users"
 import { db } from "@/src/lib/prisma"
 
 /**
- * Apenas em desenvolvimento: define o usuário logado como OWNER e vincula à barbearia.
- * Em produção esta action não faz nada.
+ * Apenas em desenvolvimento: define o usuário logado como OWNER e vincula à organização.
  */
-export async function setCurrentUserAsOwner(barbershopId: string) {
+export async function setCurrentUserAsOwner(organizationId: string) {
   if (process.env.NODE_ENV !== "development") {
     throw new Error("Disponível apenas em desenvolvimento")
   }
 
-  const user = await getCurrentUser("Faça login para continuar")
+  const { user } = await getCurrentUser()
 
-  const barbershop = await db.barbershop.findUnique({
-    where: { id: barbershopId },
+  const organization = await db.organization.findUnique({
+    where: { id: organizationId },
     select: { id: true },
   })
-  if (!barbershop) {
+  if (!organization) {
     throw new Error("Barbearia não encontrada")
   }
 
-  await db.$transaction([
-    db.user.update({
+  await db.$transaction(async (tx) => {
+    await tx.user.update({
       where: { id: user.id },
-      data: { role: "OWNER" },
-    }),
-    db.barbershop.update({
-      where: { id: barbershopId },
-      data: { owners: { connect: { id: user.id } } },
-    }),
-  ])
+      data: { role: Role.OWNER },
+    })
+
+    const existing = await tx.member.findFirst({
+      where: {
+        organizationId: organization.id,
+        userId: user.id,
+      },
+    })
+
+    if (existing) {
+      await tx.member.update({
+        where: { id: existing.id },
+        data: { role: Role.OWNER },
+      })
+    } else {
+      await tx.member.create({
+        data: {
+          organizationId: organization.id,
+          userId: user.id,
+          role: Role.OWNER,
+        },
+      })
+    }
+  })
 
   revalidatePath("/")
   revalidatePath("/owner")

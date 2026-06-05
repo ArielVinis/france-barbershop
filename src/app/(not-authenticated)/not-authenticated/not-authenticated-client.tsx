@@ -38,7 +38,7 @@ export function NotAuthenticatedClient({
             </Button>
             <p className="mt-4">
               <Link
-                href={PATHS.HOME}
+                href={PATHS.ROOT}
                 className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
               >
                 Voltar para a página inicial

@@ -8,6 +8,9 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/blob-report/
 
 # next.js
 /.next/
@@ -44,3 +47,5 @@ package-lock.json
 .cursor
 src/app/__(example)
 bun.lock
+.agents
+skills-lock.json

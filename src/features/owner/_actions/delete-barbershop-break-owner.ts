@@ -1,0 +1,31 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { getCurrentUser } from "@/src/server/auth/users"
+import { ForbiddenError, NotFoundError, requireOrganizationForOwner } from "@/src/lib/authz"
+import { db } from "@/src/lib/prisma"
+import { PATHS } from "@/src/constants/PATHS"
+
+export async function deleteBarbershopBreakOwner(breakId: string) {
+  const { user } = await getCurrentUser()
+
+  const row = await db.organizationBreak.findUnique({
+    where: { id: breakId },
+    select: { organizationId: true },
+  })
+  if (!row) throw new NotFoundError("Pausa não encontrada")
+
+  const shop = await requireOrganizationForOwner(user.id, row.organizationId).catch(
+    (error) => {
+      if (error instanceof NotFoundError) {
+        throw new ForbiddenError("Você não tem acesso a esta pausa")
+      }
+      throw error
+    },
+  )
+
+  await db.organizationBreak.delete({ where: { id: breakId } })
+
+  revalidatePath(PATHS.PANEL.WORKED_HOURS)
+  revalidatePath(PATHS.BARBERSHOP.ROOT(shop.slug))
+}

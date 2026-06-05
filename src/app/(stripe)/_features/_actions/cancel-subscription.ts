@@ -8,7 +8,7 @@ export async function cancelSubscription(subscriptionId: string) {
   try {
     await stripe.subscriptions.cancel(subscriptionId)
 
-    revalidatePath(PATHS.OWNER.SUBSCRIPTION)
+    revalidatePath(PATHS.PANEL.SUBSCRIPTION)
 
     return { success: true, message: "Subscription canceled successfully" }
   } catch (error: unknown) {

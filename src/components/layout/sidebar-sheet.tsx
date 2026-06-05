@@ -2,7 +2,6 @@
 
 import { Button } from "../ui/button"
 import {
-  Building2,
   CalendarIcon,
   HomeIcon,
   LogInIcon,
@@ -19,7 +18,7 @@ import {
 import { quickSearchOptions } from "../../constants/search"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
-import { signOut, useSession } from "next-auth/react"
+import { signOut, useSession } from "@/src/lib/auth-client"
 import { Avatar, AvatarImage } from "../ui/avatar"
 import SignInDialog from "../auth/sign-in-dialog"
 import { PATHS } from "@/src/constants/PATHS"
@@ -30,12 +29,11 @@ import { useRouter } from "next/navigation"
 const SidebarSheet = () => {
   const { data } = useSession()
   const router = useRouter()
-  const handleLogoutClick = () => signOut()
 
   const [signInDialogIsOpen, setSignInDialogIsOpen] = useState(false)
   const handleBookingsClick = () => {
     if (data?.user) {
-      return router.push(PATHS.BOOKINGS.HOME)
+      return router.push(PATHS.BOOKINGS.ROOT)
     }
     return setSignInDialogIsOpen(true)
   }
@@ -66,8 +64,8 @@ const SidebarSheet = () => {
               </Avatar>
 
               <div>
-                <p className="font-bold">{data.user.name}</p>
-                <p className="text-xs">{data.user.email}</p>
+                <p className="font-bold">{data?.user.name}</p>
+                <p className="text-xs">{data?.user.email}</p>
               </div>
             </div>
           ) : (
@@ -90,7 +88,7 @@ const SidebarSheet = () => {
         <div className="flex flex-col gap-2 border-b border-solid py-5">
           <SheetClose asChild>
             <Button className="justify-start gap-2" variant="ghost" asChild>
-              <Link href={PATHS.HOME}>
+              <Link href={PATHS.ROOT}>
                 <HomeIcon size={18} />
                 Início
               </Link>
@@ -104,26 +102,14 @@ const SidebarSheet = () => {
             <CalendarIcon size={18} />
             Agendamentos
           </Button>
-          {(data?.user as { role?: string })?.role === "BARBER" && (
-            <SheetClose asChild>
-              <Button className="justify-start gap-2" variant="ghost" asChild>
-                <Link href={PATHS.BARBER.HOME}>
-                  <SquareScissors size={18} />
-                  Painel do barbeiro
-                </Link>
-              </Button>
-            </SheetClose>
-          )}
-          {(data?.user as { role?: string })?.role === "OWNER" && (
-            <SheetClose asChild>
-              <Button className="justify-start gap-2" variant="ghost" asChild>
-                <Link href={PATHS.OWNER.HOME}>
-                  <Building2 size={18} />
-                  Painel do proprietário
-                </Link>
-              </Button>
-            </SheetClose>
-          )}
+          <SheetClose asChild>
+            <Button className="justify-start gap-2" variant="ghost" asChild>
+              <Link href={PATHS.PANEL.ROOT}>
+                <SquareScissors size={18} />
+                Painel interno
+              </Link>
+            </Button>
+          </SheetClose>
         </div>
 
         <div className="flex flex-col gap-2 border-b border-solid py-5">
@@ -149,7 +135,7 @@ const SidebarSheet = () => {
             <Button
               variant="ghost"
               className="justify-start gap-2"
-              onClick={handleLogoutClick}
+              onClick={() => signOut()}
             >
               <LogOutIcon size={18} />
               Sair da conta

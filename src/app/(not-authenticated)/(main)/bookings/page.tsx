@@ -1,11 +1,14 @@
 import Header from "@/src/components/layout/header"
-import { getSession } from "@/src/lib/auth"
+import { auth } from "@/src/lib/auth"
 import { getConfirmedBookings } from "@/src/features/bookings/_data/get-confirmed-bookings"
 import { getConcludedBookings } from "@/src/features/bookings/_data/get-concluded-bookings"
 import BookingsClient from "./bookings-client"
+import { headers } from "next/headers"
 
 const Bookings = async () => {
-  const session = await getSession()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   const confirmedBookings = await getConfirmedBookings()
   const concludedBookings = await getConcludedBookings()
 

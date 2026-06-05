@@ -1,11 +1,10 @@
 "use client"
 
 import type {
-  Barbershop,
-  BarbershopService,
+  OrganizationService,
   Booking,
-  BarbershopSchedule,
-} from "@/prisma/generated/prisma/client"
+  OrganizationSchedule,
+} from "@/prisma/generated/prisma/browser"
 import Image from "next/image"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
@@ -20,7 +19,7 @@ import { Calendar } from "../ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { useEffect, useMemo, useState } from "react"
 import { set } from "date-fns"
-import { useSession } from "next-auth/react"
+import { useSession } from "@/src/lib/auth-client"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "../ui/dialog"
 import SignInDialog from "../auth/sign-in-dialog"
@@ -52,16 +51,17 @@ type BarberWithAgenda = {
 }
 
 interface ServiceItemProps {
-  service: BarbershopService
-  barbershop: Pick<Barbershop, "name"> & {
-    schedules: BarbershopSchedule[]
+  service: OrganizationService
+  organization: {
+    schedules: OrganizationSchedule[]
     breaks?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>
     blockedSlots?: Array<{ startAt: Date | string; endAt: Date | string }>
+    name: string
   }
   barbers: BarberWithAgenda[]
 }
 
-const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
+const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
   const { data } = useSession()
   const router = useRouter()
   const [signInDialogIsOpen, setSignInDialogIsOpen] = useState(false)
@@ -81,11 +81,12 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
       const bookings = await getBookings({
         date: selectedDay,
         serviceId: service.id,
+        memberId: selectedBarberId,
       })
       setDayBookings(bookings)
     }
     fetch()
-  }, [selectedDay, service.id])
+  }, [selectedDay, service.id, selectedBarberId])
 
   const selectedBarber = useMemo(() => {
     if (!selectedBarberId) return undefined
@@ -133,10 +134,10 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
 
   const handleCreateBooking = async () => {
     try {
-      if (!selectedDate) return
+      if (!selectedDate || !selectedBarberId) return
       await createBooking({
         serviceId: service.id,
-        barberId: selectedBarberId,
+        memberId: selectedBarberId,
         date: selectedDate,
       })
       handleBookingSheetOpenChange()
@@ -162,7 +163,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
     const barberSchedule = selectedBarber.schedules.find(
       (s) => s.dayOfWeek === dayOfWeek && s.isActive,
     )
-    const shopSchedule = barbershop.schedules.find(
+    const shopSchedule = organization.schedules.find(
       (s) => s.dayOfWeek === dayOfWeek && s.isActive,
     )
     const schedule: DaySchedule | null =
@@ -174,7 +175,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
 
     let timeSlots = generateTimeSlots(schedule, 30)
 
-    const shopBreaksForDay = (barbershop.breaks ?? []).filter(
+    const shopBreaksForDay = (organization.breaks ?? []).filter(
       (b) => b.dayOfWeek === dayOfWeek,
     )
     timeSlots = filterTimesByBreaks(
@@ -196,7 +197,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
     timeSlots = filterTimesByBlockedSlots(
       timeSlots,
       selectedDay,
-      (barbershop.blockedSlots ?? []).map((s) => ({
+      (organization.blockedSlots ?? []).map((s) => ({
         startAt: new Date(s.startAt),
         endAt: new Date(s.endAt),
       })),
@@ -212,16 +213,16 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
     )
 
     const barberBookings = dayBookings.filter(
-      (b) => b.barberId === selectedBarberId,
+      (b) => b.userId === selectedBarber?.id,
     )
     return filterAvailableTimes(timeSlots, barberBookings, selectedDay)
   }, [
     dayBookings,
     selectedDay,
     selectedBarberId,
-    barbershop.schedules,
-    barbershop.breaks,
-    barbershop.blockedSlots,
+    organization.schedules,
+    organization.breaks,
+    organization.blockedSlots,
     barbers,
   ])
 
@@ -349,7 +350,7 @@ const ServiceItem = ({ service, barbershop, barbers }: ServiceItemProps) => {
                   {selectedDate && selectedBarberId && (
                     <div className="p-5">
                       <BookingSummary
-                        barbershop={barbershop}
+                        organization={organization}
                         service={service}
                         selectedDate={selectedDate}
                         barber={selectedBarber}
