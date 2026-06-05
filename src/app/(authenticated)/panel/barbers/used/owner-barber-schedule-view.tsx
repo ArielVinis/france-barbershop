@@ -36,7 +36,7 @@ export function OwnerBarberScheduleContent({
   const scheduleRows = (() => {
     const byDay = new Map(barber.schedules.map((s) => [s.dayOfWeek, s]))
     const shopByDay = new Map(
-      barber.barbershop.schedules.map((s) => [s.dayOfWeek, s]),
+      barber.organization.schedules.map((s) => [s.dayOfWeek, s]),
     )
     return Array.from({ length: 7 }, (_, dayOfWeek) => {
       const row = byDay.get(dayOfWeek) ?? shopByDay.get(dayOfWeek)
@@ -155,7 +155,7 @@ export function OwnerBarberScheduleView({
     <div className="space-y-6 px-4 lg:px-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`${PATHS.PANEL.BARBERS}?shopId=${barber.barbershop.id}`}>
+          <Link href={`${PATHS.PANEL.BARBERS}?organizationId=${barber.organization.id}`}>
             <ChevronLeftIcon className="h-4 w-4" />
           </Link>
         </Button>
@@ -164,7 +164,7 @@ export function OwnerBarberScheduleView({
             Agenda — {barber.user.name ?? "Barbeiro"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {barber.barbershop.organization.name}
+            {barber.organization.name}
           </p>
         </div>
       </div>

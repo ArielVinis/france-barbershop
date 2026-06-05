@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/src/server/auth/users"
-import { getBarberForUser } from "@/src/lib/authz"
+import { getBarberMemberForUser } from "@/src/lib/authz"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { BarberSubscriptionPanel } from "@/src/app/(authenticated)/panel/subscription/barber-subscription-panel"
 import {
@@ -36,19 +36,19 @@ function formatDate(value: number | null | undefined) {
 export default async function OwnerSubscriptionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ shopId?: string }>
+  searchParams: Promise<{ organizationId?: string }>
 }) {
   const { user } = await getCurrentUser()
   if (!user) return null
   if (user.role === "BARBER") {
-    const barber = await getBarberForUser(user.id)
+    const barber = await getBarberMemberForUser(user.id)
     if (!barber) return null
 
     const params = await searchParams
     ensureBarberShopIdMatchesUrl(
       PATHS.PANEL.SUBSCRIPTION,
-      { shopId: params.shopId },
-      barber.barbershopId,
+      { shopId: params.organizationId },
+      barber.organizationId,
     )
 
     return <BarberSubscriptionPanel />

@@ -7,8 +7,8 @@ import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner
 import { PATHS } from "@/src/constants/PATHS"
 import {
   flattenSearchParams,
-  resolveScopedShopIdOrRedirect,
-} from "@/src/lib/panel/shop-query"
+  resolveScopedOrganizationIdOrRedirect,
+} from "@/src/lib/panel/organization-query"
 import { redirectBarberFromOwnerOnlyRoutes } from "@/src/lib/panel/ensure-panel-owner"
 
 export default async function OwnerServicesPage({
@@ -27,7 +27,7 @@ export default async function OwnerServicesPage({
     redirect(PATHS.PANEL.SUBSCRIPTION)
   }
 
-  if (owner.barbershops.length === 0) {
+  if (owner.organizations.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <h1 className="text-5xl font-bold capitalize">
@@ -42,9 +42,9 @@ export default async function OwnerServicesPage({
 
   const raw = await searchParams
   const flat = flattenSearchParams(raw)
-  const ids = owner.barbershops.map((b) => b.id)
-  const shopId = resolveScopedShopIdOrRedirect(
-    flat.shopId,
+  const ids = owner.organizations.map((b) => b.id)
+  const shopId = resolveScopedOrganizationIdOrRedirect(
+    flat.organizationId,
     ids,
     PATHS.PANEL.SERVICES,
     flat,
@@ -58,11 +58,11 @@ export default async function OwnerServicesPage({
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <OwnerServicesTable
             services={JSON.parse(JSON.stringify(services))}
-            barbershops={owner.barbershops.map((b) => ({
-              id: b.id,
-              name: b.organization.name,
+            organizations={owner.organizations.map((org) => ({
+              id: org.id,
+              name: org.name,
             }))}
-            selectedBarbershopId={shopId}
+            selectedOrganizationId={shopId}
           />
         </div>
       </div>

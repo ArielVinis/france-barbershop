@@ -2,12 +2,17 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { getBarberForUser } from "@/src/lib/authz"
+import { getBarberMemberForUser } from "@/src/lib/authz"
 import { getBarberBookings } from "@/src/features/barber/_data/get-barber-bookings"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
 import { getOwnerBarbers } from "@/src/features/owner/_data/get-owner-barbers"
 import { getOwnerBookings } from "@/src/features/owner/_data/get-owner-bookings"
-import { bookingsToCalendarEvents } from "@/src/lib/booking-calendar-utils"
+import {
+  bookingsToCalendarEvents,
+  type BookingForCalendarEvent,
+} from "@/src/lib/booking-calendar-utils"
+import type { OwnerBookingRow } from "@/src/features/owner/types/owner-booking-row"
+import type { OwnerBarberListRow } from "@/src/features/owner/types/owner-barber-list-row"
 import { ScheduleFilters } from "./used/schedule-filters"
 import { OwnerScheduleCalendar } from "./used/owner-schedule-calendar"
 import { OwnerBookingsTable } from "../dashboard/used/dashboard-content/owner-bookings-table"
@@ -15,7 +20,7 @@ import { BarberBookingsTable } from "./used/barber-bookings-table"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-barbershop-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
-import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
+import { resolveOrganizationIdForAggregate } from "@/src/lib/panel/organization-query"
 import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
 import { Role } from "@/prisma/generated/prisma/enums"
 
@@ -24,7 +29,7 @@ export default async function OwnerSchedulePage({
 }: {
   searchParams: Promise<{
     period?: string
-    shopId?: string
+    organizationId?: string
     barber?: string
     viewDate?: string
   }>
@@ -32,7 +37,7 @@ export default async function OwnerSchedulePage({
   const { user } = await getCurrentUser()
 
   if (user.role === Role.MEMBER) {
-    const barber = await getBarberForUser(user.id)
+    const barber = await getBarberMemberForUser(user.id)
     if (!barber) return null
 
     const params = await searchParams
@@ -40,15 +45,15 @@ export default async function OwnerSchedulePage({
       PATHS.PANEL.SCHEDULE,
       {
         period: params.period,
-        shopId: params.shopId,
+        shopId: params.organizationId,
         barber: params.barber,
         viewDate: params.viewDate,
       },
-      barber.barbershopId,
+      barber.organizationId,
     )
 
     const hasSubscriptionAccess = await hasBarbershopSubscriptionAccess(
-      barber.barbershopId,
+      barber.organizationId,
     )
     if (!hasSubscriptionAccess) {
       redirect(PATHS.PANEL.SUBSCRIPTION)
@@ -75,10 +80,7 @@ export default async function OwnerSchedulePage({
     ])
 
     const calendarEvents = bookingsToCalendarEvents(
-      bookingsForCalendar.map((b) => ({
-        ...b,
-        date: b.date,
-      })),
+      bookingsForCalendar as unknown as BookingForCalendarEvent[],
     )
 
     return (
@@ -117,7 +119,7 @@ export default async function OwnerSchedulePage({
     redirect(PATHS.PANEL.SUBSCRIPTION)
   }
 
-  if (owner.barbershops.length === 0) {
+  if (owner.organizations.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-8">
         <div className="max-w-md rounded-lg border bg-card p-6 text-center">
@@ -145,12 +147,18 @@ export default async function OwnerSchedulePage({
     params.period === "month"
       ? params.period
       : "week"
-  const barbershopIds = owner.barbershops.map((b) => b.id)
-  const shopResolved = resolveShopIdForAggregate(params.shopId, barbershopIds)
-  const barbershopId =
+  const organizationIds = owner.organizations.map((b) => b.id)
+  const shopResolved = resolveOrganizationIdForAggregate(
+    params.organizationId,
+    organizationIds,
+  )
+  const organizationId =
     shopResolved === "all" || shopResolved === null ? null : shopResolved
 
-  const barbers = await getOwnerBarbers(user.id, barbershopId ?? undefined)
+  const barbers = (await getOwnerBarbers(
+    user.id,
+    organizationId ?? undefined,
+  )) as OwnerBarberListRow[]
   const barberId =
     params.barber && barbers.some((b) => b.id === params.barber)
       ? params.barber
@@ -167,16 +175,16 @@ export default async function OwnerSchedulePage({
   const dateForTable = new Date()
 
   const [bookingsForTable, bookingsForCalendar] = await Promise.all([
-    getOwnerBookings(barbershopIds, {
+    getOwnerBookings(organizationIds, {
       period,
-      barbershopId,
-      barberId,
+      organizationId,
+      memberId: barberId,
       date: dateForTable,
     }),
-    getOwnerBookings(barbershopIds, {
+    getOwnerBookings(organizationIds, {
       period: "month",
-      barbershopId,
-      barberId,
+      organizationId,
+      memberId: barberId,
       date: viewDate,
     }),
   ])
@@ -184,14 +192,11 @@ export default async function OwnerSchedulePage({
   const barbersForFilter = barbers.map((b) => ({
     id: b.id,
     name: b.user.name ?? "Barbeiro",
-    barbershopId: b.barbershop.id,
+    organizationId: b.organization.id,
   }))
 
   const calendarEvents = bookingsToCalendarEvents(
-    bookingsForCalendar.map((b) => ({
-      ...b,
-      date: b.date,
-    })),
+    bookingsForCalendar as unknown as BookingForCalendarEvent[],
   )
 
   return (
@@ -215,7 +220,11 @@ export default async function OwnerSchedulePage({
           barbeiro. Cancelar ou realocar pelos ícones do menu.
         </p>
         <OwnerBookingsTable
-          bookings={JSON.parse(JSON.stringify(bookingsForTable))}
+          bookings={
+            JSON.parse(
+              JSON.stringify(bookingsForTable),
+            ) as OwnerBookingRow[]
+          }
           barbers={barbersForFilter}
         />
       </div>

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { getBarberForUser } from "@/src/lib/authz"
+import { getBarberMemberForUser } from "@/src/lib/authz"
 import { db } from "@/src/lib/prisma"
 import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-barbershop-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
@@ -16,17 +16,17 @@ import {
 
 export async function BarberSubscriptionPanel() {
   const { user } = await getCurrentUser()
-  const barber = await getBarberForUser(user.id)
+  const barber = await getBarberMemberForUser(user.id)
   if (!barber) return null
 
-  const hasAccess = await hasBarbershopSubscriptionAccess(barber.barbershopId)
+  const hasAccess = await hasBarbershopSubscriptionAccess(barber.organizationId)
   if (hasAccess) {
     redirect(PATHS.PANEL.ROOT)
   }
 
-  const shop = await db.barbershop.findUnique({
-    where: { id: barber.barbershopId },
-    select: { organization: { select: { name: true } } },
+  const shop = await db.organization.findUnique({
+    where: { id: barber.organizationId },
+    select: { name: true },
   })
 
   return (
@@ -35,10 +35,8 @@ export async function BarberSubscriptionPanel() {
         <Card className="max-w-lg">
           <CardHeader>
             <CardTitle>Assinatura inativa</CardTitle>
-            {shop?.organization?.name ? (
-              <CardDescription>
-                Barbearia: {shop.organization.name}
-              </CardDescription>
+            {shop?.name ? (
+              <CardDescription>Barbearia: {shop.name}</CardDescription>
             ) : null}
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">

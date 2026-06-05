@@ -59,14 +59,14 @@ type BarberRow = Awaited<
 
 type OwnerBarbersTableProps = {
   barbers: BarberRow[]
-  barbershops: { id: string; name: string }[]
-  selectedBarbershopId: string
+  organizations: { id: string; name: string }[]
+  selectedOrganizationId: string
 }
 
 export function OwnerBarbersTable({
   barbers,
-  barbershops,
-  selectedBarbershopId,
+  organizations,
+  selectedOrganizationId,
 }: OwnerBarbersTableProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -75,8 +75,8 @@ export function OwnerBarbersTable({
     barberId: string
     name: string
   } | null>(null)
-  const [addBarbershopId, setAddBarbershopId] =
-    useState<string>(selectedBarbershopId)
+  const [addOrganizationId, setAddOrganizationId] =
+    useState<string>(selectedOrganizationId)
   const [addEmail, setAddEmail] = useState("")
   const [scheduleDialogBarberId, setScheduleDialogBarberId] = useState<
     string | null
@@ -85,8 +85,8 @@ export function OwnerBarbersTable({
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
 
   useEffect(() => {
-    setAddBarbershopId(selectedBarbershopId)
-  }, [selectedBarbershopId])
+    setAddOrganizationId(selectedOrganizationId)
+  }, [selectedOrganizationId])
 
   useEffect(() => {
     if (!scheduleDialogBarberId) return
@@ -104,16 +104,16 @@ export function OwnerBarbersTable({
   }, [scheduleDialogBarberId])
 
   const handleAdd = () => {
-    if (!addBarbershopId || !addEmail.trim()) {
+    if (!addOrganizationId || !addEmail.trim()) {
       toast.error("Selecione a barbearia e informe o e-mail")
       return
     }
     startTransition(async () => {
       try {
-        await createBarberOwner(addBarbershopId, addEmail.trim())
+        await createBarberOwner(addOrganizationId, addEmail.trim())
         toast.success("Barbeiro vinculado com sucesso")
         setAddOpen(false)
-        setAddBarbershopId(selectedBarbershopId)
+        setAddOrganizationId(selectedOrganizationId)
         setAddEmail("")
         router.refresh()
       } catch (e) {
@@ -191,7 +191,7 @@ export function OwnerBarbersTable({
                       {b.user.name ?? "—"}
                     </TableCell>
                     <TableCell>{b.user.email ?? "—"}</TableCell>
-                    <TableCell>{b.barbershop.organization.name}</TableCell>
+                    <TableCell>{b.organization.name}</TableCell>
                     <TableCell>
                       <Badge variant={b.isActive ? "default" : "secondary"}>
                         {b.isActive ? "Ativo" : "Inativo"}
@@ -264,14 +264,14 @@ export function OwnerBarbersTable({
             <div className="space-y-2">
               <Label>Barbearia</Label>
               <Select
-                value={addBarbershopId}
-                onValueChange={setAddBarbershopId}
+                value={addOrganizationId}
+                onValueChange={setAddOrganizationId}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {barbershops.map((b) => (
+                  {organizations.map((b) => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.name}
                     </SelectItem>
@@ -319,7 +319,7 @@ export function OwnerBarbersTable({
                 : "Agenda"}
             </DialogTitle>
             <DialogDescription>
-              {scheduleData?.barbershop.organization.name ?? "Carregando…"}
+              {scheduleData?.organization.name ?? "Carregando…"}
             </DialogDescription>
           </DialogHeader>
           <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">

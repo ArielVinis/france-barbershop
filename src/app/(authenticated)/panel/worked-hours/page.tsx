@@ -1,14 +1,14 @@
 import { getCurrentUser } from "@/src/server/auth/users"
 import { redirect } from "next/navigation"
 import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getOwnerBarbershopHours } from "@/src/features/owner/_data/get-owner-barbershop-hours"
+import { getOwnerOrganizationHours } from "@/src/features/owner/_data/get-owner-organization-hours"
 import { OwnerBarbershopHoursClient } from "./used/owner-barbershop-hours-client"
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { PATHS } from "@/src/constants/PATHS"
 import {
   flattenSearchParams,
-  resolveScopedShopIdOrRedirect,
-} from "@/src/lib/panel/shop-query"
+  resolveScopedOrganizationIdOrRedirect,
+} from "@/src/lib/panel/organization-query"
 import { redirectBarberFromOwnerOnlyRoutes } from "@/src/lib/panel/ensure-panel-owner"
 
 export default async function OwnerHorariosPage({
@@ -27,7 +27,7 @@ export default async function OwnerHorariosPage({
     redirect(PATHS.PANEL.SUBSCRIPTION)
   }
 
-  if (owner.barbershops.length === 0) {
+  if (owner.organizations.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
         <h1 className="text-xl font-semibold">Nenhuma barbearia vinculada</h1>
@@ -40,16 +40,16 @@ export default async function OwnerHorariosPage({
 
   const raw = await searchParams
   const flat = flattenSearchParams(raw)
-  const ids = owner.barbershops.map((b) => b.id)
-  const shopId = resolveScopedShopIdOrRedirect(
-    flat.shopId,
+  const ids = owner.organizations.map((b) => b.id)
+  const shopId = resolveScopedOrganizationIdOrRedirect(
+    flat.organizationId,
     ids,
     PATHS.PANEL.WORKED_HOURS,
     flat,
   )
 
-  const barbershop = await getOwnerBarbershopHours(user.id, shopId)
-  if (!barbershop) {
+  const organization = await getOwnerOrganizationHours(user.id, shopId)
+  if (!organization) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
         <h1 className="text-xl font-semibold">Barbearia não encontrada</h1>
@@ -61,15 +61,15 @@ export default async function OwnerHorariosPage({
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <OwnerBarbershopHoursClient
-          key={barbershop.id}
-          barbershopId={barbershop.id}
-          barbershops={owner.barbershops.map((b) => ({
-            id: b.id,
-            name: b.organization.name,
+          key={organization.id}
+          organizationId={organization.id}
+          organizations={owner.organizations.map((org) => ({
+            id: org.id,
+            name: org.name,
           }))}
-          initialSchedules={barbershop.schedules}
-          initialBreaks={barbershop.breaks}
-          initialBlockedSlots={[]}
+          initialSchedules={organization.schedules}
+          initialBreaks={organization.breaks}
+          initialBlockedSlots={organization.blockedSlots}
         />
       </div>
     </div>

@@ -17,19 +17,19 @@ import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-
 import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
 import { DashboardContent } from "@/src/app/(authenticated)/panel/dashboard/used/dashboard-content"
 import { PATHS } from "@/src/constants/PATHS"
-import { getBarberForUser } from "@/src/lib/authz"
+import { getBarberMemberForUser } from "@/src/lib/authz"
 import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
 import {
   normalizePanelDashboardPeriod,
   PANEL_DASHBOARD_PERIOD_LABELS,
 } from "@/src/lib/panel/dashboard-params"
-import { resolveShopIdForAggregate } from "@/src/lib/panel/shop-query"
+import { resolveOrganizationIdForAggregate } from "@/src/lib/panel/organization-query"
 import type { PanelDashboardStats } from "@/src/types/panel-dashboard"
 import { Role, User } from "@/prisma/generated/prisma/client"
 
 type Props = {
   user: User
-  searchParams: { period?: string; shopId?: string }
+  searchParams: { period?: string; organizationId?: string }
 }
 
 function mapDashboardStats(stats: {
@@ -93,30 +93,30 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
       redirect(PATHS.PANEL.SUBSCRIPTION)
     }
 
-    if (owner.barbershops.length === 0) {
+    if (owner.organizations.length === 0) {
       return renderOwnerWithoutShops()
     }
 
-    const barbershopIds = owner.barbershops.map((barbershop) => barbershop.id)
-    const shopResolved = resolveShopIdForAggregate(
-      searchParams.shopId,
-      barbershopIds,
+    const organizationIds = owner.organizations.map((barbershop) => barbershop.id)
+    const shopResolved = resolveOrganizationIdForAggregate(
+      searchParams.organizationId,
+      organizationIds,
     )
-    const barbershopId =
+    const organizationId =
       shopResolved === "all" || shopResolved === null ? null : shopResolved
 
     const [stats, chartRevenue, chartBookings, chartDistribution] =
       await Promise.all([
-        getOwnerDashboardStats(barbershopIds, { period, barbershopId, date }),
-        getOwnerChartDataRevenue(barbershopIds, { period, barbershopId, date }),
-        getOwnerChartDataBookings(barbershopIds, {
+        getOwnerDashboardStats(organizationIds, { period, organizationId, date }),
+        getOwnerChartDataRevenue(organizationIds, { period, organizationId, date }),
+        getOwnerChartDataBookings(organizationIds, {
           period,
-          barbershopId,
+          organizationId,
           date,
         }),
-        getOwnerChartDataDistribution(barbershopIds, {
+        getOwnerChartDataDistribution(organizationIds, {
           period,
-          barbershopId,
+          organizationId,
           date,
         }),
       ])
@@ -140,29 +140,29 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
   }
 
   if (user.role === Role.MEMBER) {
-    const barber = await getBarberForUser(user.id)
+    const barber = await getBarberMemberForUser(user.id)
     if (!barber) return null
 
     ensureBarberShopIdMatchesUrl(
       PATHS.PANEL.ROOT,
       {
         period,
-        shopId: searchParams.shopId,
+        shopId: searchParams.organizationId,
       },
-      barber.barbershopId,
+      barber.organizationId,
     )
 
     const hasSubscriptionAccess = await hasBarbershopSubscriptionAccess(
-      barber.barbershopId,
+      barber.organizationId,
     )
     if (!hasSubscriptionAccess) {
       redirect(PATHS.PANEL.SUBSCRIPTION)
     }
 
     const scope = {
-      barbershopId: barber.barbershopId,
-      barberId: barber.id,
-    }
+      organizationId: barber.organizationId,
+      memberId: barber.id,
+    } as const
 
     const [stats, chartRevenue, chartBookings, chartDistribution] =
       await Promise.all([

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/src/components/ui/select"
 import { Label } from "@/src/components/ui/label"
-import { SHOP_QUERY_PARAM } from "@/src/lib/panel/shop-query"
+import { ORGANIZATION_QUERY_PARAM } from "@/src/lib/panel/organization-query"
 
 export type PeriodValue = "day" | "week" | "month"
 
@@ -19,7 +19,7 @@ const PERIOD_OPTIONS: { value: PeriodValue; label: string }[] = [
   { value: "month", label: "Este mês" },
 ]
 
-type BarberOption = { id: string; name: string; barbershopId: string }
+type BarberOption = { id: string; name: string; organizationId: string }
 
 type ScheduleFiltersProps = {
   barbers: BarberOption[]
@@ -35,7 +35,7 @@ export function ScheduleFilters({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const period = (searchParams.get("period") as PeriodValue) ?? "week"
-  const shopId = searchParams.get(SHOP_QUERY_PARAM) ?? "all"
+  const shopId = searchParams.get(ORGANIZATION_QUERY_PARAM) ?? "all"
   const barberId = searchParams.get("barber") ?? "all"
 
   const setParams = (updates: {
@@ -57,7 +57,7 @@ export function ScheduleFilters({
     variant === "owner"
       ? shopId === "all"
         ? barbers
-        : barbers.filter((b) => b.barbershopId === shopId)
+        : barbers.filter((b) => b.organizationId === shopId)
       : []
   const barberValue =
     variant === "owner" &&

@@ -83,7 +83,7 @@ export async function All() {
               Envie um convite de membro para um novo membro.
             </DialogDescription>
             {/* TODO: Add SendInvitationMemberForm */}
-            <SendInvitationMemberForm onSubmit={sendInvitationMember} />
+            {/* <SendInvitationMemberForm onSubmit={sendInvitationMember} /> */}
           </DialogContent>
         </Dialog>
       </div>

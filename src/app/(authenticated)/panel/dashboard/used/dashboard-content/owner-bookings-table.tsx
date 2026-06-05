@@ -47,6 +47,7 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { updateBookingStatusOwner } from "@/src/features/owner/_actions/update-booking-status-owner"
 import { rescheduleBookingOwner } from "@/src/features/owner/_actions/reschedule-booking-owner"
+import type { OwnerBookingRow } from "@/src/features/owner/types/owner-booking-row"
 
 const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: "Confirmado",
@@ -63,16 +64,10 @@ const PAYMENT_LABEL: Record<string, string> = {
   CANCELLED: "Cancelado",
 }
 
-type BookingRow = Awaited<
-  ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-bookings").getOwnerBookings
-  >
->[number]
-
-type BarberOption = { id: string; name: string; barbershopId: string }
+type BarberOption = { id: string; name: string; organizationId: string }
 
 type OwnerBookingsTableProps = {
-  bookings: BookingRow[]
+  bookings: OwnerBookingRow[]
   barbers: BarberOption[]
 }
 
@@ -93,7 +88,7 @@ export function OwnerBookingsTable({
     label: string
   } | null>(null)
   const [rescheduleBooking, setRescheduleBooking] = useState<{
-    booking: BookingRow
+    booking: OwnerBookingRow
     newDateTime: string
     barberId: string
   } | null>(null)
@@ -115,11 +110,11 @@ export function OwnerBookingsTable({
     })
   }
 
-  const openReschedule = (booking: BookingRow) => {
+  const openReschedule = (booking: OwnerBookingRow) => {
     setRescheduleBooking({
       booking,
       newDateTime: toDatetimeLocal(new Date(booking.date)),
-      barberId: booking.barber?.id ?? "",
+      barberId: booking.member?.id ?? "",
     })
   }
 
@@ -146,7 +141,7 @@ export function OwnerBookingsTable({
   const barbersForReschedule = rescheduleBooking
     ? barbers.filter(
         (b) =>
-          b.barbershopId === rescheduleBooking.booking.service.barbershopId,
+          b.organizationId === rescheduleBooking.booking.service.organizationId,
       )
     : []
 
@@ -193,7 +188,7 @@ export function OwnerBookingsTable({
                     }).format(Number(b.service.price))}
                   </div>
                 </TableCell>
-                <TableCell>{b.barber?.user.name ?? "—"}</TableCell>
+                <TableCell>{b.member?.user.name ?? "—"}</TableCell>
                 <TableCell>
                   {format(b.date, "dd/MM/yyyy HH:mm", { locale: ptBR })}
                 </TableCell>
@@ -336,12 +331,12 @@ export function OwnerBookingsTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="same">
-                      {rescheduleBooking.booking.barber?.user.name ?? "—"}
+                      {rescheduleBooking.booking.member?.user.name ?? "—"}
                       {" (manter)"}
                     </SelectItem>
                     {barbersForReschedule
                       .filter(
-                        (br) => br.id !== rescheduleBooking.booking.barber?.id,
+                        (br) => br.id !== rescheduleBooking.booking.member?.id,
                       )
                       .map((br) => (
                         <SelectItem key={br.id} value={br.id}>

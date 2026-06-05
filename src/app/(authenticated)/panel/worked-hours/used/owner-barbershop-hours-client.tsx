@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { PATHS } from "@/src/constants/PATHS"
-import { SHOP_QUERY_PARAM } from "@/src/lib/panel/shop-query"
+import { ORGANIZATION_QUERY_PARAM } from "@/src/lib/panel/organization-query"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -61,8 +61,8 @@ type BlockedSlotItem = {
 }
 
 type OwnerBarbershopHoursClientProps = {
-  barbershopId: string
-  barbershops: { id: string; name: string }[]
+  organizationId: string
+  organizations: { id: string; name: string }[]
   initialSchedules: Array<{
     dayOfWeek: number
     startTime: string
@@ -89,8 +89,8 @@ function buildScheduleRows(
 }
 
 export function OwnerBarbershopHoursClient({
-  barbershopId,
-  barbershops,
+  organizationId,
+  organizations,
   initialSchedules,
   initialBreaks,
   initialBlockedSlots,
@@ -115,7 +115,7 @@ export function OwnerBarbershopHoursClient({
 
   const handleBarbershopChange = (nextId: string) => {
     const next = new URLSearchParams(searchParams.toString())
-    next.set(SHOP_QUERY_PARAM, nextId)
+    next.set(ORGANIZATION_QUERY_PARAM, nextId)
     router.push(`${PATHS.PANEL.WORKED_HOURS}?${next.toString()}`)
   }
 
@@ -134,7 +134,7 @@ export function OwnerBarbershopHoursClient({
   const handleSaveSchedules = () => {
     startSchedulesTransition(async () => {
       try {
-        await upsertBarbershopSchedulesOwner(barbershopId, schedules)
+        await upsertBarbershopSchedulesOwner(organizationId, schedules)
         toast.success("Horários de funcionamento salvos")
         router.refresh()
       } catch (e) {
@@ -152,7 +152,7 @@ export function OwnerBarbershopHoursClient({
   const handleAddBreak = () => {
     startBreakTransition(async () => {
       try {
-        const created = await createBarbershopBreakOwner(barbershopId, newBreak)
+        const created = await createBarbershopBreakOwner(organizationId, newBreak)
         toast.success("Pausa adicionada")
         setBreaks((prev) => [...prev, created])
         setNewBreak({ dayOfWeek: 1, startTime: "12:00", endTime: "13:00" })
@@ -195,7 +195,7 @@ export function OwnerBarbershopHoursClient({
     }
     startBlockTransition(async () => {
       try {
-        const created = await createBarbershopBlockedSlotOwner(barbershopId, {
+        const created = await createBarbershopBlockedSlotOwner(organizationId, {
           startAt,
           endAt,
           reason: newBlock.reason.trim() || null,
@@ -233,16 +233,16 @@ export function OwnerBarbershopHoursClient({
 
   return (
     <div className="flex flex-1 flex-col gap-6 py-4 md:py-6">
-      {barbershops.length > 1 && (
+      {organizations.length > 1 && (
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-2">
             <Label>Barbearia</Label>
-            <Select value={barbershopId} onValueChange={handleBarbershopChange}>
+            <Select value={organizationId} onValueChange={handleBarbershopChange}>
               <SelectTrigger className="w-[min(100%,280px)]">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {barbershops.map((b) => (
+                {organizations.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
                     {b.name}
                   </SelectItem>

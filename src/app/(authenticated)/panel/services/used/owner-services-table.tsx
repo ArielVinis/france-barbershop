@@ -49,9 +49,9 @@ type ServiceRow = Awaited<
 
 type OwnerServicesTableProps = {
   services: ServiceRow[]
-  barbershops: { id: string; name: string }[]
+  organizations: { id: string; name: string }[]
   /** Loja ativa (query `shopId`); pré-preenche novo serviço */
-  selectedBarbershopId: string
+  selectedOrganizationId: string
 }
 
 const DEFAULT_IMAGE =
@@ -66,8 +66,8 @@ function formatPrice(value: number) {
 
 export function OwnerServicesTable({
   services,
-  barbershops,
-  selectedBarbershopId,
+  organizations,
+  selectedOrganizationId,
 }: OwnerServicesTableProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -79,7 +79,7 @@ export function OwnerServicesTable({
   } | null>(null)
 
   const [addForm, setAddForm] = useState({
-    barbershopId: selectedBarbershopId,
+    organizationId: selectedOrganizationId,
     name: "",
     description: "",
     imageUrl: "",
@@ -89,8 +89,8 @@ export function OwnerServicesTable({
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAddForm((prev) => ({ ...prev, barbershopId: selectedBarbershopId }))
-  }, [selectedBarbershopId])
+    setAddForm((prev) => ({ ...prev, organizationId: selectedOrganizationId }))
+  }, [selectedOrganizationId])
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -100,7 +100,7 @@ export function OwnerServicesTable({
   })
 
   const handleAdd = () => {
-    if (!addForm.barbershopId || !addForm.name.trim()) {
+    if (!addForm.organizationId || !addForm.name.trim()) {
       toast.error("Selecione a barbearia e informe o nome do serviço")
       return
     }
@@ -117,7 +117,7 @@ export function OwnerServicesTable({
     startTransition(async () => {
       try {
         await createServiceOwner({
-          barbershopId: addForm.barbershopId,
+          organizationId: addForm.organizationId,
           name: addForm.name.trim(),
           description: addForm.description.trim(),
           imageUrl: addForm.imageUrl.trim() || DEFAULT_IMAGE,
@@ -127,7 +127,7 @@ export function OwnerServicesTable({
         toast.success("Serviço criado")
         setAddOpen(false)
         setAddForm({
-          barbershopId: selectedBarbershopId,
+          organizationId: selectedOrganizationId,
           name: "",
           description: "",
           imageUrl: "",
@@ -248,7 +248,7 @@ export function OwnerServicesTable({
                     </TableCell>
                     <TableCell>{formatPrice(Number(s.price))}</TableCell>
                     <TableCell>{s.durationMinutes} min</TableCell>
-                    <TableCell>{s.barbershop.organization.name}</TableCell>
+                    <TableCell>{s.organization.name}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button
@@ -304,16 +304,16 @@ export function OwnerServicesTable({
             <div className="space-y-2">
               <Label>Barbearia</Label>
               <Select
-                value={addForm.barbershopId}
+                value={addForm.organizationId}
                 onValueChange={(v) =>
-                  setAddForm((p) => ({ ...p, barbershopId: v }))
+                  setAddForm((p) => ({ ...p, organizationId: v }))
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {barbershops.map((b) => (
+                  {organizations.map((b) => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.name}
                     </SelectItem>
