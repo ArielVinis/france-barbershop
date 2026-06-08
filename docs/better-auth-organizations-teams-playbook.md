@@ -1,80 +1,238 @@
-# Better Auth com Organizations e Teams
+# Better Auth com Organizations
+
+Guia operacional da autenticação e do multi-tenant no France Barbershop.
 
 ## Objetivo
 
-Padronizar autenticação e multi-tenant com Better Auth, usando `organization` como fonte de verdade para cada barbearia e `teams` para segmentação interna.
+Centralizar autenticação com **Better Auth** e modelar cada barbearia como uma **Organization** (plugin `organization`). O tenant concentra identidade pública e dados de negócio — não existe tabela `Barbershop` separada.
 
 ## Arquitetura adotada
 
-- **Tenant principal:** tabela `organization` (plugin Better Auth).
-- **Domínio de negócio:** tabela `Barbershop`.
-- **Vínculo tenant/domínio:** `Barbershop.organizationId -> Organization.id` (1:1 opcional).
-- **Sessão ativa:** `session.activeOrganizationId` e `session.activeTeamId`.
+```mermaid
+flowchart LR
+  User --> Member
+  Member --> Organization
+  Organization --> OrganizationService
+  Organization --> Booking
+  Booking --> User
+  Booking --> Member
+  Session -->|activeOrganizationId| Organization
+```
+
+| Conceito | Implementação |
+| --- | --- |
+| **Tenant / barbearia** | `Organization` (nome, slug, logo, endereço, telefones, descrição) |
+| **Equipe** | `Member` — vínculo `User` ↔ `Organization` com papel por org |
+| **Barbeiro** | `Member` com `role: MEMBER` e `User.role: MEMBER` |
+| **Dono / gestor** | `Member` com `role: OWNER` ou `MANAGER`; `User.role` espelha o papel global |
+| **Cliente** | `User.role: CLIENT` (sem `Member` obrigatório) |
+| **Sessão ativa** | `session.activeOrganizationId` (definido no login e via switcher) |
+| **URL pública** | `/{slug}` → `Organization.slug` |
+
+### Papéis em dois níveis
+
+O sistema usa **dois eixos** de autorização:
+
+1. **`User.role`** (global) — controla acesso ao painel (`/panel`) e o layout exibido.
+2. **`Member.role`** (por organização) — controla o papel do usuário dentro de cada barbearia.
+
+Papéis definidos no access control (`src/lib/auth/permissions.ts`):
+
+| Papel | Uso típico |
+| --- | --- |
+| `CLIENT` | Cliente final; agenda serviços na área pública |
+| `MEMBER` | Barbeiro; vê dashboard e agendamentos da sua org |
+| `MANAGER` | Gestor com permissões de gestão no painel |
+| `OWNER` | Dono da barbearia; gestão completa + assinatura Stripe |
+| `ADMIN` | Reservado no access control da plataforma |
+
+### Teams
+
+O schema Prisma inclui `Team` e `TeamMember` (legado do plugin), mas **teams não estão habilitados** na configuração atual do Better Auth (`organizationClient()` sem `teams`). Não há fluxo de UI nem queries de negócio que usem teams hoje.
 
 ## Arquivos implementados
 
-- `src/lib/auth.ts`
-  - plugin `organization` habilitado com `teams.enabled: true`
-  - convite por e-mail via `sendInvitationEmail`
-  - helpers `getSession()` e `getCurrentUser()`
-- `src/lib/auth-client.ts`
-  - `organizationClient({ teams: { enabled: true } })`
-- `src/features/organization/_actions/organization-management.ts`
-  - ações para criar org, ativar org, criar team, convidar e aceitar convite
-  - ação para vincular organização ativa em uma barbearia
-- `src/app/(authenticated)/panel/organization/page.tsx`
-  - tela operacional para owner
-- `src/app/(not-authenticated)/(main)/organization/invitations/accept/page.tsx`
-  - tela de aceite de convite por URL
-- `prisma/schema.prisma`
-  - modelos de organization/team/member/invitation
-  - campos de sessão ativa
-  - vínculo com `Barbershop`
+### Servidor — autenticação
 
-## Fluxo recomendado
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `src/lib/auth.ts` | Better Auth: e-mail/senha, Google, verificação, reset, plugin `organization`, convites via Resend |
+| `src/lib/auth/permissions.ts` | Access control (`ac`) e papéis ADMIN, OWNER, MANAGER, MEMBER, CLIENT |
+| `src/lib/auth-client.ts` | Cliente React: `signIn`, `signUp`, `organization.setActive`, `useActiveOrganization` |
+| `src/server/auth/users.ts` | `getCurrentUser()`, `signIn`, `signUp` |
+| `src/app/api/auth/[...nextauth]/route.ts` | Handler HTTP do Better Auth (nome de rota legado) |
 
-1. Owner cria organização (`createOrganization`).
-2. Owner define organização ativa (`setActiveOrganization`).
-3. Owner cria teams (`createTeam`).
-4. Owner convida membros (`createInvitation`), que recebem URL com `invitationId`.
-5. Usuário convidado aceita (`acceptInvitation`).
-6. Owner vincula organização ativa a uma `Barbershop`.
+### Servidor — organizações
 
-## Convenções de ID e slug
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `src/server/organizations/create-organization-with-profile.ts` | Cria `Organization` + `Member` (OWNER) em transação; promove `CLIENT` → `OWNER`; define org ativa na sessão |
+| `src/server/organizations/organizations.ts` | `getOrganizations`, `getActiveOrganization`, `getOrganizationBySlug/Id` |
+| `src/server/organizations/member.ts` | `addMember`, `removeMember`, `sendInvitationMember` |
+| `src/app/api/accept-invitation/[invitationId]/route.ts` | Aceite de convite por GET → redirect para `/panel` |
 
-- `Organization.id`: ID técnico do tenant.
-- `Organization.slug`: slug único e estável; usado na URL pública da loja (`/{slug}`) com `Barbershop` ligado por `organizationId`.
-- `Barbershop.organizationId`: obrigatório; 1:1 com `Organization`. Nome, slug e logo da marca vivem só em `Organization`; `Barbershop` mantém endereço, telefones, descrição e relações de negócio.
+### Autorização no domínio
 
-## Migração Prisma (segura)
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `src/lib/authz/get-organizations-for-owner.ts` | Organizações onde o usuário é `Member.role: OWNER` |
+| `src/lib/authz/get-barber-member-for-user.ts` | Registro `Member` do barbeiro (`role: MEMBER`) |
+| `src/lib/authz/require-organization-for-owner.ts` | Garante que o owner tem acesso à org antes de mutações |
+| `src/lib/panel/organization-query.ts` | Resolução de `?organizationId=` no painel multi-org |
 
-Como a base já possui dados, rode em ambiente de desenvolvimento com revisão humana:
+### UI
 
-1. Validar schema:
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `src/components/auth/create-organization-form.tsx` | Formulário de criação de barbearia |
+| `src/components/auth/organization-switcher.tsx` | Troca de organização ativa no header do painel |
+| `src/components/emails/organization-invitation.tsx` | Template de e-mail de convite |
+| `src/app/(authenticated)/panel/organization/page.tsx` | Gestão de organizações e membros |
+| `src/app/(authenticated)/panel/layout.tsx` | Layout do painel por papel (OWNER/MANAGER vs MEMBER) |
+| `src/app/proxy.ts` | Proteção de `/panel/*` — só OWNER, MANAGER e MEMBER |
 
-- `npx prisma validate`
+### Schema
 
-2. Formatar:
+`prisma/schema.prisma` — modelos `User`, `Session`, `Account`, `Verification`, `Organization`, `Member`, `Invitation`, `Team`, `TeamMember` e entidades de negócio (`OrganizationService`, `Booking`, horários, etc.).
 
-- `npx prisma format`
+## Fluxos
 
-3. Gerar SQL de diff para revisão antes de aplicar:
+### 1. Criar barbearia (owner)
 
-- `npx prisma migrate diff`
+```
+Owner autenticado → /panel/organization → "Criar organização"
+  → createOrganizationWithProfile()
+    → Organization (name, slug, logo, address, phones, description)
+    → Member (userId, organizationId, role: OWNER)
+    → User.role: CLIENT → OWNER (se aplicável)
+    → auth.api.setActiveOrganization()
+```
 
-4. Revisar SQL para evitar drops indevidos em tabelas já populadas.
-5. Aplicar somente após revisão em ambiente de staging.
+O slug deve ser único, em minúsculas com hífens (`barbearia-vintage`). A página pública fica em `/{slug}`.
 
-## Segurança e operação
+### 2. Convidar membro por e-mail
 
-- Configure `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL`.
-- Opcional para envio de convites:
-  - `BETTER_AUTH_INVITATION_WEBHOOK_URL`
-  - `BETTER_AUTH_INVITATION_ACCEPT_URL`
-- Sem webhook configurado, o sistema loga a URL do convite no servidor.
+```
+Owner → sendInvitationMember(email, role, organizationId)
+  → auth.api.createInvitation()
+  → sendInvitationEmail() em auth.ts
+  → E-mail Resend com link: /api/accept-invitation/{invitationId}
+```
 
-## Próximos passos sugeridos
+O convidado precisa estar autenticado (ou autenticar-se) ao clicar no link. Em sucesso, redireciona para `/panel`; em falha, para `/not-authenticated`.
 
-- Restringir queries do painel por `organizationId` (isolamento completo multi-tenant).
-- Sincronizar automaticamente criação de `Barbershop` ao criar `Organization`.
-- Evoluir controle de papéis: papel global da plataforma (`User.role`) + papel por organização (`Member.role`).
+### 3. Adicionar barbeiro existente
+
+Fluxo alternativo em `createBarberOwner()` (`src/features/owner/_actions/create-barber-owner.ts`):
+
+1. Owner informa e-mail de um usuário já cadastrado.
+2. Sistema valida que o usuário não é barbeiro em outra org.
+3. Cria `Member` com `role: MEMBER` e atualiza `User.role` para `MEMBER`.
+
+### 4. Trocar organização ativa
+
+No painel, o `OrganizationSwitcher` chama:
+
+```ts
+await authClient.organization.setActive({ organizationId })
+router.refresh()
+```
+
+A sessão passa a usar o novo `activeOrganizationId`.
+
+### 5. Sessão no primeiro login
+
+Hook em `auth.ts` (`databaseHooks.session.create.before`):
+
+- Busca o primeiro `Member` do usuário via `getActiveOrganization(userId)`.
+- Preenche `activeOrganizationId` na sessão criada.
+
+> Se o usuário pertencer a várias organizações, o switcher no painel é a forma de alternar o contexto.
+
+## Convenções
+
+### Slug e URL pública
+
+- `Organization.slug` — único, estável, usado em `/{slug}` e em links da sidebar.
+- `Organization.name` / `logo` — marca exibida na UI pública e no painel.
+
+### Escopo no painel (`organizationId`)
+
+Rotas de gestão do owner aceitam `?organizationId=` quando o usuário possui mais de uma organização. Helpers em `src/lib/panel/organization-query.ts`:
+
+- `resolveScopedOrganizationIdOrRedirect` — força seleção de org ou redireciona com query param.
+- `resolveOrganizationIdForAggregate` — dashboard/agenda agregados (`all` ou org específica).
+
+Barbeiros (`MEMBER`) usam a org do seu único `Member` via `ensureBarberShopIdMatchesUrl`.
+
+### Barbeiro ativo para agendamento
+
+`Member.isActive` controla se o barbeiro aparece na página pública para novos agendamentos (`toggleBarberActiveOwner`).
+
+## Isolamento multi-tenant
+
+Práticas já adotadas:
+
+- Queries do owner passam por `requireOrganizationForOwner` ou `getOrganizationsForOwner`.
+- Barbeiro resolve org via `getBarberMemberForUser` (um `Member` com `role: MEMBER`).
+- Bookings referenciam `memberId` (barbeiro) e `serviceId` (`OrganizationService` da org).
+- Serviços, horários, pausas e bloqueios são sempre filtrados por `organizationId`.
+
+Pontos a reforçar (ver roadmap):
+
+- Garantir filtro por org em **todas** as Server Actions restantes.
+- Alinhar suporte completo a `MANAGER` nas queries de `getOwnerByUserId` (hoje filtra só `Member.role: OWNER`).
+
+## Variáveis de ambiente
+
+Obrigatórias para auth e convites:
+
+```env
+BETTER_AUTH_SECRET="..."
+BETTER_AUTH_URL="http://localhost:3000"
+DATABASE_URL="postgresql://..."
+RESEND_API_KEY="re_..."
+EMAIL_NO_REPLY="France Barber <no-reply@seudominio.com>"
+```
+
+Opcionais:
+
+```env
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
+```
+
+Convites são enviados **diretamente pelo Resend** em `sendInvitationEmail` — não há webhook de convite configurável no código atual. A URL de aceite é montada em runtime:
+
+```
+{BETTER_AUTH_URL}/api/accept-invitation/{invitationId}
+```
+
+## Migração Prisma
+
+Para alterações no schema em ambiente com dados:
+
+1. `npx prisma validate`
+2. `npx prisma format`
+3. `npx prisma migrate diff` — revisar SQL antes de aplicar
+4. Aplicar em staging antes de produção
+
+Ver também `.cursor/rules` e skills Prisma do projeto.
+
+## Desenvolvimento local
+
+Em `NODE_ENV=development`, a rota `/dev` permite vincular o usuário logado como `OWNER` de uma organização existente (`setCurrentUserAsOwner`). Útil quando o seed cria organizações sem contas de e-mail/senha.
+
+## Roadmap
+
+- [ ] Fluxo completo de convite → cadastro → primeiro acesso do barbeiro
+- [ ] Suporte consistente a `MANAGER` nas queries de organização do painel
+- [ ] Habilitar teams no plugin (se necessário para segmentação interna)
+- [ ] Auditoria de isolamento: todas as actions filtram por `organizationId`
+- [ ] Webhook ou job para sincronizar papéis `User.role` ↔ `Member.role` após convite
+
+## Referências
+
+- [README do projeto](../README.md)
+- [Better Auth — Organization plugin](https://www.better-auth.com/docs/plugins/organization)
+- Regras do projeto: `.cursor/rules/middleware.mdc`, `.cursor/rules/nextjs-server-actions.mdc`
