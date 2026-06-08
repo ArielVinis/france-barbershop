@@ -1,115 +1,211 @@
-# 💈 France Barbershop
+# France Barbershop
 
-Sistema de agendamento para barbearias desenvolvido com Next.js 14, TypeScript, Prisma e PostgreSQL.
+Sistema de agendamento e gestão para barbearias, construído com Next.js 16, Better Auth, Prisma e PostgreSQL.
 
-## 📋 Índice
+## Índice
 
-- [Sobre o Projeto](#🎯-sobre-o-projeto)
-- [Tecnologias](#🛠-tecnologias)
-- [Estrutura do Projeto](#📁-estrutura-do-projeto)
-- [Como Rodar](#🚀-como-rodar)
-- [Funcionalidades Implementadas](#✨-funcionalidades-implementadas)
-- [TODOs](#📝-todos)
-- [Estrutura do Banco de Dados](#🗄️-estrutura-do-banco-de-dados)
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Tecnologias](#tecnologias)
+- [Arquitetura](#arquitetura)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Como Rodar](#como-rodar)
+- [Funcionalidades Implementadas](#funcionalidades-implementadas)
+- [Roadmap](#roadmap)
+- [Estrutura do Banco de Dados](#estrutura-do-banco-de-dados)
+- [Comandos Úteis](#comandos-úteis)
+- [Testes](#testes)
+- [Documentação Adicional](#documentação-adicional)
 
-## 🎯 Sobre o Projeto
+## Sobre o Projeto
 
-Sistema completo de gestão e agendamento para barbearias com três perfis de usuário:
+Plataforma multi-tenant onde cada barbearia é uma **Organization** (plugin organization do Better Auth). O sistema cobre o fluxo público de agendamento e um painel interno unificado em `/panel`, com navegação e permissões por papel.
 
-- **CLIENT**: Visualiza barbearias, serviços e faz agendamentos
-- **BARBER**: Painel de agenda e gestão de atendimentos
-- **OWNER**: Dashboard administrativo completo da barbearia
+### Perfis de usuário
 
-## 🛠 Tecnologias
+| Papel       | Descrição                                                                                          |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| **CLIENT**  | Cliente final: navega barbearias, agenda serviços e acompanha reservas em `/bookings`.             |
+| **MEMBER**  | Barbeiro: acessa o painel com dashboard, agendamentos e gestão de atendimentos.                    |
+| **MANAGER** | Gestor da barbearia: painel com permissões de gestão (barbeiros, serviços, horários, organização). |
+| **OWNER**   | Dono da barbearia: gestão completa + assinatura Stripe da plataforma.                              |
+| **ADMIN**   | Papel reservado no access control do Better Auth.                                                  |
 
-- **Framework**: Next.js 16 (App Router)
-- **Linguagem**: TypeScript
-- **ORM**: Prisma
-- **Banco de Dados**: PostgreSQL
-- **Autenticação**: NextAuth.js
-- **Estilização**: Tailwind CSS
-- **Componentes**: shadcn/ui
-- **Validação**: Zod
-- **Notificações**: Sonner
+> O barbeiro não é um `role` global separado: é um `User` com `role: MEMBER` vinculado à organização via tabela `Member`.
 
-## 📁 Estrutura do Projeto
+## Tecnologias
+
+| Área                  | Stack                                     |
+| --------------------- | ----------------------------------------- |
+| Framework             | Next.js 16 (App Router)                   |
+| Linguagem             | TypeScript                                |
+| Autenticação          | Better Auth + plugin organization (teams) |
+| ORM                   | Prisma 7                                  |
+| Banco                 | PostgreSQL                                |
+| UI                    | Tailwind CSS, shadcn/ui, next-themes      |
+| Formulários           | react-hook-form + Zod                     |
+| Pagamentos            | Stripe (Checkout + Customer Portal)       |
+| E-mail                | Resend + React Email                      |
+| Gráficos / calendário | Recharts, react-big-calendar              |
+| Testes                | Vitest (unit), Playwright (E2E)           |
+| Qualidade             | ESLint, Prettier, Husky, lint-staged      |
+
+## Arquitetura
+
+```mermaid
+flowchart TB
+  subgraph publico [Área pública]
+    Home["/"]
+    Lista["/barbershops"]
+    Slug["/[slug]"]
+    Bookings["/bookings"]
+  end
+
+  subgraph auth [Autenticação]
+    Login["/auth/login"]
+    Signup["/auth/signup"]
+    Reset["/auth/reset-password"]
+  end
+
+  subgraph panel [Painel /panel]
+    Dashboard["/panel"]
+    Schedule["/panel/schedule"]
+    Org["/panel/organization"]
+    Barbers["/panel/barbers"]
+    Services["/panel/services"]
+    Hours["/panel/worked-hours"]
+    Sub["/panel/subscription"]
+  end
+
+  Cliente --> publico
+  Cliente --> auth
+  MEMBER --> panel
+  OWNER --> panel
+  MANAGER --> panel
+  panel --> Stripe
+  auth --> BetterAuth[Better Auth]
+  BetterAuth --> PostgreSQL
+  panel --> PostgreSQL
+  publico --> PostgreSQL
+```
+
+### Multi-tenant
+
+- Cada barbearia = registro em `Organization` (slug, endereço, serviços, horários).
+- Membros da equipe = `Member` (barbeiro, gestor ou dono na org).
+- A sessão guarda `activeOrganizationId` para contexto do tenant ativo.
+- Convites por e-mail via Resend (`/api/accept-invitation/[id]`).
+
+### Proteção de rotas
+
+- `src/app/proxy.ts` — matcher em `/panel/*` e `/dev/*`; só OWNER, MANAGER e MEMBER entram no painel.
+- Rotas exclusivas de dono/gestor redirecionam barbeiros (MEMBER) quando necessário.
+- Várias telas de gestão exigem assinatura Stripe ativa do dono.
+
+## Estrutura do Projeto
 
 ```
-app/
-├── (auth)/              # Rotas de autenticação
-│   └── api/auth/       # NextAuth [...nextauth]
-├── (main)/              # Rotas públicas e autenticadas
-│   ├── barbershops/     # Listagem e detalhes de barbearias → /barbershops, /barbershops/[slug]
-│   ├── bookings/        # Agendamentos do cliente → /bookings
-│   └── page.tsx         # Home pública → /
-├── (barber)/            # Route group do painel do barbeiro
-│   └── barber/          # Rotas em /barber/*
-│       ├── layout.tsx   # Layout base: sidebar + proteção por role BARBER
-│       ├── page.tsx     # Dashboard → /barber
-│       ├── bookings/    # Meus agendamentos → /barber/bookings
-│       ├── perfil/      # Meu perfil → /barber/perfil
-│       ├── ratings/     # Avaliações → /barber/ratings
-│       └── settings/    # Configurações → /barber/settings
-├── _components/         # Componentes compartilhados
-│   ├── auth/           # Componentes de autenticação
-│   ├── barber/         # Componentes do painel do barbeiro (ex: barber-sidebar)
-│   ├── barbershop/     # Componentes de barbearia
-│   ├── booking/        # Componentes de agendamento
-│   ├── common/         # Componentes comuns
-│   ├── layout/         # Componentes de layout
-│   └── ui/             # Componentes shadcn/ui
-├── _constants/         # Constantes da aplicação
-├── _features/          # Features organizadas por domínio
-│   ├── barber/
-│   │   └── _data/      # get-barber-by-user-id, etc.
-│   ├── bookings/
-│   │   ├── _actions/   # Server Actions
-│   │   └── _data/      # Data fetching
-│   └── barbershops/
-├── _lib/               # Utilitários e configurações
-│   ├── auth.ts         # Configuração NextAuth (session com role e barberId)
-│   ├── prisma.ts       # Cliente Prisma
-│   └── schedule-utils.ts # Utilitários de horários
-├── _providers/         # Providers (ex: auth)
-└── layout.tsx          # Layout raiz
+src/
+├── app/
+│   ├── (authenticated)/panel/     # Painel interno (owner, manager, barbeiro)
+│   │   ├── page.tsx                 # Dashboard → /panel
+│   │   ├── schedule/                # Agendamentos → /panel/schedule
+│   │   ├── organization/            # Gestão de org → /panel/organization
+│   │   ├── barbers/                 # Barbeiros → /panel/barbers
+│   │   ├── services/                # Serviços → /panel/services
+│   │   ├── worked-hours/            # Horários → /panel/worked-hours
+│   │   ├── subscription/            # Assinatura Stripe → /panel/subscription
+│   │   └── layout.tsx               # Sidebar + header por papel
+│   ├── (not-authenticated)/
+│   │   ├── auth/                    # login, signup, forgot/reset password
+│   │   └── (main)/                  # home pública, barbershops, bookings, [slug]
+│   ├── (stripe)/                    # checkout e confirmação de pagamento
+│   ├── api/
+│   │   ├── auth/[...nextauth]/      # Handler Better Auth (rota legada)
+│   │   └── accept-invitation/       # Aceite de convites
+│   ├── (authenticated)/dev/         # Ferramentas de dev (só NODE_ENV=development)
+│   ├── proxy.ts                     # Proteção de rotas do painel
+│   └── page.tsx                     # Home → /
+├── components/                      # UI, auth, layout, templates
+├── constants/                       # PATHS, constantes globais
+├── features/                        # Domínios com actions e data fetching
+│   ├── barber/                      # Fluxo do barbeiro (MEMBER)
+│   ├── barbershops/                 # Listagem pública
+│   ├── bookings/                    # Agendamentos do cliente
+│   ├── owner/                       # Gestão do dono/gestor
+│   └── dev/                         # Actions de desenvolvimento
+├── lib/                             # auth, prisma, stripe, schedule-utils...
+├── resources/                       # Itens da sidebar do painel
+├── server/                          # auth, organizations
+└── types/                           # Tipos compartilhados do painel
 
 prisma/
-├── schema.prisma       # Schema do banco de dados
-└── seed.ts             # Seed do banco de dados
+├── schema.prisma                    # Schema (client gerado em prisma/generated/prisma)
+├── migrations/                      # Migrations versionadas
+└── seed.ts                          # Dados de demonstração
+
+tests/
+├── unit/                            # Vitest
+└── e2e/                             # Playwright
+
+docs/
+└── better-auth-organizations-teams-playbook.md
 ```
 
-### Layout base do painel do barbeiro
+### Rotas principais
 
-- **Rota**: `/barber` (e subrotas). Acesso apenas para usuários com `role === BARBER` e com registro em `Barber`; caso contrário, redireciona para `/`.
-- **Estrutura visual**:
-  - **Sidebar fixa** (esquerda): logo (link para home), **foto + nome do barbeiro** e nome da barbearia, bloco **Horários** (exibe os horários da barbearia por dia da semana), navegação (Início, Meus agendamentos, Configurar agenda, Meu perfil, Avaliações), botão Sair.
-  - **Área principal**: `{children}` com padding, scroll independente.
-- **Dados**: o layout busca o barbeiro por `userId` da sessão (incluindo barbearia e `schedules`) e repassa para a sidebar.
+| Rota                  | Descrição                                                         |
+| --------------------- | ----------------------------------------------------------------- |
+| `/`                   | Home com busca e barbearias em destaque                           |
+| `/barbershops`        | Listagem e busca de barbearias                                    |
+| `/[slug]`             | Página pública da barbearia (serviços, horários, agendamento)     |
+| `/bookings`           | Agendamentos do cliente autenticado                               |
+| `/auth/login`         | Login (e-mail/senha ou Google)                                    |
+| `/auth/signup`        | Cadastro com verificação de e-mail                                |
+| `/panel`              | Dashboard do painel (cards e gráficos por papel)                  |
+| `/panel/schedule`     | Agenda: tabela + calendário (owner) ou atendimentos (barbeiro)    |
+| `/panel/organization` | Gestão da organização e membros                                   |
+| `/panel/barbers`      | CRUD de barbeiros, ativar/desativar, ver agenda individual        |
+| `/panel/services`     | CRUD de serviços (preço, duração)                                 |
+| `/panel/worked-hours` | Horários, pausas e bloqueios da barbearia                         |
+| `/panel/subscription` | Assinatura Stripe (dono) ou bloqueio por plano inativo (barbeiro) |
+| `/dev`                | Em desenvolvimento: vincular usuário logado como OWNER            |
 
-## 🚀 Como Rodar
+### Sidebar do painel (por papel)
+
+Definida em `src/resources/sidebar-items.ts`:
+
+- **MEMBER** (barbeiro): Dashboard, Agendamentos
+- **OWNER / MANAGER**: Dashboard, Agendamentos, Organização, Barbeiros, Serviços, Horários de trabalho
+
+## Como Rodar
 
 ### Pré-requisitos
 
 - Node.js 18+
-- PostgreSQL
-- npm ou yarn
+- PostgreSQL (local ou remoto)
+- Contas opcionais: [Resend](https://resend.com), [Stripe](https://stripe.com), Google OAuth
 
-### Instalação
-
-1. Clone o repositório:
+### 1. Clonar e instalar
 
 ```bash
 git clone <url-do-repositorio>
 cd france-barbershop
-```
-
-2. Instale as dependências:
-
-```bash
 npm install
 ```
 
-3. Configure as variáveis de ambiente:
+### 2. Banco de dados local (opcional)
+
+```bash
+docker compose up -d
+```
+
+O `docker-compose.yml` sobe PostgreSQL em `localhost:5432` com:
+
+- usuário: `postgres`
+- senha: `password`
+- database: `fullstack-barbershop`
+
+### 3. Variáveis de ambiente
 
 ```bash
 cp .env.example .env
@@ -118,255 +214,213 @@ cp .env.example .env
 Edite o `.env` com suas credenciais:
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/france_barbershop"
-NEXTAUTH_SECRET="seu-secret-aqui"
-NEXTAUTH_URL="http://localhost:3000"
+# Obrigatórias
+BETTER_AUTH_SECRET="gere-um-secret-aleatorio"
+BETTER_AUTH_URL="http://localhost:3000"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/fullstack-barbershop"
+RESEND_API_KEY="re_..."
+EMAIL_NO_REPLY="France Barber <no-reply@seudominio.com>"
+
+# Google OAuth (opcional)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# Stripe (painel do dono e assinatura)
+STRIPE_PRICE_ID="price_..."
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_CUSTOMER_PORTAL_URL="https://billing.stripe.com/p/login/..."
+STRIPE_WEBHOOK_SECRET=""   # opcional em dev
 ```
 
-4. Configure o banco de dados:
+### 4. Migrations e seed
 
 ```bash
-# Criar migration
 npx prisma migrate dev
-
-# Popular banco com dados de teste
 npx prisma db seed
 ```
 
-5. Inicie o servidor de desenvolvimento:
+O seed cria:
+
+- 10 barbearias (`Organization`) com serviços e horários
+- 1 barbeiro (`MEMBER`) por barbearia
+- 1 usuário dono: `dono@francebarber.com` (sem senha — ver abaixo)
+
+> Os usuários do seed **não têm conta de e-mail/senha**. Para testar o painel:
+>
+> 1. Cadastre-se em `/auth/signup` com seu e-mail.
+> 2. Em desenvolvimento, acesse `/dev` e vincule-se como OWNER a uma barbearia.
+> 3. Para Stripe em dev, use chaves de teste e assine via `/panel/subscription`.
+
+### 5. Servidor de desenvolvimento
 
 ```bash
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000)
+Acesse [http://localhost:3000](http://localhost:3000).
 
-## ✅ Funcionalidades Implementadas
+## Funcionalidades Implementadas
 
 ### Cliente (CLIENT)
 
-- [x] Visualização de barbearias
-- [x] Busca de barbearias
-- [x] Visualização de serviços
-- [x] Seleção de barbeiro
-- [x] Agendamento de serviços
-- [x] Visualização de agendamentos confirmados
-- [x] Visualização de agendamentos concluídos
+- [x] Home com busca e barbearias em destaque
+- [x] Listagem e busca em `/barbershops`
+- [x] Página pública da barbearia em `/[slug]`
+- [x] Seleção de barbeiro e agendamento de serviços
+- [x] Agendamentos confirmados e concluídos em `/bookings`
 - [x] Cancelamento de agendamentos
-- [x] Autenticação com NextAuth
+- [x] Autenticação (e-mail/senha, Google, verificação de e-mail, reset de senha)
 
-### Sistema Base
+### Barbeiro (MEMBER)
 
-- [x] Schema do banco de dados completo
-- [x] Modelos: User, Barber, Barbershop, Service, Booking, Schedule
-- [x] Sistema de horários de funcionamento por dia da semana
-- [x] Status de agendamento (CONFIRMED, IN_PROGRESS, FINISHED, CANCELLED, NO_SHOW)
-- [x] Métodos de pagamento (CREDIT_CARD, DEBIT_CARD, PIX, CASH)
-- [x] Status de pagamento (PENDING, PAID, REFUNDED, CANCELLED)
-- [x] Duração de serviços
-- [x] Observações em agendamentos
+- [x] Painel unificado em `/panel` com sidebar
+- [x] Dashboard com estatísticas
+- [x] Agendamentos em `/panel/schedule` (lista do dia/semana/mês)
+- [x] Iniciar, finalizar, cancelar e marcar não comparecimento
+- [x] Registrar método de pagamento ao finalizar
+- [x] Observações nos atendimentos
+- [x] Bloqueio de acesso quando a barbearia não tem assinatura ativa
 
-## 📝 TODOs
+### Dono / Gestor (OWNER / MANAGER)
 
-### 🔴 Alta Prioridade
+- [x] Dashboard com agendamentos, faturamento, barbeiros ativos e gráficos
+- [x] Gestão de barbeiros (criar, excluir, ativar/desativar, ver agenda)
+- [x] Gestão de serviços (criar, editar, preço, duração)
+- [x] Agenda geral com calendário, filtro por barbeiro, cancelar e realocar
+- [x] Horários de funcionamento, pausas e bloqueios (feriados/dias especiais)
+- [x] Gestão de organização e membros (convites)
+- [x] Assinatura Stripe: plano, status, portal de pagamento, cancelamento
 
-#### Painel do Barbeiro (BARBER)
+### Sistema base
 
-- [x] **Layout base do barbeiro**
-  - [x] Sidebar ou topbar com foto + nome
-  - [x] Exibição de horários configurados
+- [x] Schema Prisma com organizations, members, bookings, schedules
+- [x] Status de agendamento: CONFIRMED, IN_PROGRESS, FINISHED, CANCELLED, NO_SHOW
+- [x] Métodos de pagamento: CREDIT_CARD, DEBIT_CARD, PIX, CASH
+- [x] Status de pagamento: PENDING, PAID, REFUNDED, CANCELLED
+- [x] Dark mode (ThemeSwitcher)
+- [x] Testes unitários e E2E (parcial)
+- [x] Husky + lint-staged no pre-commit
 
-- [x] **Meus agendamentos (bookings)**
-  - [x] Lista do dia / semana / mês
-  - [x] Status: Confirmado, Em andamento, Finalizado, Cancelado
-  - [x] Botão "Iniciar atendimento"
-  - [x] Botão "Finalizar atendimento"
-  - [x] Visualização de informações do cliente
-  - [x] Poder adicionar observação (Optional)
-  - [x] Poder por o status do agendamento (caso o cliente informar que deseja cancelar ou para informar que o cliente não compareceu, o proprio barbeiro pode alterar o status)
-  - [x] Inserir qual modo de pagamento foi realizado para relatórios.
+## Roadmap
 
-- [x] **Configurar agenda (settings)**
-  - [x] Definir dias de trabalho
-  - [x] Configurar horário de início e fim de cada dia
-  - [x] Gerenciar pausas
-  - [x] Bloquear horários específicos (exemplo: férias)
+### Alta prioridade
 
-- [x] **Meu perfil (perfil): Standby**
-  - [ ] Thinking
+- [ ] Webhook Stripe para sincronizar status de assinatura automaticamente
+- [ ] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
+- [ ] Validação robusta de conflitos de horário no agendamento
 
-- [x] **Avaliações (ratings): Standby**
-  - [ ] Feedback dos clientes
-  - [ ] Nota média
-  - [ ] Comentários recebidos
+### Média prioridade
 
-#### Painel do Dono (OWNER)
+- [ ] Sistema de avaliações
+  - [ ] Avaliações por barbeiro (hoje só existe `Rating` para organização)
+  - [ ] Exibir avaliações na página pública da barbearia
+- [ ] Perfil do barbeiro (bio, foto, serviços que realiza)
+- [ ] Notificações por e-mail/SMS e lembretes de agendamento
+- [ ] Bloqueios de horário por barbeiro (hoje bloqueios são da organização)
 
-- [x] **Dashboard inicial**
-  - [x] Agendamentos do dia/semana/mês
-  - [x] Faturamento
-  - [x] Barbeiros ativos
-  - [x] Serviços mais vendidos
-  - [x] Gráficos e estatísticas
+### Baixa prioridade
 
-- [x] **Gestão de barbeiros**
-  - [x] Criar/Excluir barbeiro
-  - [x] Ativar / desativar barbeiro (para ele aparecer ou não para agendamento em sua barbearia)
-  - [x] Ver agenda individual
+- [ ] Melhorias de UX (skeletons em mais telas, animações, responsividade)
+- [ ] Ampliar cobertura de testes (unit, integração, E2E)
+- [ ] Otimização de queries e cache
+- [ ] CI/CD e deploy em produção
+- [ ] Documentação de componentes e guia de contribuição
 
-- [x] **Gestão de serviços**
-  - [x] Criar serviço que a barbearia realiza
-  - [x] Editar serviço
-  - [x] Definir preço
-  - [x] Configurar tempo médio
+## Estrutura do Banco de Dados
 
-- [x] **Agenda geral**
-  - [x] Visão da barbearia inteira
-  - [x] Filtro por barbeiro
-  - [x] Cancelar agendamentos
-  - [x] Realocar agendamentos
+### Modelos principais
 
-- [x] **Gestão de horários**
-  - [x] Configurar horários de funcionamento por dia
-  - [x] Criar pausas (ex: almoço)
-  - [x] Bloquear horários específicos
-  - [x] Feriados e dias especiais
-
-- [ ] **Criar tela de assinatura para o Dono**
-  - [ ] Tela "Minha Assinatura" para o dono da barbearia gerenciar a assinatura (Stripe)
-    - Exibe detalhes do plano atual em um Card:
-      - Nome do plano (ex: Plano Pro)
-      - Status da assinatura (ex: Ativo ou Inativo)
-      - Próxima cobrança (data)
-      - Valor (mensalidade)
-      - Ciclo (ex: Mensal)
-    - Ações disponíveis em outro Card:
-      - Botão para atualizar método de pagamento
-      - Botão grande (vermelho) para cancelar assinatura
-    - Layout dividido em dois cards: um para detalhes, outro para ações.
-    - Tudo conectado ao Stripe (informações provenientes via API)
-    - Exemplo visual: [🖼️ Tela similar à mostrada, porém, mais moderna: ![Ideia de tela](public/idea.png)]
-
-### 🟡 Média Prioridade
-
-- [ ] **Sistema de avaliações**
-  - [ ] Modelo `BarberRating` (avaliações específicas para barbeiros)
-  - [ ] Implementar avaliações de barbearia (já existe modelo `Rating`)
-  - [ ] Exibir avaliações na página da barbearia
-  - [ ] Sistema de comentários
-
-- [ ] **Melhorias no agendamento**
-  - [ ] Validação de conflitos de horário
-  - [ ] Notificações por email/SMS
-  - [ ] Lembretes de agendamento
-  - [ ] Histórico completo de agendamentos
-
-- [ ] **Perfil do barbeiro**
-  - [ ] Campos adicionais no modelo `Barber`:
-    - [ ] `bio` (String?)
-    - [ ] `isOnline` (Boolean)
-    - [ ] `isAvailable` (Boolean)
-    - [ ] `commission` (Decimal) - comissão/salário
-  - [ ] Foto do barbeiro
-  - [ ] Serviços que cada barbeiro realiza (relação muitos-para-muitos)
-
-- [ ] **Sistema de bloqueios**
-  - [x] Modelo `BlockedTimeSlot` para horários bloqueados
-  - [ ] Bloqueios por barbeiro
-  - [ ] Bloqueios gerais da barbearia
-
-### 🟢 Baixa Prioridade
-
-- [ ] **Melhorias de UX/UI**
-  - [ ] Loading states
-  - [ ] Skeleton loaders
-  - [ ] Animações
-  - [ ] Responsividade aprimorada
-  - [ ] Dark mode
-  - [ ] Calendário de Bookings
-  - [ ] Sidebar de Barber
-
-- [ ] **Testes**
-  - [ ] Testes unitários
-  - [ ] Testes de integração
-  - [ ] Testes E2E
-
-- [ ] **Performance**
-  - [ ] Otimização de queries
-  - [ ] Cache de dados
-  - [ ] Image optimization
-  - [ ] Code splitting
-
-- [ ] **Documentação**
-  - [ ] Documentação de API
-  - [ ] Guia de contribuição
-  - [ ] Documentação de componentes
-
-- [ ] **Deploy**
-  - [ ] Configuração de CI/CD
-  - [ ] Deploy em produção
-  - [ ] Monitoramento e logs
-
-## 🗄 Estrutura do Banco de Dados
-
-### Modelos Principais
-
-- **User**: Usuários do sistema (CLIENT, BARBER, OWNER)
-- **Barbershop**: Barbearias
-- **Barber**: Barbeiros vinculados a barbearias
-- **BarbershopService**: Serviços oferecidos
-- **Booking**: Agendamentos
-- **BarbershopSchedule**: Horários de funcionamento por dia
-- **BarbershopBreak**: Pausas recorrentes da barbearia (ex.: almoço)
-- **BarbershopBlockedSlot**: Bloqueios por período (feriados, dias especiais)
-- **Rating**: Avaliações de barbearias
+| Modelo                                 | Descrição                                                |
+| -------------------------------------- | -------------------------------------------------------- |
+| `User`                                 | Usuários do sistema                                      |
+| `Session` / `Account` / `Verification` | Sessões e credenciais (Better Auth)                      |
+| `Organization`                         | Barbearia (tenant): nome, slug, endereço, telefones      |
+| `Member`                               | Vínculo usuário ↔ organização (barbeiro, gestor ou dono) |
+| `Team` / `TeamMember`                  | Times dentro da organização                              |
+| `Invitation`                           | Convites pendentes para a organização                    |
+| `OrganizationService`                  | Serviços oferecidos                                      |
+| `Booking`                              | Agendamentos (cliente, serviço, barbeiro opcional)       |
+| `OrganizationSchedule`                 | Horário de funcionamento por dia da semana               |
+| `OrganizationBreak`                    | Pausas recorrentes (ex.: almoço)                         |
+| `OrganizationBlockedSlot`              | Bloqueios por período (feriados, férias)                 |
+| `Rating`                               | Avaliações da organização                                |
 
 ### Relacionamentos
 
-- Um `User` pode ser um `Barber` (1:1)
-- Um `User` pode ser `Owner` de múltiplas `Barbershop` (N:M)
-- Um `Barber` pertence a uma `Barbershop` (N:1)
-- Um `Booking` tem um `User` (cliente), um `Service` e opcionalmente um `Barber`
-- Uma `Barbershop` tem múltiplos `BarbershopSchedule` (um por dia da semana), `BarbershopBreak` e `BarbershopBlockedSlot`
+- `User` ↔ `Member` ↔ `Organization` (N:M via Member)
+- `Booking` → `User` (cliente), `OrganizationService`, `Member?` (barbeiro)
+- `Organization` → `OrganizationSchedule`, `OrganizationBreak`, `OrganizationBlockedSlot`, `OrganizationService`
 
 ### Enums
 
-- **Role**: CLIENT, BARBER, OWNER
-- **BookingStatus**: CONFIRMED, IN_PROGRESS, FINISHED, CANCELLED, NO_SHOW
-- **PaymentMethod**: CREDIT_CARD, DEBIT_CARD, PIX, CASH
-- **PaymentStatus**: PENDING, PAID, REFUNDED, CANCELLED
+```prisma
+Role:           ADMIN | MEMBER | OWNER | MANAGER | CLIENT
+BookingStatus:  CONFIRMED | IN_PROGRESS | FINISHED | CANCELLED | NO_SHOW
+PaymentMethod:  CREDIT_CARD | DEBIT_CARD | PIX | CASH
+PaymentStatus:  PENDING | PAID | REFUNDED | CANCELLED
+```
 
-## 📚 Comandos Úteis
+## Comandos Úteis
 
 ```bash
 # Desenvolvimento
 npm run dev
-
-# Build
-npm run build
+npm run build          # requer permissão explícita em CI/produção
+npm run start
 
 # Prisma
-npx prisma studio          # Interface visual do banco
-npx prisma migrate dev      # Criar nova migration
-npx prisma generate         # Gerar Prisma Client
-npx prisma db seed          # Popular banco com dados de teste
+npx prisma studio
+npx prisma migrate dev
+npx prisma generate
+npx prisma db seed
 
-# Linting
+# Qualidade
 npm run lint
+npm run format
+
+# Testes
+npm test               # Vitest (unit)
+npm run test:watch
+npm run test:e2e       # Playwright
+npm run test:e2e:ui
 ```
 
-## 🤝 Contribuindo
+## Testes
+
+### Unitários (Vitest)
+
+Localizados em `tests/unit/`. Cobrem autorização e actions do painel do dono.
+
+```bash
+npm test
+```
+
+### E2E (Playwright)
+
+Localizados em `tests/e2e/`. O Playwright sobe o dev server automaticamente se não estiver rodando.
+
+```bash
+npm run test:e2e
+```
+
+## Documentação Adicional
+
+- [Better Auth — Organizations e Teams](docs/better-auth-organizations-teams-playbook.md)
+- Regras do projeto em `.cursor/rules/` (actions, UI, middleware, testes)
+
+## Contribuindo
 
 1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+2. Crie uma branch (`git checkout -b feature/minha-feature`)
+3. Commit suas mudanças
+4. Push para a branch
 5. Abra um Pull Request
 
-## 📄 Licença
+## Licença
 
 Este projeto está sob a licença MIT.
 
 ---
 
-Desenvolvido para barbearias modernas
+Desenvolvido para barbearias modernas.
