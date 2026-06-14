@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache"
 import { Role } from "@/prisma/generated/prisma/enums"
 import { z } from "zod"
-import { db } from "../../../lib/prisma"
-import { auth } from "@/src/lib/auth"
 import { headers } from "next/headers"
+import { auth } from "@/src/lib/auth"
+import { assertNoBarberBookingConflict } from "@/src/lib/booking-conflict"
+import { db } from "@/src/lib/prisma"
 
 const CreateBookingSchema = z.object({
   serviceId: z.string().uuid(),
@@ -13,7 +14,9 @@ const CreateBookingSchema = z.object({
   date: z.coerce.date(),
 })
 
-export const createBooking = async (input: z.infer<typeof CreateBookingSchema>) => {
+export const createBooking = async (
+  input: z.infer<typeof CreateBookingSchema>,
+) => {
   const parsed = CreateBookingSchema.safeParse(input)
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos")
@@ -28,33 +31,42 @@ export const createBooking = async (input: z.infer<typeof CreateBookingSchema>) 
     throw new Error("Usuário não autenticado")
   }
 
-  const service = await db.organizationService.findUnique({
-    where: { id: serviceId },
-    select: { organizationId: true },
-  })
-  if (!service) {
-    throw new Error("Serviço não encontrado")
-  }
+  await db.$transaction(async (tx) => {
+    const service = await tx.organizationService.findUnique({
+      where: { id: serviceId },
+      select: { organizationId: true, durationMinutes: true },
+    })
+    if (!service) {
+      throw new Error("Serviço não encontrado")
+    }
 
-  const barberMember = await db.member.findFirst({
-    where: {
-      id: memberId,
-      organizationId: service.organizationId,
-      role: Role.MEMBER,
-      isActive: true,
-    },
-  })
-  if (!barberMember) {
-    throw new Error("Barbeiro inválido para este serviço")
-  }
+    const barberMember = await tx.member.findFirst({
+      where: {
+        id: memberId,
+        organizationId: service.organizationId,
+        role: Role.MEMBER,
+        isActive: true,
+      },
+    })
+    if (!barberMember) {
+      throw new Error("Barbeiro inválido para este serviço")
+    }
 
-  await db.booking.create({
-    data: {
-      serviceId,
+    await assertNoBarberBookingConflict(
+      tx,
       memberId,
       date,
-      userId: session.user.id,
-    },
+      service.durationMinutes,
+    )
+
+    await tx.booking.create({
+      data: {
+        serviceId,
+        memberId,
+        date,
+        userId: session.user.id,
+      },
+    })
   })
 
   revalidatePath("/barbershops/[slug]", "page")

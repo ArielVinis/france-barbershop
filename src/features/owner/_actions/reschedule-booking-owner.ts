@@ -3,7 +3,12 @@
 import { Role } from "@/prisma/generated/prisma/enums"
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { ForbiddenError, NotFoundError, requireOrganizationForOwner } from "@/src/lib/authz"
+import {
+  ForbiddenError,
+  NotFoundError,
+  requireOrganizationForOwner,
+} from "@/src/lib/authz"
+import { assertNoBarberBookingConflict } from "@/src/lib/booking-conflict"
 import { db } from "@/src/lib/prisma"
 import { PATHS } from "@/src/constants/PATHS"
 
@@ -21,7 +26,7 @@ export async function rescheduleBookingOwner(
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
-      service: { select: { organizationId: true } },
+      service: { select: { organizationId: true, durationMinutes: true } },
     },
   })
 
@@ -36,8 +41,12 @@ export async function rescheduleBookingOwner(
     throw error
   }
 
-  const allowedStatuses = ["CONFIRMED", "IN_PROGRESS"]
-  if (!allowedStatuses.includes(booking.status)) {
+  const allowedStatuses = ["CONFIRMED", "IN_PROGRESS"] as const
+  if (
+    !allowedStatuses.includes(
+      booking.status as (typeof allowedStatuses)[number],
+    )
+  ) {
     throw new Error(
       "Só é possível realocar agendamentos confirmados ou em andamento",
     )
@@ -60,14 +69,35 @@ export async function rescheduleBookingOwner(
     }
   }
 
-  await db.booking.update({
-    where: { id: bookingId },
-    data: {
-      date: newDate,
-      ...(barberId !== undefined
-        ? { memberId: barberId || null }
-        : {}),
-    },
+  const targetMemberId = barberId !== undefined ? barberId : booking.memberId
+  if (!targetMemberId) {
+    throw new Error("É necessário informar um barbeiro para este agendamento")
+  }
+
+  await db.$transaction(async (tx) => {
+    await assertNoBarberBookingConflict(
+      tx,
+      targetMemberId,
+      newDate,
+      booking.service.durationMinutes,
+      bookingId,
+    )
+
+    const result = await tx.booking.updateMany({
+      where: {
+        id: bookingId,
+        status: { in: [...allowedStatuses] },
+        service: { organizationId: booking.service.organizationId },
+      },
+      data: {
+        date: newDate,
+        ...(barberId !== undefined ? { memberId: barberId || null } : {}),
+      },
+    })
+
+    if (result.count === 0) {
+      throw new Error("Não foi possível realocar este agendamento")
+    }
   })
 
   revalidatePath(PATHS.PANEL.ROOT)
