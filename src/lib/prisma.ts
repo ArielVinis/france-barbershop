@@ -8,12 +8,10 @@ if (!connectionString) {
 
 const adapter = new PrismaPg({ connectionString })
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient }
-
-const prisma = globalForPrisma.prisma || new PrismaClient({ adapter })
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
 }
 
-export const db = prisma
+export const db = globalForPrisma.prisma ?? new PrismaClient({ adapter })
+
+globalForPrisma.prisma = db
