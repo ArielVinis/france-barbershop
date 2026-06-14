@@ -233,6 +233,20 @@ STRIPE_CUSTOMER_PORTAL_URL="https://billing.stripe.com/p/login/..."
 STRIPE_WEBHOOK_SECRET=""   # opcional em dev
 ```
 
+#### Supabase (produção)
+
+Use **duas URLs** do painel do Supabase:
+
+```env
+# App (Vercel, serverless) — connection pooling
+DATABASE_URL="postgresql://...@...pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+# CLI: migrate, seed, studio — conexão directa
+DIRECT_DATABASE_URL="postgresql://...@...pooler.supabase.com:5432/postgres"
+```
+
+A app usa `DATABASE_URL`; o Prisma CLI (`migrate`, `seed`) usa `DIRECT_DATABASE_URL` quando definida. Em dev local com Docker, só `DATABASE_URL` basta.
+
 ### 4. Migrations e seed
 
 ```bash

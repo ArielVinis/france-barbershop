@@ -1,13 +1,14 @@
 import "dotenv/config"
-import { defineConfig, env } from "prisma/config"
+import { defineConfig } from "prisma/config"
+import { getDirectDatabaseUrl } from "./src/lib/get-direct-database-url"
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
-    seed: "bun ./prisma/seed.ts",
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: getDirectDatabaseUrl(),
   },
 })
