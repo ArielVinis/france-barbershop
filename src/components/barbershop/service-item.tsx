@@ -213,7 +213,7 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
     )
 
     const barberBookings = dayBookings.filter(
-      (b) => b.userId === selectedBarber?.id,
+      (b) => b.memberId === selectedBarberId,
     )
     return filterAvailableTimes(timeSlots, barberBookings, selectedDay)
   }, [
