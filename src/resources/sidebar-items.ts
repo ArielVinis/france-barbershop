@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import {
   LayoutDashboardIcon,
   UserPlusIcon,

@@ -1,6 +1,6 @@
 "use server"
 
-import { auth } from "@/src/lib/auth"
+import { auth } from "@/src/shared/lib/auth"
 import { headers } from "next/headers"
 
 export const isAdmin = async () => {

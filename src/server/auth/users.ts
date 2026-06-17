@@ -1,8 +1,8 @@
 "use server"
 
-import { PATHS } from "@/src/constants/PATHS"
-import { auth } from "@/src/lib/auth"
-import { db } from "@/src/lib/prisma"
+import { PATHS } from "@/src/shared/constants/PATHS"
+import { auth } from "@/src/shared/lib/auth"
+import { db } from "@/src/shared/lib/prisma"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
