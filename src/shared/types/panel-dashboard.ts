@@ -3,7 +3,7 @@ import type {
   DistributionByBarber,
   DistributionByService,
   RevenueChartPoint,
-} from "@/src/features/owner/_data/get-owner-chart-data"
+} from "@/src/features/dashboard/dashboard.types"
 
 /**
  * Dados dos cartões do dashboard do painel (OWNER e BARBER usam a mesma forma).

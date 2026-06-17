@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { ORGANIZATION_QUERY_PARAM } from "@/src/lib/panel/organization-query"
+import { ORGANIZATION_QUERY_PARAM } from "@/src/shared/guards/panel/organization-query"
 
 export function ensureBarberShopIdMatchesUrl(
   pathname: string,

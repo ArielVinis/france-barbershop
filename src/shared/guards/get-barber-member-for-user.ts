@@ -1,6 +1,6 @@
 import { cache } from "react"
 import { Role } from "@/prisma/generated/prisma/enums"
-import { db } from "@/src/lib/prisma"
+import { db } from "@/src/shared/lib/prisma"
 
 export const getBarberMemberForUser = cache(async (userId: string) => {
   return db.member.findFirst({

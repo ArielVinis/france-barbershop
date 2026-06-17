@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 export const ORGANIZATION_QUERY_PARAM = "organizationId" as const
 

@@ -1,6 +1,6 @@
-import { db } from "@/src/lib/prisma"
+import { db } from "@/src/shared/lib/prisma"
 import { getOrganizationForOwner } from "./get-organizations-for-owner"
-import { ForbiddenError, NotFoundError } from "./errors"
+import { ForbiddenError, NotFoundError } from "@/src/shared/errors/errors"
 
 export type OwnerOrganizationLookup = { id: string; slug: string }
 

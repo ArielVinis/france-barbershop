@@ -3,13 +3,13 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import { lastLoginMethod, organization } from "better-auth/plugins"
 import { db } from "./prisma"
 import { nextCookies } from "better-auth/next-js"
-import { ac, ADMIN, OWNER, MANAGER, MEMBER, CLIENT } from "./auth/permissions"
-import { OrganizationInvitationEmail } from "../components/emails/organization-invitation"
-import { ResetPasswordEmail } from "../components/emails/reset-password"
-import { VerifyEmail } from "../components/emails/verify-email"
+import { ac, ADMIN, OWNER, MANAGER, MEMBER, CLIENT } from "./permissions"
+import { OrganizationInvitationEmail } from "@/src/components/emails/organization-invitation"
+import { ResetPasswordEmail } from "@/src/components/emails/reset-password"
+import { VerifyEmail } from "@/src/components/emails/verify-email"
 import { Resend } from "resend"
-import { getActiveOrganization } from "../server/organizations/organizations"
-import { PATHS } from "../constants/PATHS"
+import { organizationService } from "@/src/features/organization/organization.service"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 const baseUrl = process.env.BETTER_AUTH_URL as string
 const invitationAcceptUrl = (invitationId: string) =>
@@ -37,7 +37,9 @@ export const auth = betterAuth({
     session: {
       create: {
         before: async (session) => {
-          const organization = await getActiveOrganization(session.userId)
+          const organization = await organizationService.getActiveOrganization(
+            session.userId,
+          )
           return {
             data: {
               ...session,
