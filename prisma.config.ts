@@ -1,6 +1,6 @@
 import "dotenv/config"
 import { defineConfig } from "prisma/config"
-import { getDirectDatabaseUrl } from "./src/lib/get-direct-database-url"
+import { getDirectDatabaseUrl } from "./src/shared/lib/get-direct-database-url"
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

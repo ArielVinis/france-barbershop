@@ -118,7 +118,7 @@ src/
 │   ├── (not-authenticated)/
 │   │   ├── auth/                    # login, signup, forgot/reset password
 │   │   └── (main)/                  # home pública, barbershops, bookings, [slug]
-│   ├── (stripe)/                    # checkout e confirmação de pagamento
+│   ├── (stripe)/                    # checkout e confirmação de pagamento (UI)
 │   ├── api/
 │   │   ├── auth/[...nextauth]/      # Handler Better Auth (rota legada)
 │   │   └── accept-invitation/       # Aceite de convites
@@ -126,17 +126,24 @@ src/
 │   ├── proxy.ts                     # Proteção de rotas do painel
 │   └── page.tsx                     # Home → /
 ├── components/                      # UI, auth, layout, templates
-├── constants/                       # PATHS, constantes globais
-├── features/                        # Domínios com actions e data fetching
-│   ├── barber/                      # Fluxo do barbeiro (MEMBER)
-│   ├── barbershops/                 # Listagem pública
-│   ├── bookings/                    # Agendamentos do cliente
-│   ├── owner/                       # Gestão do dono/gestor
-│   └── dev/                         # Actions de desenvolvimento
-├── lib/                             # auth, prisma, stripe, schedule-utils...
+├── features/                        # Domínios (repository / service / actions)
+│   ├── booking/                     # Agendamentos (cliente, barbeiro, owner)
+│   ├── dashboard/                   # Stats e gráficos do painel
+│   ├── dev/                         # Actions de desenvolvimento
+│   ├── member/                      # Barbeiros e membros da org
+│   ├── organization/                # Organizações e contexto do owner
+│   ├── public/                      # Listagem e páginas públicas
+│   ├── schedule/                    # Horários, pausas e bloqueios
+│   ├── service/                     # Serviços da barbearia
+│   └── subscription/                # Assinatura Stripe e acesso ao plano
 ├── resources/                       # Itens da sidebar do painel
-├── server/                          # auth, organizations
-└── types/                           # Tipos compartilhados do painel
+├── server/                          # Auth HTTP (users, permissions)
+└── shared/                          # Código transversal
+    ├── constants/                   # PATHS, NUMBERS, search
+    ├── errors/                      # ValidationError, ForbiddenError, NotFoundError
+    ├── guards/                      # Authz, panel query helpers
+    ├── lib/                         # prisma, auth, stripe, utils, schedule-utils
+    └── types/                       # Tipos compartilhados do painel
 
 prisma/
 ├── schema.prisma                    # Schema (client gerado em prisma/generated/prisma)
@@ -144,12 +151,40 @@ prisma/
 └── seed.ts                          # Dados de demonstração
 
 tests/
-├── unit/                            # Vitest
+├── unit/                            # Vitest (espelha domínios: booking/, service/, shared/guards/, …)
 └── e2e/                             # Playwright
 
 docs/
 └── better-auth-organizations-teams-playbook.md
 ```
+
+### Convenção por feature
+
+Cada domínio em `features/[nome]/` segue o padrão **repository / service / actions**:
+
+| Ficheiro | Uso |
+| -------- | --- |
+| `[nome].repository.ts` | Acesso Prisma apenas (`db` via `@/src/shared/lib/prisma`) |
+| `[nome].service.ts` | Regras de negócio (sem `'use server'`, sem `revalidatePath`) |
+| `[nome].schema.ts` | Schemas Zod de input/output |
+| `[nome].types.ts` | Tipos do domínio |
+| `[nome].actions.ts` | Server Actions públicas/cliente (finas: validar → service → revalidar) |
+| `[nome].panel.actions.ts` | Server Actions do painel (quando aplicável) |
+| `_lib/` | Utilitários puros internos do domínio |
+
+Exemplo (`booking/`):
+
+- `booking.actions.ts` — `createBooking`, `deleteBooking`, `getBookings`, `getConfirmedBookings`, `getConcludedBookings`
+- `booking.panel.actions.ts` — `updateBookingStatus`, `updateBookingStatusOwner`, `rescheduleBookingOwner`, `getOwnerBookings`, `getBarberBookings`
+
+Domínios só de leitura (`public`, `dashboard`) usam `service` + `repository`; páginas podem importar `*.service.ts` em Server Components ou `*.actions.ts` quando precisam de `'use server'`.
+
+### Regras de importação
+
+- **`features/`** não importam entre si — código comum vai para `shared/`.
+- **`app/`** importa de `features/` e `shared/`.
+- **`components/`** importa de `shared/` (tipos, utils); evitar import direto de `features/`.
+- **`shared/`** e **`server/`** não importam de `app/` nem de `features/`.
 
 ### Rotas principais
 
