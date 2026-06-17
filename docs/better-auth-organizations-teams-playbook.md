@@ -36,7 +36,7 @@ O sistema usa **dois eixos** de autorização:
 1. **`User.role`** (global) — controla acesso ao painel (`/panel`) e o layout exibido.
 2. **`Member.role`** (por organização) — controla o papel do usuário dentro de cada barbearia.
 
-Papéis definidos no access control (`src/lib/auth/permissions.ts`):
+Papéis definidos no access control (`src/shared/lib/permissions.ts`):
 
 | Papel | Uso típico |
 | --- | --- |
@@ -56,29 +56,29 @@ O schema Prisma inclui `Team` e `TeamMember` (legado do plugin), mas **teams nã
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `src/lib/auth.ts` | Better Auth: e-mail/senha, Google, verificação, reset, plugin `organization`, convites via Resend |
-| `src/lib/auth/permissions.ts` | Access control (`ac`) e papéis ADMIN, OWNER, MANAGER, MEMBER, CLIENT |
-| `src/lib/auth-client.ts` | Cliente React: `signIn`, `signUp`, `organization.setActive`, `useActiveOrganization` |
+| `src/shared/lib/auth.ts` | Better Auth: e-mail/senha, Google, verificação, reset, plugin `organization`, convites via Resend |
+| `src/shared/lib/permissions.ts` | Access control (`ac`) e papéis ADMIN, OWNER, MANAGER, MEMBER, CLIENT |
+| `src/shared/lib/auth-client.ts` | Cliente React: `signIn`, `signUp`, `organization.setActive`, `useActiveOrganization` |
 | `src/server/auth/users.ts` | `getCurrentUser()`, `signIn`, `signUp` |
 | `src/app/api/auth/[...nextauth]/route.ts` | Handler HTTP do Better Auth (nome de rota legado) |
 
-### Servidor — organizações
+### Servidor — organizações e membros
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `src/server/organizations/create-organization-with-profile.ts` | Cria `Organization` + `Member` (OWNER) em transação; promove `CLIENT` → `OWNER`; define org ativa na sessão |
-| `src/server/organizations/organizations.ts` | `getOrganizations`, `getActiveOrganization`, `getOrganizationBySlug/Id` |
-| `src/server/organizations/member.ts` | `addMember`, `removeMember`, `sendInvitationMember` |
+| `src/features/organization/_actions/create-organization-with-profile.ts` | Cria `Organization` + `Member` (OWNER) em transação; promove `CLIENT` → `OWNER`; define org ativa na sessão |
+| `src/features/organization/_data/organizations.ts` | `getOrganizations`, `getActiveOrganization`, `getOrganizationBySlug/Id` |
+| `src/features/member/_actions/member.ts` | `addMember`, `removeMember`, `sendInvitationMember` |
 | `src/app/api/accept-invitation/[invitationId]/route.ts` | Aceite de convite por GET → redirect para `/panel` |
 
 ### Autorização no domínio
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `src/lib/authz/get-organizations-for-owner.ts` | Organizações onde o usuário é `Member.role: OWNER` |
-| `src/lib/authz/get-barber-member-for-user.ts` | Registro `Member` do barbeiro (`role: MEMBER`) |
-| `src/lib/authz/require-organization-for-owner.ts` | Garante que o owner tem acesso à org antes de mutações |
-| `src/lib/panel/organization-query.ts` | Resolução de `?organizationId=` no painel multi-org |
+| `src/shared/guards/get-organizations-for-owner.ts` | Organizações onde o usuário é `Member.role: OWNER` |
+| `src/shared/guards/get-barber-member-for-user.ts` | Registro `Member` do barbeiro (`role: MEMBER`) |
+| `src/shared/guards/require-organization-for-owner.ts` | Garante que o owner tem acesso à org antes de mutações |
+| `src/shared/guards/panel/organization-query.ts` | Resolução de `?organizationId=` no painel multi-org |
 
 ### UI
 
@@ -123,7 +123,7 @@ O convidado precisa estar autenticado (ou autenticar-se) ao clicar no link. Em s
 
 ### 3. Adicionar barbeiro existente
 
-Fluxo alternativo em `createBarberOwner()` (`src/features/owner/_actions/create-barber-owner.ts`):
+Fluxo alternativo em `createBarberOwner()` (`src/features/member/_actions/create-barber-owner.ts`):
 
 1. Owner informa e-mail de um usuário já cadastrado.
 2. Sistema valida que o usuário não é barbeiro em outra org.
@@ -142,7 +142,7 @@ A sessão passa a usar o novo `activeOrganizationId`.
 
 ### 5. Sessão no primeiro login
 
-Hook em `auth.ts` (`databaseHooks.session.create.before`):
+Hook em `src/shared/lib/auth.ts` (`databaseHooks.session.create.before`):
 
 - Busca o primeiro `Member` do usuário via `getActiveOrganization(userId)`.
 - Preenche `activeOrganizationId` na sessão criada.
@@ -158,7 +158,7 @@ Hook em `auth.ts` (`databaseHooks.session.create.before`):
 
 ### Escopo no painel (`organizationId`)
 
-Rotas de gestão do owner aceitam `?organizationId=` quando o usuário possui mais de uma organização. Helpers em `src/lib/panel/organization-query.ts`:
+Rotas de gestão do owner aceitam `?organizationId=` quando o usuário possui mais de uma organização. Helpers em `src/shared/guards/panel/organization-query.ts`:
 
 - `resolveScopedOrganizationIdOrRedirect` — força seleção de org ou redireciona com query param.
 - `resolveOrganizationIdForAggregate` — dashboard/agenda agregados (`all` ou org específica).
