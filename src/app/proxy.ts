@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { Role } from "@/prisma/generated/prisma/enums"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import { getCurrentUser } from "../server/auth/users"
 
 export async function proxy(req: NextRequest) {
