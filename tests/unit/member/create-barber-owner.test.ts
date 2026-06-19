@@ -1,0 +1,55 @@
+import { describe, it, expect, vi, beforeEach } from "vitest"
+
+vi.mock("react", () => ({
+  cache: (fn: unknown) => fn,
+}))
+
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}))
+
+vi.mock("@/src/server/auth/users", () => ({
+  getCurrentUser: vi.fn(),
+}))
+
+vi.mock("@/src/shared/guards", () => ({
+  requireOrganizationForOwner: vi.fn(),
+}))
+
+vi.mock("@/src/shared/lib/prisma", () => ({
+  db: {
+    user: {
+      findUnique: vi.fn(),
+    },
+    $transaction: vi.fn(),
+  },
+}))
+
+import { createBarberOwner } from "@/src/features/member/member.panel.actions"
+import { getCurrentUser } from "@/src/server/auth/users"
+import { requireOrganizationForOwner } from "@/src/shared/guards"
+import { db } from "@/src/shared/lib/prisma"
+
+describe("createBarberOwner (integração com authz)", () => {
+  beforeEach(() => {
+    vi.mocked(getCurrentUser).mockReset()
+    vi.mocked(requireOrganizationForOwner).mockReset()
+    vi.mocked(db.user.findUnique).mockReset()
+    vi.mocked(db.$transaction).mockReset()
+  })
+
+  it("lança quando a barbearia não existe", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never)
+    vi.mocked(requireOrganizationForOwner).mockRejectedValue(
+      new Error("Barbearia não encontrada"),
+    )
+
+    await expect(
+      createBarberOwner("loja-alheia", "novo@email.com"),
+    ).rejects.toThrow("Barbearia não encontrada")
+
+    expect(db.user.findUnique).not.toHaveBeenCalled()
+  })
+})
