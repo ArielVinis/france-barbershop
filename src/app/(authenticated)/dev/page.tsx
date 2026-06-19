@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { db } from "@/src/lib/prisma"
+import { db } from "@/src/shared/lib/prisma"
 import Header from "@/src/components/layout/header"
 import { DevPanelForm } from "./panel/dev-panel-form"
 

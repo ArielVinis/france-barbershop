@@ -12,8 +12,8 @@ import {
   SelectValue,
 } from "@/src/components/ui/select"
 import { Label } from "@/src/components/ui/label"
-import { setCurrentUserAsOwner } from "@/src/features/dev/_actions/set-current-user-as-owner"
-import { PATHS } from "@/src/constants/PATHS"
+import { setCurrentUserAsOwner } from "@/src/features/dev/dev.actions"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 type DevPanelFormProps = {
   user: { name?: string | null; email?: string | null; role?: string }
