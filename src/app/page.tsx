@@ -1,26 +1,27 @@
 import Header from "../components/layout/header"
 import { Button } from "../components/ui/button"
 import Image from "next/image"
-import { db } from "../lib/prisma"
+import {
+  getPopularBarbershops,
+  getRecommendedBarbershops,
+} from "@/src/features/public/public.actions"
 import BarbershopItem from "../components/barbershop/barbershop-item"
-import { quickSearchOptions } from "../constants/search"
+import { quickSearchOptions } from "@/src/shared/constants/search"
 import BookingItem from "../components/booking/booking-item"
 import Search from "../components/common/search"
 import Link from "next/link"
-import { auth } from "../lib/auth"
+import { auth } from "@/src/shared/lib/auth"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { getConfirmedBookings } from "../features/bookings/_data/get-confirmed-bookings"
+import { getConfirmedBookings } from "@/src/features/booking/booking.actions"
 import { headers } from "next/headers"
 
 const Home = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  const barbershops = await db.organization.findMany()
-  const popularBarbershops = await db.organization.findMany({
-    orderBy: { name: "desc" },
-  })
+  const barbershops = await getRecommendedBarbershops()
+  const popularBarbershops = await getPopularBarbershops()
   const confirmedBookings = await getConfirmedBookings()
 
   return (
