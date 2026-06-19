@@ -3,10 +3,10 @@ import ServiceItem from "@/src/components/barbershop/service-item"
 import SidebarSheet from "@/src/components/layout/sidebar-sheet"
 import { Button, buttonVariants } from "@/src/components/ui/button"
 import { Sheet, SheetTrigger } from "@/src/components/ui/sheet"
-import { cn } from "@/src/lib/utils"
-import { PATHS } from "@/src/constants/PATHS"
-import { Role } from "@/prisma/generated/prisma/enums"
-import { db } from "@/src/lib/prisma"
+import { cn } from "@/src/shared/lib/utils"
+import { PATHS } from "@/src/shared/constants/PATHS"
+import { getBarbershopBySlug } from "@/src/features/public/public.actions"
+import { getBarbershopBarbers } from "@/src/features/public/public.actions"
 import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -21,48 +21,13 @@ interface BarbershopPageProps {
 const BarbershopPage = async ({ params }: BarbershopPageProps) => {
   const { slug } = await params
 
-  const organization = await db.organization.findFirst({
-    where: { slug },
-    include: {
-      services: true,
-      schedules: true,
-      breaks: true,
-      blockedSlots: true,
-    },
-  })
+  const organization = await getBarbershopBySlug(slug)
 
   if (!organization) {
     return notFound()
   }
 
-  const barberMembers = await db.member.findMany({
-    where: {
-      organizationId: organization.id,
-      role: Role.MEMBER,
-      isActive: true,
-    },
-    select: {
-      id: true,
-      user: { select: { name: true } },
-    },
-  })
-
-  const barbers = barberMembers.map((m) => ({
-    id: m.id,
-    user: { name: m.user.name ?? "Barbeiro" },
-    schedules: [] as Array<{
-      dayOfWeek: number
-      startTime: string
-      endTime: string
-      isActive: boolean
-    }>,
-    breaks: [] as Array<{
-      dayOfWeek: number
-      startTime: string
-      endTime: string
-    }>,
-    blockedSlots: [] as Array<{ startAt: Date; endAt: Date }>,
-  }))
+  const barbers = await getBarbershopBarbers(organization.id)
 
   return (
     <div>

@@ -1,7 +1,7 @@
 import Header from "@/src/components/layout/header"
-import { auth } from "@/src/lib/auth"
-import { getConfirmedBookings } from "@/src/features/bookings/_data/get-confirmed-bookings"
-import { getConcludedBookings } from "@/src/features/bookings/_data/get-concluded-bookings"
+import { auth } from "@/src/shared/lib/auth"
+import { getConfirmedBookings } from "@/src/features/booking/booking.actions"
+import { getConcludedBookings } from "@/src/features/booking/booking.actions"
 import BookingsClient from "./bookings-client"
 import { headers } from "next/headers"
 

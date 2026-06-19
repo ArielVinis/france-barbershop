@@ -1,10 +1,8 @@
 import BarbershopItem from "@/src/components/barbershop/barbershop-item"
 import Header from "@/src/components/layout/header"
 import Search from "@/src/components/common/search"
-import {
-  getBarbershops,
-  GetBarbershopsProps,
-} from "@/src/features/barbershops/_data/get-barbershops"
+import { getBarbershops } from "@/src/features/public/public.actions"
+import type { GetBarbershopsProps } from "@/src/features/public/public.types"
 
 const SearchBarbershops = async ({ searchParams }: GetBarbershopsProps) => {
   const params = await searchParams
