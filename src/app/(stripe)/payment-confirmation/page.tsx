@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 
-import { stripe } from "@/src/lib/stripe"
-import { PATHS } from "@/src/constants/PATHS"
+import { stripe } from "@/src/shared/lib/stripe"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import { HomeIcon, ShoppingBag } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import {
