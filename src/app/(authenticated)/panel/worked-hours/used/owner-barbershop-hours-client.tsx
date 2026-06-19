@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { PATHS } from "@/src/constants/PATHS"
-import { ORGANIZATION_QUERY_PARAM } from "@/src/lib/panel/organization-query"
+import { PATHS } from "@/src/shared/constants/PATHS"
+import { ORGANIZATION_QUERY_PARAM } from "@/src/shared/guards/panel/organization-query"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -25,14 +25,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card"
-import {
-  upsertBarbershopSchedulesOwner,
-  type BarbershopScheduleInput,
-} from "@/src/features/owner/_actions/upsert-barbershop-schedules-owner"
-import { createBarbershopBreakOwner } from "@/src/features/owner/_actions/create-barbershop-break-owner"
-import { deleteBarbershopBreakOwner } from "@/src/features/owner/_actions/delete-barbershop-break-owner"
-import { createBarbershopBlockedSlotOwner } from "@/src/features/owner/_actions/create-barbershop-blocked-slot-owner"
-import { deleteBarbershopBlockedSlotOwner } from "@/src/features/owner/_actions/delete-barbershop-blocked-slot-owner"
+import type { BarbershopScheduleInput } from "@/src/features/schedule/schedule.schema"
+import { upsertBarbershopSchedulesOwner } from "@/src/features/schedule/schedule.panel.actions"
+import { createBarbershopBreakOwner } from "@/src/features/schedule/schedule.panel.actions"
+import { deleteBarbershopBreakOwner } from "@/src/features/schedule/schedule.panel.actions"
+import { createBarbershopBlockedSlotOwner } from "@/src/features/schedule/schedule.panel.actions"
+import { deleteBarbershopBlockedSlotOwner } from "@/src/features/schedule/schedule.panel.actions"
 
 const DAY_NAMES = [
   "Domingo",

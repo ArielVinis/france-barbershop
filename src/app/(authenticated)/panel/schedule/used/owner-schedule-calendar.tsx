@@ -6,8 +6,8 @@ import { Calendar, dateFnsLocalizer } from "react-big-calendar"
 import { format, startOfWeek, getDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import "react-big-calendar/lib/css/react-big-calendar.css"
-import { PATHS } from "@/src/constants/PATHS"
-import type { CalendarEvent } from "@/src/lib/booking-calendar-utils"
+import { PATHS } from "@/src/shared/constants/PATHS"
+import type { CalendarEvent } from "@/src/features/schedule/_lib/booking-calendar-utils"
 import "./owner-schedule-calendar.css"
 
 const locales = { "pt-BR": ptBR }

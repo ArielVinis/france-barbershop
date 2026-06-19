@@ -1,30 +1,30 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { getBarberDashboardStats } from "@/src/features/barber/_data/get-barber-dashboard-stats"
+import { getBarberDashboardStats } from "@/src/features/dashboard/dashboard.service"
 import {
   getBarberChartDataBookings,
   getBarberChartDataDistribution,
   getBarberChartDataRevenue,
-} from "@/src/features/barber/_data/get-barber-chart-data"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
+} from "@/src/features/dashboard/dashboard.service"
+import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
 import {
   getOwnerChartDataBookings,
   getOwnerChartDataDistribution,
   getOwnerChartDataRevenue,
-} from "@/src/features/owner/_data/get-owner-chart-data"
-import { getOwnerDashboardStats } from "@/src/features/owner/_data/get-owner-dashboard-stats"
-import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-barbershop-subscription-access"
-import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
+} from "@/src/features/dashboard/dashboard.service"
+import { getOwnerDashboardStats } from "@/src/features/dashboard/dashboard.service"
+import { hasBarbershopSubscriptionAccess } from "@/src/features/subscription/subscription.actions"
+import { hasOwnerSubscriptionAccess } from "@/src/features/subscription/subscription.actions"
 import { DashboardContent } from "@/src/app/(authenticated)/panel/dashboard/used/dashboard-content"
-import { PATHS } from "@/src/constants/PATHS"
-import { getBarberMemberForUser } from "@/src/lib/authz"
-import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
+import { PATHS } from "@/src/shared/constants/PATHS"
+import { getBarberMemberForUser } from "@/src/shared/guards"
+import { ensureBarberShopIdMatchesUrl } from "@/src/shared/guards/panel/ensure-barber-shop-query"
 import {
   normalizePanelDashboardPeriod,
   PANEL_DASHBOARD_PERIOD_LABELS,
-} from "@/src/lib/panel/dashboard-params"
-import { resolveOrganizationIdForAggregate } from "@/src/lib/panel/organization-query"
-import type { PanelDashboardStats } from "@/src/types/panel-dashboard"
+} from "@/src/features/dashboard/_lib/dashboard-params"
+import { resolveOrganizationIdForAggregate } from "@/src/shared/guards/panel/organization-query"
+import type { PanelDashboardStats } from "@/src/shared/types/panel-dashboard"
 import { Role, User } from "@/prisma/generated/prisma/client"
 
 type Props = {

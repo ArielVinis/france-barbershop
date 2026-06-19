@@ -45,9 +45,9 @@ import {
   SelectValue,
 } from "@/src/components/ui/select"
 import { Input } from "@/src/components/ui/input"
-import { updateBookingStatusOwner } from "@/src/features/owner/_actions/update-booking-status-owner"
-import { rescheduleBookingOwner } from "@/src/features/owner/_actions/reschedule-booking-owner"
-import type { OwnerBookingRow } from "@/src/features/owner/types/owner-booking-row"
+import { updateBookingStatusOwner } from "@/src/features/booking/booking.panel.actions"
+import { rescheduleBookingOwner } from "@/src/features/booking/booking.panel.actions"
+import type { OwnerBookingRow } from "@/src/features/booking/booking.types"
 
 const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: "Confirmado",

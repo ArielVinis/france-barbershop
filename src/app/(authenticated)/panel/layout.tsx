@@ -2,10 +2,10 @@ import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { AppSidebar } from "@/src/components/templates/Sidebar/app-sidebar"
 import { SiteHeader } from "@/src/components/templates/SiteHeader/site-header"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getBarberByUserId } from "@/src/features/barber/_data/get-barber-by-user-id"
+import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
+import { getBarberByUserId } from "@/src/features/member/member.panel.actions"
 import { OrganizationSwitcher } from "@/src/components/auth/organization-switcher"
-import { getOrganizations } from "@/src/server/organizations/organizations"
+import { getOrganizations } from "@/src/features/organization/organization.actions"
 import { Role } from "@/prisma/generated/prisma/enums"
 
 export default async function PanelLayout({

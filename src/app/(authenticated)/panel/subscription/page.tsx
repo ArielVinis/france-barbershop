@@ -1,14 +1,14 @@
 import { getCurrentUser } from "@/src/server/auth/users"
-import { getBarberMemberForUser } from "@/src/lib/authz"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
+import { getBarberMemberForUser } from "@/src/shared/guards"
+import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
 import { BarberSubscriptionPanel } from "@/src/app/(authenticated)/panel/subscription/barber-subscription-panel"
 import {
   fetchSubscriptionByEmail,
   isOwnerSubscriptionAllowed,
   translateSubscriptionInterval,
   translateSubscriptionStatus,
-} from "@/src/app/(stripe)/_features/_actions/fetch-subscription-by-email"
-import { cancelSubscription } from "@/src/app/(stripe)/_features/_actions/cancel-subscription"
+} from "@/src/features/subscription/subscription.actions"
+import { cancelSubscription } from "@/src/features/subscription/subscription.actions"
 import Checkout from "@/src/app/(stripe)/_components/checkout"
 import {
   Card,
@@ -17,8 +17,8 @@ import {
   CardTitle,
 } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
-import { ensureBarberShopIdMatchesUrl } from "@/src/lib/panel/ensure-barber-shop-query"
-import { PATHS } from "@/src/constants/PATHS"
+import { ensureBarberShopIdMatchesUrl } from "@/src/shared/guards/panel/ensure-barber-shop-query"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import { Role } from "@/prisma/generated/prisma/enums"
 
 function formatCurrency(amount: number | null | undefined, currency = "brl") {

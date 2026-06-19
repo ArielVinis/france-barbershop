@@ -10,13 +10,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/src/components/ui/dialog"
-import { getOrganizationById } from "@/src/server/organizations/organizations"
+import { getOrganizationById } from "@/src/features/organization/organization.actions"
 import { PlusIcon } from "lucide-react"
 import { MembersTable } from "./members-table"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { addMember } from "@/src/server/organizations/member"
+import { addMember } from "@/src/features/member/member.actions"
 import { Role } from "@/prisma/generated/prisma/enums"
-import { sendInvitationMember } from "@/src/server/organizations/member"
+import { sendInvitationMember } from "@/src/features/member/member.actions"
 
 export async function All() {
   const { session, user } = await getCurrentUser()

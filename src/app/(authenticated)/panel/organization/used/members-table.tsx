@@ -7,7 +7,7 @@ import {
   TableCell,
   Table,
 } from "@/src/components/ui/table"
-import { removeMember } from "@/src/server/organizations/member"
+import { removeMember } from "@/src/features/member/member.actions"
 import { PencilIcon, TrashIcon } from "lucide-react"
 
 type MembersTableProps = {

@@ -1,15 +1,15 @@
 import { getCurrentUser } from "@/src/server/auth/users"
 import { redirect } from "next/navigation"
-import { getOwnerByUserId } from "@/src/features/owner/_data/get-owner-by-user-id"
-import { getOwnerOrganizationHours } from "@/src/features/owner/_data/get-owner-organization-hours"
+import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
+import { getOwnerOrganizationHours } from "@/src/features/schedule/schedule.panel.actions"
 import { OwnerBarbershopHoursClient } from "./used/owner-barbershop-hours-client"
-import { hasOwnerSubscriptionAccess } from "@/src/features/owner/_data/get-owner-subscription-access"
-import { PATHS } from "@/src/constants/PATHS"
+import { hasOwnerSubscriptionAccess } from "@/src/features/subscription/subscription.actions"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import {
   flattenSearchParams,
   resolveScopedOrganizationIdOrRedirect,
-} from "@/src/lib/panel/organization-query"
-import { redirectBarberFromOwnerOnlyRoutes } from "@/src/lib/panel/ensure-panel-owner"
+} from "@/src/shared/guards/panel/organization-query"
+import { redirectBarberFromOwnerOnlyRoutes } from "@/src/shared/guards/panel/ensure-panel-owner"
 
 export default async function OwnerHorariosPage({
   searchParams,

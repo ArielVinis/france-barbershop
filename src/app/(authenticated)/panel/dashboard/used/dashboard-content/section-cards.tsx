@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card"
-import type { PanelDashboardStats } from "@/src/types/panel-dashboard"
+import type { PanelDashboardStats } from "@/src/shared/types/panel-dashboard"
 import { Role } from "@/prisma/generated/prisma/enums"
 
 type SectionCardsProps = {

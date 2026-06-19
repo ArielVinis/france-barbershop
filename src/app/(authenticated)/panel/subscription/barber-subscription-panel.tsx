@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { getBarberMemberForUser } from "@/src/lib/authz"
-import { db } from "@/src/lib/prisma"
-import { hasBarbershopSubscriptionAccess } from "@/src/features/owner/_data/get-barbershop-subscription-access"
-import { PATHS } from "@/src/constants/PATHS"
+import { getBarberMemberForUser } from "@/src/shared/guards"
+import { db } from "@/src/shared/lib/prisma"
+import { hasBarbershopSubscriptionAccess } from "@/src/features/subscription/subscription.actions"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import { Button } from "@/src/components/ui/button"
 import {
   Card,

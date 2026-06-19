@@ -12,8 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card"
-import { PATHS } from "@/src/constants/PATHS"
-import type { BarberForOwner } from "@/src/features/owner/types/barber-for-owner"
+import { PATHS } from "@/src/shared/constants/PATHS"
+import type { BarberForOwner } from "@/src/features/member/member.types"
 
 const DAY_NAMES = [
   "Domingo",

@@ -5,14 +5,14 @@ import { DashboardFilters } from "./dashboard-filters"
 import { ChartRevenue } from "./dashboard-content/chart-revenue"
 import { ChartBookings } from "./dashboard-content/chart-bookings"
 import { ChartDistribution } from "./dashboard-content/chart-distribution"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import { Button } from "@/src/components/ui/button"
 import type {
   PanelDashboardBookingsSeries,
   PanelDashboardDistribution,
   PanelDashboardRevenueSeries,
   PanelDashboardStats,
-} from "@/src/types/panel-dashboard"
+} from "@/src/shared/types/panel-dashboard"
 import { Role } from "@/prisma/generated/prisma/enums"
 
 type DashboardContentProps = {

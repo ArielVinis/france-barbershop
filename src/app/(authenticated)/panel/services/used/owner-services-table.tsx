@@ -37,13 +37,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
-import { createServiceOwner } from "@/src/features/owner/_actions/create-service-owner"
-import { updateServiceOwner } from "@/src/features/owner/_actions/update-service-owner"
-import { deleteServiceOwner } from "@/src/features/owner/_actions/delete-service-owner"
+import { createServiceOwner } from "@/src/features/service/service.panel.actions"
+import { updateServiceOwner } from "@/src/features/service/service.panel.actions"
+import { deleteServiceOwner } from "@/src/features/service/service.panel.actions"
 
 type ServiceRow = Awaited<
   ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-services").getOwnerServices
+    typeof import("@/src/features/service/service.panel.actions").getOwnerServices
   >
 >[number]
 

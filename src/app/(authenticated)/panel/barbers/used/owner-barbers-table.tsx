@@ -44,16 +44,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
-import { createBarberOwner } from "@/src/features/owner/_actions/create-barber-owner"
-import { deleteBarberOwner } from "@/src/features/owner/_actions/delete-barber-owner"
-import { toggleBarberActiveOwner } from "@/src/features/owner/_actions/toggle-barber-active-owner"
-import { getBarberScheduleForOwner } from "@/src/features/owner/_actions/get-barber-schedule-for-owner"
-import type { BarberForOwner } from "@/src/features/owner/types/barber-for-owner"
+import { createBarberOwner } from "@/src/features/member/member.panel.actions"
+import { deleteBarberOwner } from "@/src/features/member/member.panel.actions"
+import { toggleBarberActiveOwner } from "@/src/features/member/member.panel.actions"
+import { getBarberScheduleForOwner } from "@/src/features/member/member.panel.actions"
+import type { BarberForOwner } from "@/src/features/member/member.types"
 import { OwnerBarberScheduleContent } from "./owner-barber-schedule-view"
 
 type BarberRow = Awaited<
   ReturnType<
-    typeof import("@/src/features/owner/_data/get-owner-barbers").getOwnerBarbers
+    typeof import("@/src/features/member/member.panel.actions").getOwnerBarbers
   >
 >[number]
 

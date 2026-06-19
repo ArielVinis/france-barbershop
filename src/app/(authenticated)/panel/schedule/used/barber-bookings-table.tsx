@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select"
-import { updateBookingStatus } from "@/src/features/barber/_actions/update-booking-status"
+import { updateBookingStatus } from "@/src/features/booking/booking.panel.actions"
 
 const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: "Confirmado",
@@ -59,7 +59,7 @@ const PAYMENT_LABEL: Record<string, string> = {
 
 type BookingRow = Awaited<
   ReturnType<
-    typeof import("@/src/features/barber/_data/get-barber-bookings").getBarberBookings
+    typeof import("@/src/features/booking/booking.panel.actions").getBarberBookings
   >
 >[number]
 
