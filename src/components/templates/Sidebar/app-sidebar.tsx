@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/src/components/ui/sidebar"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import Image from "next/image"
 import {
   getPanelNavMainForRole,

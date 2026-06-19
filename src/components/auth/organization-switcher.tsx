@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select"
-import { authClient } from "@/src/lib/auth-client"
+import { authClient } from "@/src/shared/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 

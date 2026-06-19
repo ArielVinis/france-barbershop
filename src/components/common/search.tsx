@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "../ui/form"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 const formSchema = z.object({
   title: z.string().trim().min(1, {

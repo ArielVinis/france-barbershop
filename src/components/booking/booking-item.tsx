@@ -29,7 +29,7 @@ import {
   DialogTrigger,
 } from "../ui/dialog"
 import { DialogClose } from "@radix-ui/react-dialog"
-import { deleteBooking } from "../../features/bookings/_actions/delete-booking"
+import { deleteBooking } from "@/src/features/booking/booking.actions"
 import { toast } from "sonner"
 import { useState } from "react"
 import BookingSummary from "./booking-summary"
@@ -79,9 +79,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
 
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage
-                    src={organization.logo ?? "/banner.png"}
-                  />
+                  <AvatarImage src={organization.logo ?? "/banner.png"} />
                 </Avatar>
                 <p className="text-sm">{organization.name}</p>
               </div>

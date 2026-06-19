@@ -19,14 +19,14 @@ import { Calendar } from "../ui/calendar"
 import { ptBR } from "date-fns/locale"
 import { useEffect, useMemo, useState } from "react"
 import { set } from "date-fns"
-import { useSession } from "@/src/lib/auth-client"
+import { useSession } from "@/src/shared/lib/auth-client"
 import { toast } from "sonner"
 import { Dialog, DialogContent } from "../ui/dialog"
 import SignInDialog from "../auth/sign-in-dialog"
 import BookingSummary from "../booking/booking-summary"
 import { useRouter } from "next/navigation"
-import { getBookings } from "../../features/bookings/_actions/get-bookings"
-import { createBooking } from "../../features/bookings/_actions/create-booking"
+import { getBookings } from "@/src/features/booking/booking.actions"
+import { createBooking } from "@/src/features/booking/booking.actions"
 import {
   generateTimeSlots,
   filterAvailableTimes,
@@ -34,7 +34,7 @@ import {
   filterTimesByBlockedSlots,
   getDayOfWeek,
   type DaySchedule,
-} from "../../lib/schedule-utils"
+} from "@/src/shared/lib/schedule-utils"
 
 type BarberWithAgenda = {
   id: string

@@ -1,4 +1,4 @@
-import { authClient } from "@/src/lib/auth-client"
+import { authClient } from "@/src/shared/lib/auth-client"
 import { Button } from "../ui/button"
 import { LogOutIcon } from "lucide-react"
 

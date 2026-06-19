@@ -17,8 +17,8 @@ import { toast } from "sonner"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { createOrganizationWithProfile } from "@/src/server/organizations/create-organization-with-profile"
-import { PATHS } from "@/src/constants/PATHS"
+import { createOrganizationWithProfile } from "@/src/features/organization/organization.actions"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 const formSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").trim(),
@@ -30,7 +30,9 @@ const formSchema = z.object({
       "Slug só pode conter letras minúsculas, números e hífens",
     )
     .trim(),
-  logo: z.union([z.string().url("Logo deve ser uma URL válida"), z.literal("")]).optional(),
+  logo: z
+    .union([z.string().url("Logo deve ser uma URL válida"), z.literal("")])
+    .optional(),
   description: z.string().trim().optional(),
   address: z.string().trim().min(1, "Morada é obrigatória"),
   phone: z.string().trim().min(8, "Informe um telefone válido"),

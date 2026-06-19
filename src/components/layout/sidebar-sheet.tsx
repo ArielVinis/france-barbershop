@@ -15,13 +15,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "../ui/sheet"
-import { quickSearchOptions } from "../../constants/search"
+import { quickSearchOptions } from "@/src/shared/constants/search"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
-import { signOut, useSession } from "@/src/lib/auth-client"
+import { signOut, useSession } from "@/src/shared/lib/auth-client"
 import { Avatar, AvatarImage } from "../ui/avatar"
 import SignInDialog from "../auth/sign-in-dialog"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import Image from "next/image"
 import { useState } from "react"
 import { useRouter } from "next/navigation"

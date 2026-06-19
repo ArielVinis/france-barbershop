@@ -1,10 +1,10 @@
 "use client"
 
-import { cn } from "@/src/lib/utils"
+import { cn } from "@/src/shared/lib/utils"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import Link from "next/link"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import { signUp } from "@/src/server/auth/users"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -21,7 +21,7 @@ import { toast } from "sonner"
 import { useTransition } from "react"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { authClient } from "@/src/lib/auth-client"
+import { authClient } from "@/src/shared/lib/auth-client"
 import Image from "next/image"
 
 const formSchema = z.object({

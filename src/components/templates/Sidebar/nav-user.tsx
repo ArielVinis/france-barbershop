@@ -3,7 +3,7 @@
 import { CreditCard, LogOutIcon, MoreVerticalIcon } from "lucide-react"
 import Link from "next/link"
 
-import { signOut } from "@/src/lib/auth-client"
+import { signOut } from "@/src/shared/lib/auth-client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 import {
   SidebarMenu,
   SidebarMenuButton,

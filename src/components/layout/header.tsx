@@ -7,7 +7,7 @@ import { MenuIcon } from "lucide-react"
 import { Sheet, SheetTrigger } from "../ui/sheet"
 import SidebarSheet from "./sidebar-sheet"
 import Link from "next/link"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 const Header = () => {
   return (

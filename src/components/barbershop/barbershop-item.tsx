@@ -5,7 +5,7 @@ import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
 import { StarIcon } from "lucide-react"
 import Link from "next/link"
-import { PATHS } from "@/src/constants/PATHS"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 export type OrganizationListCard = Pick<
   Organization,
