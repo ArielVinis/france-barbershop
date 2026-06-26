@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import {
   CalendarIcon,
   Loader2Icon,
+  MailIcon,
   PlusIcon,
   Trash2Icon,
   UserXIcon,
@@ -44,7 +45,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
-import { createBarberOwner } from "@/src/features/member/member.panel.actions"
+import {
+  createBarberOwner,
+  sendInvitationOwner,
+} from "@/src/features/member/member.panel.actions"
 import { deleteBarberOwner } from "@/src/features/member/member.panel.actions"
 import { toggleBarberActiveOwner } from "@/src/features/member/member.panel.actions"
 import { getBarberScheduleForOwner } from "@/src/features/member/member.panel.actions"
@@ -71,22 +75,25 @@ export function OwnerBarbersTable({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [addOpen, setAddOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{
     barberId: string
     name: string
   } | null>(null)
-  const [addOrganizationId, setAddOrganizationId] =
-    useState<string>(selectedOrganizationId)
+  const [addOrganizationId, setAddOrganizationId] = useState<string>(
+    selectedOrganizationId,
+  )
   const [addEmail, setAddEmail] = useState("")
+  const [inviteEmail, setInviteEmail] = useState("")
   const [scheduleDialogBarberId, setScheduleDialogBarberId] = useState<
     string | null
   >(null)
   const [scheduleData, setScheduleData] = useState<BarberForOwner | null>(null)
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false)
 
-  useEffect(() => {
+  const resetDialogOrganization = () => {
     setAddOrganizationId(selectedOrganizationId)
-  }, [selectedOrganizationId])
+  }
 
   useEffect(() => {
     if (!scheduleDialogBarberId) return
@@ -103,6 +110,27 @@ export function OwnerBarbersTable({
     }
   }, [scheduleDialogBarberId])
 
+  const handleInvite = () => {
+    if (!addOrganizationId || !inviteEmail.trim()) {
+      toast.error("Selecione a barbearia e informe o e-mail")
+      return
+    }
+    startTransition(async () => {
+      try {
+        await sendInvitationOwner({
+          organizationId: addOrganizationId,
+          email: inviteEmail.trim(),
+        })
+        toast.success("Convite enviado por e-mail")
+        setInviteOpen(false)
+        setInviteEmail("")
+        router.refresh()
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro ao enviar convite")
+      }
+    })
+  }
+
   const handleAdd = () => {
     if (!addOrganizationId || !addEmail.trim()) {
       toast.error("Selecione a barbearia e informe o e-mail")
@@ -113,7 +141,6 @@ export function OwnerBarbersTable({
         await createBarberOwner(addOrganizationId, addEmail.trim())
         toast.success("Barbeiro vinculado com sucesso")
         setAddOpen(false)
-        setAddOrganizationId(selectedOrganizationId)
         setAddEmail("")
         router.refresh()
       } catch (e) {
@@ -155,7 +182,24 @@ export function OwnerBarbersTable({
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 lg:px-6">
         <h2 className="text-lg font-semibold">Gestão de barbeiros</h2>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setAddOpen(true)} size="sm">
+          <Button
+            variant="outline"
+            onClick={() => {
+              resetDialogOrganization()
+              setInviteOpen(true)
+            }}
+            size="sm"
+          >
+            <MailIcon className="mr-2 h-4 w-4" />
+            Convidar por e-mail
+          </Button>
+          <Button
+            onClick={() => {
+              resetDialogOrganization()
+              setAddOpen(true)
+            }}
+            size="sm"
+          >
             <PlusIcon className="mr-2 h-4 w-4" />
             Adicionar barbeiro
           </Button>
@@ -250,8 +294,72 @@ export function OwnerBarbersTable({
         </div>
       </div>
 
+      {/* Dialog Convidar barbeiro */}
+      <Dialog
+        open={inviteOpen}
+        onOpenChange={(open) => {
+          setInviteOpen(open)
+          if (open) resetDialogOrganization()
+          if (!open) setInviteEmail("")
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convidar barbeiro</DialogTitle>
+            <DialogDescription>
+              Envie um convite por e-mail. O barbeiro poderá criar conta (se
+              necessário), aceitar o convite e acessar o painel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Barbearia</Label>
+              <Select
+                value={addOrganizationId}
+                onValueChange={setAddOrganizationId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizations.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail do convidado</Label>
+              <Input
+                type="email"
+                placeholder="email@exemplo.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button onClick={handleInvite} disabled={isPending}>
+              {isPending ? "Enviando…" : "Enviar convite"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Adicionar barbeiro */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+      <Dialog
+        open={addOpen}
+        onOpenChange={(open) => {
+          setAddOpen(open)
+          if (open) resetDialogOrganization()
+          if (!open) setAddEmail("")
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar barbeiro</DialogTitle>
