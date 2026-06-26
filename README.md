@@ -366,7 +366,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 ### Alta prioridade
 
 - [x] Webhook Stripe para sincronizar status de assinatura automaticamente
-- [ ] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
+- [x] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
 - [ ] Validação robusta de conflitos de horário no agendamento
 
 ### Média prioridade
