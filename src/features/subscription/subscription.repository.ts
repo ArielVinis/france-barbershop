@@ -1,11 +1,16 @@
 import { Role } from "@/prisma/generated/prisma/enums"
 import { stripe } from "@/src/shared/lib/stripe"
 import { db } from "@/src/shared/lib/prisma"
-import type Stripe from "stripe"
+import type { UserSubscriptionSnapshot } from "@/src/features/subscription/_lib/map-stripe-subscription"
 
-const OWNER_ALLOWED_SUBSCRIPTION_STATUSES = new Set<Stripe.Subscription.Status>(
-  ["active", "trialing", "past_due"],
-)
+const userSubscriptionSelect = {
+  id: true,
+  email: true,
+  stripeCustomerId: true,
+  stripeSubscriptionId: true,
+  subscriptionStatus: true,
+  subscriptionCurrentPeriodEnd: true,
+} as const
 
 export const subscriptionRepository = {
   findOwnerEmail(organizationId: string) {
@@ -18,6 +23,42 @@ export const subscriptionRepository = {
           select: { user: { select: { email: true } } },
         },
       },
+    })
+  },
+
+  findUserSubscriptionByEmail(email: string) {
+    return db.user.findUnique({
+      where: { email },
+      select: userSubscriptionSelect,
+    })
+  },
+
+  findUserById(userId: string) {
+    return db.user.findUnique({
+      where: { id: userId },
+      select: userSubscriptionSelect,
+    })
+  },
+
+  findUserByStripeCustomerId(stripeCustomerId: string) {
+    return db.user.findUnique({
+      where: { stripeCustomerId },
+      select: userSubscriptionSelect,
+    })
+  },
+
+  findUserByStripeSubscriptionId(stripeSubscriptionId: string) {
+    return db.user.findUnique({
+      where: { stripeSubscriptionId },
+      select: userSubscriptionSelect,
+    })
+  },
+
+  updateUserSubscription(userId: string, data: UserSubscriptionSnapshot) {
+    return db.user.update({
+      where: { id: userId },
+      data,
+      select: userSubscriptionSelect,
     })
   },
 }
@@ -38,6 +79,10 @@ export const subscriptionStripeRepository = {
     return customer.subscriptions.data[0]
   },
 
+  async retrieveSubscription(subscriptionId: string) {
+    return stripe.subscriptions.retrieve(subscriptionId)
+  },
+
   async cancelSubscription(subscriptionId: string) {
     return stripe.subscriptions.cancel(subscriptionId)
   },
@@ -45,11 +90,23 @@ export const subscriptionStripeRepository = {
   async createCheckoutSession(params: {
     priceId: string | undefined
     returnUrl: string
+    userId: string
+    email?: string
   }) {
     return stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       ui_mode: "embedded",
+      customer_email: params.email,
+      client_reference_id: params.userId,
+      metadata: {
+        userId: params.userId,
+      },
+      subscription_data: {
+        metadata: {
+          userId: params.userId,
+        },
+      },
       line_items: [
         {
           quantity: 1,
@@ -59,13 +116,6 @@ export const subscriptionStripeRepository = {
       return_url: params.returnUrl,
     })
   },
-}
-
-export function isOwnerSubscriptionAllowed(
-  status: Stripe.Subscription.Status | null | undefined,
-) {
-  if (!status) return false
-  return OWNER_ALLOWED_SUBSCRIPTION_STATUSES.has(status)
 }
 
 export function translateSubscriptionStatus(status: string) {
