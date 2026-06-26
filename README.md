@@ -265,8 +265,18 @@ STRIPE_PRICE_ID="price_..."
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_CUSTOMER_PORTAL_URL="https://billing.stripe.com/p/login/..."
-STRIPE_WEBHOOK_SECRET=""   # opcional em dev
+STRIPE_WEBHOOK_SECRET="whsec_..."   # stripe listen em dev; Dashboard em produção
 ```
+
+**Webhook (dev local):**
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+Eventos configurados: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+
+Copie o `whsec_...` emitido pelo CLI para `STRIPE_WEBHOOK_SECRET` no `.env`.
 
 #### Supabase (produção)
 
@@ -355,7 +365,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 ### Alta prioridade
 
-- [ ] Webhook Stripe para sincronizar status de assinatura automaticamente
+- [x] Webhook Stripe para sincronizar status de assinatura automaticamente
 - [ ] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
 - [ ] Validação robusta de conflitos de horário no agendamento
 

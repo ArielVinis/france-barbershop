@@ -4,7 +4,7 @@ import { getOwnerByUserId } from "@/src/features/organization/organization.actio
 import { BarberSubscriptionPanel } from "@/src/app/(authenticated)/panel/subscription/barber-subscription-panel"
 import {
   fetchSubscriptionByEmail,
-  isOwnerSubscriptionAllowed,
+  hasOwnerSubscriptionAccess,
   translateSubscriptionInterval,
   translateSubscriptionStatus,
 } from "@/src/features/subscription/subscription.actions"
@@ -61,7 +61,7 @@ export default async function OwnerSubscriptionPage({
   const subscription = await fetchSubscriptionByEmail(owner.user.email ?? "")
   const item = subscription?.items.data[0]
   const price = item?.price
-  const isPaid = await isOwnerSubscriptionAllowed(subscription?.status)
+  const isPaid = await hasOwnerSubscriptionAccess(owner.user.email ?? "")
   const customerPortalUrl = process.env.STRIPE_CUSTOMER_PORTAL_URL
 
   async function handleCancelSubscription(formData: FormData) {

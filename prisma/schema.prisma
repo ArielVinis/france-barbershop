@@ -49,6 +49,11 @@ model User {
   sessions      Session[]
   bookings      Booking[]
 
+  stripeCustomerId             String?   @unique
+  stripeSubscriptionId         String?   @unique
+  subscriptionStatus           String?
+  subscriptionCurrentPeriodEnd DateTime? @db.Timestamptz(3)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

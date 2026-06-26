@@ -43,5 +43,6 @@ export const PATHS = Object.freeze({
   API: {
     ACCEPT_INVITATION: (invitationId: string) =>
       `/api/accept-invitation/${invitationId}`,
+    STRIPE_WEBHOOK: "/api/stripe/webhook",
   },
 })
