@@ -19,7 +19,7 @@ import {
 } from "../ui/form"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { useTransition } from "react"
+import { useTransition, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { authClient } from "@/src/shared/lib/auth-client"
 import Image from "next/image"
@@ -32,11 +32,27 @@ const formSchema = z.object({
 
 export function LoginForm({
   className,
+  callbackUrl,
+  authError,
   ...props
-}: React.ComponentPropsWithoutRef<"form">) {
+}: React.ComponentPropsWithoutRef<"form"> & {
+  callbackUrl?: string
+  authError?: string
+}) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const lastMethod = authClient.getLastUsedLoginMethod()
+  const redirectTo = callbackUrl ?? PATHS.PANEL.ROOT
+
+  useEffect(() => {
+    if (authError) {
+      toast.error(authError)
+    }
+  }, [authError])
+
+  const signupHref = callbackUrl
+    ? `${PATHS.AUTH.SIGN_UP}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : PATHS.AUTH.SIGN_UP
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,7 +67,7 @@ export function LoginForm({
       const { success, message } = await signIn(data.email, data.password)
       if (success) {
         toast.success(message)
-        router.push(PATHS.PANEL.ROOT)
+        router.push(redirectTo)
       } else {
         toast.error(message)
       }
@@ -61,7 +77,7 @@ export function LoginForm({
   const signInWithGoogle = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: PATHS.PANEL.ROOT,
+      callbackURL: redirectTo,
     })
   }
 
@@ -166,7 +182,7 @@ export function LoginForm({
         <div className="text-center text-sm">
           Não tem uma conta?{" "}
           <Link
-            href={PATHS.AUTH.SIGN_UP}
+            href={signupHref}
             className="underline underline-offset-4"
           >
             Criar conta

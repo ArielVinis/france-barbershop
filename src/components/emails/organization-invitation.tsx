@@ -24,7 +24,7 @@ const ROLE_LABELS: Record<string, string> = {
   owner: "Proprietário",
   admin: "Administrador",
   manager: "Gerente",
-  member: "Membro",
+  member: "Barbeiro",
   client: "Cliente",
 }
 

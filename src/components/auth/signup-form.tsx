@@ -36,10 +36,17 @@ const formSchema = z.object({
 
 export function SignupForm({
   className,
+  callbackUrl,
   ...props
-}: React.ComponentPropsWithoutRef<"form">) {
+}: React.ComponentPropsWithoutRef<"form"> & {
+  callbackUrl?: string
+}) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const redirectTo = callbackUrl ?? PATHS.PANEL.ROOT
+  const loginHref = callbackUrl
+    ? `${PATHS.AUTH.LOGIN}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : PATHS.AUTH.LOGIN
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,7 +68,7 @@ export function SignupForm({
       )
       if (success) {
         toast.success(`${message}. Verifique seu email para ativar sua conta.`)
-        router.push(PATHS.PANEL.ROOT)
+        router.push(loginHref)
       } else {
         toast.error(message)
       }
@@ -71,7 +78,7 @@ export function SignupForm({
   const signUpWithGoogle = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: PATHS.PANEL.ROOT,
+      callbackURL: redirectTo,
     })
   }
 
@@ -202,7 +209,7 @@ export function SignupForm({
           <p className="text-center text-sm">
             Já tem uma conta?{" "}
             <Link
-              href={PATHS.AUTH.LOGIN}
+              href={loginHref}
               className="underline underline-offset-4"
             >
               Fazer login
