@@ -1,4 +1,5 @@
 import { cache } from "react"
+import { Role } from "@/prisma/generated/prisma/enums"
 import { memberRepository } from "@/src/features/member/member.repository"
 import { ForbiddenError, NotFoundError } from "@/src/shared/errors/errors"
 import {
@@ -7,7 +8,87 @@ import {
   requireOrganizationForOwner,
 } from "@/src/shared/guards"
 
+function mapInvitationRoleToUserRole(role: string | null | undefined): Role | null {
+  switch (role?.toLowerCase()) {
+    case "member":
+      return Role.MEMBER
+    case "manager":
+      return Role.MANAGER
+    case "owner":
+      return Role.OWNER
+    default:
+      return null
+  }
+}
+
 export const memberService = {
+  async validateInvitationRecipient(
+    organizationId: string,
+    email: string,
+    excludeUserId?: string,
+  ) {
+    const normalizedEmail = email.trim().toLowerCase()
+    const existingUser = await memberRepository.findUserByEmail(normalizedEmail)
+
+    if (existingUser && existingUser.id !== excludeUserId) {
+      if (existingUser.members.length > 0) {
+        throw new Error("Este usuário já é barbeiro em outra barbearia")
+      }
+
+      const existingInOrg = await memberRepository.findMemberInOrganization(
+        organizationId,
+        existingUser.id,
+      )
+      if (existingInOrg) {
+        throw new Error("Este usuário já pertence a esta barbearia")
+      }
+    }
+
+    return normalizedEmail
+  },
+
+  async validateInvitationAcceptance(
+    organizationId: string,
+    userId: string,
+    invitationRole: string | null | undefined,
+  ) {
+    const mappedRole = mapInvitationRoleToUserRole(invitationRole)
+    if (mappedRole !== Role.MEMBER) return
+
+    const existingElsewhere =
+      await memberRepository.findBarberMembershipElsewhere(
+        userId,
+        organizationId,
+      )
+    if (existingElsewhere) {
+      throw new Error("Você já é barbeiro em outra barbearia")
+    }
+  },
+
+  async finalizeMemberAfterInvitation(
+    userId: string,
+    invitationRole: string | null | undefined,
+  ) {
+    const mappedRole = mapInvitationRoleToUserRole(invitationRole)
+    if (!mappedRole) return
+
+    const user = await memberRepository.findUserRole(userId)
+    if (!user) return
+
+    if (user.role === Role.CLIENT) {
+      await memberRepository.updateUserRole(userId, mappedRole)
+    }
+  },
+
+  async prepareInvitationOwner(
+    ownerUserId: string,
+    organizationId: string,
+    email: string,
+  ) {
+    await requireOrganizationForOwner(ownerUserId, organizationId)
+    return memberService.validateInvitationRecipient(organizationId, email)
+  },
+
   async createBarberOwner(
     ownerUserId: string,
     organizationId: string,

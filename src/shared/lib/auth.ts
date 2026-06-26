@@ -9,6 +9,7 @@ import { ResetPasswordEmail } from "@/src/components/emails/reset-password"
 import { VerifyEmail } from "@/src/components/emails/verify-email"
 import { Resend } from "resend"
 import { organizationService } from "@/src/features/organization/organization.service"
+import { memberService } from "@/src/features/member/member.service"
 import { PATHS } from "@/src/shared/constants/PATHS"
 
 const baseUrl = process.env.BETTER_AUTH_URL as string
@@ -94,6 +95,21 @@ export const auth = betterAuth({
         MANAGER,
         MEMBER,
         CLIENT,
+      },
+      organizationHooks: {
+        beforeAcceptInvitation: async ({ invitation, user }) => {
+          await memberService.validateInvitationAcceptance(
+            invitation.organizationId,
+            user.id,
+            invitation.role,
+          )
+        },
+        afterAcceptInvitation: async ({ invitation, user }) => {
+          await memberService.finalizeMemberAfterInvitation(
+            user.id,
+            invitation.role,
+          )
+        },
       },
       async sendInvitationEmail(data) {
         const inviteUrl = invitationAcceptUrl(data.id)

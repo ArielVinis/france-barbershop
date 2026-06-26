@@ -11,6 +11,30 @@ export const memberRepository = {
     })
   },
 
+  findUserRole(userId: string) {
+    return db.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    })
+  },
+
+  updateUserRole(userId: string, role: Role) {
+    return db.user.update({
+      where: { id: userId },
+      data: { role },
+    })
+  },
+
+  findBarberMembershipElsewhere(userId: string, organizationId: string) {
+    return db.member.findFirst({
+      where: {
+        userId,
+        role: Role.MEMBER,
+        organizationId: { not: organizationId },
+      },
+    })
+  },
+
   findMemberInOrganization(organizationId: string, userId: string) {
     return db.member.findFirst({
       where: {

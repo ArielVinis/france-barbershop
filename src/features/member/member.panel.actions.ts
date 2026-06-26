@@ -1,8 +1,12 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
+import { Role } from "@/prisma/generated/prisma/enums"
 import { memberService } from "@/src/features/member/member.service"
+import { SendInvitationSchema } from "@/src/features/member/member.schema"
 import { getCurrentUser } from "@/src/server/auth/users"
+import { auth } from "@/src/shared/lib/auth"
 import { PATHS } from "@/src/shared/constants/PATHS"
 
 export async function createBarberOwner(
@@ -50,4 +54,33 @@ export async function getBarberByUserId(userId: string) {
 
 export async function getBarberForOwner(barberId: string, ownerId: string) {
   return memberService.getBarberForOwner(barberId, ownerId)
+}
+
+export async function sendInvitationOwner(input: {
+  organizationId: string
+  email: string
+}) {
+  const parsed = SendInvitationSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos")
+  }
+
+  const { user } = await getCurrentUser()
+  const email = await memberService.prepareInvitationOwner(
+    user.id,
+    parsed.data.organizationId,
+    parsed.data.email,
+  )
+
+  await auth.api.createInvitation({
+    body: {
+      email,
+      role: Role.MEMBER,
+      organizationId: parsed.data.organizationId,
+      resend: true,
+    },
+    headers: await headers(),
+  })
+
+  revalidatePath(PATHS.PANEL.BARBERS)
 }
