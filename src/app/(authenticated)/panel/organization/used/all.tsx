@@ -1,5 +1,4 @@
-"use client"
-
+import Link from "next/link"
 import { CreateOrganizationForm } from "@/src/components/auth/create-organization-form"
 import { Button } from "@/src/components/ui/button"
 import {
@@ -8,18 +7,15 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
-  DialogDescription,
 } from "@/src/components/ui/dialog"
 import { getOrganizationById } from "@/src/features/organization/organization.actions"
 import { PlusIcon } from "lucide-react"
 import { MembersTable } from "./members-table"
 import { getCurrentUser } from "@/src/server/auth/users"
-import { addMember } from "@/src/features/member/member.actions"
-import { Role } from "@/prisma/generated/prisma/enums"
-import { sendInvitationMember } from "@/src/features/member/member.actions"
+import { PATHS } from "@/src/shared/constants/PATHS"
 
 export async function All() {
-  const { session, user } = await getCurrentUser()
+  const { session } = await getCurrentUser()
 
   const organization = await getOrganizationById(
     session?.activeOrganizationId ?? "",
@@ -46,47 +42,21 @@ export async function All() {
           </Dialog>
         </div>
       </div>
-      <div className="grid gap-4 py-4">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              variant="outline"
-              onClick={() =>
-                addMember(user.id, organization?.id ?? "", Role.MEMBER)
-              }
-            >
-              <PlusIcon className="size-4" />
-              Adicionar membro
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar membro</DialogTitle>
-            </DialogHeader>
-            <DialogDescription>
-              Adicione um novo membro à organização.
-            </DialogDescription>
-          </DialogContent>
-        </Dialog>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <PlusIcon className="size-4" />
-              Enviar convite de membro
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Enviar convite de membro</DialogTitle>
-            </DialogHeader>
-            <DialogDescription>
-              Envie um convite de membro para um novo membro.
-            </DialogDescription>
-            {/* TODO: Add SendInvitationMemberForm */}
-            {/* <SendInvitationMemberForm onSubmit={sendInvitationMember} /> */}
-          </DialogContent>
-        </Dialog>
+
+      <div className="px-4 py-4 lg:px-6">
+        <p className="text-sm text-muted-foreground">
+          Para convidar barbeiros ou vincular utilizadores existentes, use a
+          página{" "}
+          <Link
+            href={PATHS.PANEL.BARBERS}
+            className="font-medium text-foreground underline underline-offset-4"
+          >
+            Barbeiros
+          </Link>
+          .
+        </p>
       </div>
+
       <MembersTable members={organization?.members || []} />
     </>
   )

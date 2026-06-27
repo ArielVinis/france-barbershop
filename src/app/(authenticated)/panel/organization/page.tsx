@@ -1,5 +1,3 @@
-"use client"
-
 import { SiteHeader } from "@/src/components/templates/SiteHeader/site-header"
 
 import { All } from "./used/all"
