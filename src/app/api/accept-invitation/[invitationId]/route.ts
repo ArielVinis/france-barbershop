@@ -3,21 +3,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { PATHS } from "@/src/shared/constants/PATHS"
 
-function buildLoginRedirect(request: NextRequest, invitationId: string) {
-  const acceptUrl = PATHS.API.ACCEPT_INVITATION(invitationId)
-  const loginUrl = new URL(PATHS.AUTH.LOGIN, request.url)
-  loginUrl.searchParams.set("callbackUrl", acceptUrl)
-  return NextResponse.redirect(loginUrl)
-}
-
-function buildErrorRedirect(
+function buildLoginRedirect(
   request: NextRequest,
   invitationId: string,
-  message: string,
+  error?: string,
 ) {
   const loginUrl = new URL(PATHS.AUTH.LOGIN, request.url)
-  loginUrl.searchParams.set("callbackUrl", PATHS.API.ACCEPT_INVITATION(invitationId))
-  loginUrl.searchParams.set("error", message)
+  loginUrl.searchParams.set(
+    "callbackUrl",
+    PATHS.API.ACCEPT_INVITATION(invitationId),
+  )
+  if (error) loginUrl.searchParams.set("error", error)
   return NextResponse.redirect(loginUrl)
 }
 
@@ -58,6 +54,6 @@ export async function GET(
       error instanceof Error
         ? error.message
         : "Não foi possível aceitar o convite"
-    return buildErrorRedirect(request, invitationId, message)
+    return buildLoginRedirect(request, invitationId, message)
   }
 }
