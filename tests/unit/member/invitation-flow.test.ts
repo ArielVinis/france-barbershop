@@ -129,24 +129,49 @@ describe("memberService — fluxo de convite", () => {
     })
   })
 
-  describe("prepareInvitationOwner", () => {
-    it("valida ownership antes de preparar convite", async () => {
+  describe("prepareInvitation", () => {
+    it("valida ownership e devolve dados do convite", async () => {
       vi.mocked(requireOrganizationForOwner).mockResolvedValue({
         id: "org-1",
       } as never)
       vi.mocked(memberRepository.findUserByEmail).mockResolvedValue(null)
 
-      const email = await memberService.prepareInvitationOwner(
+      const invitation = await memberService.prepareInvitation(
         "owner-1",
         "org-1",
         "novo@example.com",
+        Role.MEMBER,
       )
 
       expect(requireOrganizationForOwner).toHaveBeenCalledWith(
         "owner-1",
         "org-1",
       )
-      expect(email).toBe("novo@example.com")
+      expect(invitation).toEqual({
+        email: "novo@example.com",
+        organizationId: "org-1",
+        role: Role.MEMBER,
+      })
+    })
+  })
+
+  describe("createBarberOwner", () => {
+    it("reutiliza validação de convite antes de vincular", async () => {
+      vi.mocked(requireOrganizationForOwner).mockResolvedValue({
+        id: "org-1",
+      } as never)
+      vi.mocked(memberRepository.findUserByEmail).mockResolvedValue({
+        id: "user-1",
+        members: [{ id: "member-1" }],
+      } as never)
+
+      await expect(
+        memberService.createBarberOwner(
+          "owner-1",
+          "org-1",
+          "barbeiro@example.com",
+        ),
+      ).rejects.toThrow("Este usuário já é barbeiro em outra barbearia")
     })
   })
 })
