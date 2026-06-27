@@ -80,13 +80,26 @@ export const memberService = {
     }
   },
 
-  async prepareInvitationOwner(
+  async prepareInvitation(
     ownerUserId: string,
     organizationId: string,
     email: string,
+    role: Role,
   ) {
-    await requireOrganizationForOwner(ownerUserId, organizationId)
-    return memberService.validateInvitationRecipient(organizationId, email)
+    const ownerOrganization = await requireOrganizationForOwner(
+      ownerUserId,
+      organizationId,
+    )
+    const normalizedEmail = await memberService.validateInvitationRecipient(
+      ownerOrganization.id,
+      email,
+    )
+
+    return {
+      email: normalizedEmail,
+      organizationId: ownerOrganization.id,
+      role,
+    }
   },
 
   async createBarberOwner(
@@ -99,20 +112,14 @@ export const memberService = {
       organizationId,
     )
 
-    const existingUser = await memberRepository.findUserByEmail(
-      userEmail.trim().toLowerCase(),
-    )
-    if (!existingUser)
-      throw new Error("Nenhum usuário encontrado no sistema com este e-mail")
-    if (existingUser.members.length > 0)
-      throw new Error("Este usuário já é barbeiro em outra barbearia")
-
-    const existingInOrg = await memberRepository.findMemberInOrganization(
+    const email = await memberService.validateInvitationRecipient(
       ownerOrganization.id,
-      existingUser.id,
+      userEmail,
     )
-    if (existingInOrg) {
-      throw new Error("Este usuário já pertence a esta barbearia")
+
+    const existingUser = await memberRepository.findUserByEmail(email)
+    if (!existingUser) {
+      throw new Error("Nenhum usuário encontrado no sistema com este e-mail")
     }
 
     await memberRepository.createBarber({

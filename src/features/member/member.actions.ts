@@ -72,29 +72,30 @@ export const sendInvitationMember = async (
 
   try {
     const { user } = await getCurrentUser()
-    const normalizedEmail = await memberService.prepareInvitationOwner(
+    const invitation = await memberService.prepareInvitation(
       user.id,
       parsed.data.organizationId,
       parsed.data.email,
+      role,
     )
 
     await auth.api.createInvitation({
       body: {
-        email: normalizedEmail,
-        role,
-        organizationId: parsed.data.organizationId,
+        ...invitation,
         resend: true,
       },
       headers: await headers(),
     })
+
     return {
       success: true,
-      message: "Invitation sent successfully",
+      message: "Convite enviado com sucesso",
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to send invitation member",
+      error:
+        error instanceof Error ? error.message : "Falha ao enviar convite",
     }
   }
 }
