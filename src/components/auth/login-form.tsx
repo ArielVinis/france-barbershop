@@ -19,7 +19,7 @@ import {
 } from "../ui/form"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { useTransition, useEffect } from "react"
+import { useTransition, useEffect, useSyncExternalStore } from "react"
 import { Loader2 } from "lucide-react"
 import { authClient } from "@/src/shared/lib/auth-client"
 import Image from "next/image"
@@ -41,7 +41,11 @@ export function LoginForm({
 }) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
-  const lastMethod = authClient.getLastUsedLoginMethod()
+  const lastMethod = useSyncExternalStore(
+    () => () => {},
+    () => authClient.getLastUsedLoginMethod(),
+    () => null,
+  )
   const redirectTo = callbackUrl ?? PATHS.PANEL.ROOT
 
   useEffect(() => {
@@ -181,10 +185,7 @@ export function LoginForm({
         </div>
         <div className="text-center text-sm">
           Não tem uma conta?{" "}
-          <Link
-            href={signupHref}
-            className="underline underline-offset-4"
-          >
+          <Link href={signupHref} className="underline underline-offset-4">
             Criar conta
           </Link>
         </div>
