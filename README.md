@@ -162,15 +162,15 @@ docs/
 
 Cada domínio em `features/[nome]/` segue o padrão **repository / service / actions**:
 
-| Ficheiro | Uso |
-| -------- | --- |
-| `[nome].repository.ts` | Acesso Prisma apenas (`db` via `@/src/shared/lib/prisma`) |
-| `[nome].service.ts` | Regras de negócio (sem `'use server'`, sem `revalidatePath`) |
-| `[nome].schema.ts` | Schemas Zod de input/output |
-| `[nome].types.ts` | Tipos do domínio |
-| `[nome].actions.ts` | Server Actions públicas/cliente (finas: validar → service → revalidar) |
-| `[nome].panel.actions.ts` | Server Actions do painel (quando aplicável) |
-| `_lib/` | Utilitários puros internos do domínio |
+| Ficheiro                  | Uso                                                                    |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `[nome].repository.ts`    | Acesso Prisma apenas (`db` via `@/src/shared/lib/prisma`)              |
+| `[nome].service.ts`       | Regras de negócio (sem `'use server'`, sem `revalidatePath`)           |
+| `[nome].schema.ts`        | Schemas Zod de input/output                                            |
+| `[nome].types.ts`         | Tipos do domínio                                                       |
+| `[nome].actions.ts`       | Server Actions públicas/cliente (finas: validar → service → revalidar) |
+| `[nome].panel.actions.ts` | Server Actions do painel (quando aplicável)                            |
+| `_lib/`                   | Utilitários puros internos do domínio                                  |
 
 Exemplo (`booking/`):
 
@@ -368,11 +368,11 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] Webhook Stripe para sincronizar status de assinatura automaticamente
 - [x] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
 - [ ] Validação robusta de conflitos de horário no agendamento
+- [ ] Verificar velocidade das requisições e tempo de resposta
 
 ### Média prioridade
 
 - [ ] Sistema de avaliações
-  - [ ] Avaliações por barbeiro (hoje só existe `Rating` para organização)
   - [ ] Exibir avaliações na página pública da barbearia
 - [ ] Perfil do barbeiro (bio, foto, serviços que realiza)
 - [ ] Notificações por e-mail/SMS e lembretes de agendamento
@@ -380,6 +380,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 ### Baixa prioridade
 
+- [ ] Alterar o calendario para o "FullCalendar"
 - [ ] Melhorias de UX (skeletons em mais telas, animações, responsividade)
 - [ ] Ampliar cobertura de testes (unit, integração, E2E)
 - [ ] Otimização de queries e cache
