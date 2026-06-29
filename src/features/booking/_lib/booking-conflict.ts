@@ -1,6 +1,11 @@
 import { addMinutes, endOfDay, startOfDay } from "date-fns"
 import type { BookingStatus } from "@/prisma/generated/prisma/client"
 import type { Prisma } from "@/prisma/generated/prisma/client"
+import {
+  bookingOverlapsBlockedSlot,
+  bookingOverlapsBreak,
+  isBookingWithinDaySchedule,
+} from "@/src/shared/lib/schedule-utils"
 
 export const BLOCKING_BOOKING_STATUSES: BookingStatus[] = [
   "CONFIRMED",
@@ -39,6 +44,74 @@ export function findOverlappingBooking(
 }
 
 type TransactionClient = Prisma.TransactionClient
+
+export async function assertNoOrganizationScheduleConflict(
+  tx: TransactionClient,
+  organizationId: string,
+  date: Date,
+  durationMinutes: number,
+): Promise<void> {
+  if (date < new Date()) {
+    throw new Error("Este horário já passou")
+  }
+
+  const dayOfWeek = date.getDay()
+  const dayStart = startOfDay(date)
+  const dayEnd = endOfDay(date)
+
+  const organization = await tx.organization.findUnique({
+    where: { id: organizationId },
+    select: {
+      schedules: {
+        where: { dayOfWeek },
+        take: 1,
+      },
+      breaks: {
+        where: { dayOfWeek },
+      },
+      blockedSlots: {
+        where: {
+          startAt: { lte: dayEnd },
+          endAt: { gte: dayStart },
+        },
+      },
+    },
+  })
+
+  if (!organization) {
+    throw new Error("Organização não encontrada")
+  }
+
+  const schedule = organization.schedules[0] ?? null
+
+  if (!isBookingWithinDaySchedule(date, durationMinutes, schedule)) {
+    throw new Error("Fora do horário de funcionamento")
+  }
+
+  if (
+    bookingOverlapsBreak(
+      date,
+      durationMinutes,
+      organization.breaks.map((b) => ({
+        startTime: b.startTime,
+        endTime: b.endTime,
+      })),
+    )
+  ) {
+    throw new Error("Horário conflita com pausa da barbearia")
+  }
+
+  const overlapsBlock = organization.blockedSlots.some((slot) =>
+    bookingOverlapsBlockedSlot(date, durationMinutes, {
+      startAt: slot.startAt,
+      endAt: slot.endAt,
+    }),
+  )
+
+  if (overlapsBlock) {
+    throw new Error("Horário indisponível por bloqueio da barbearia")
+  }
+}
 
 export async function assertNoBarberBookingConflict(
   tx: TransactionClient,

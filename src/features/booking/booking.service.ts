@@ -3,7 +3,10 @@ import type {
   PaymentMethod,
   PaymentStatus,
 } from "@/prisma/generated/prisma/client"
-import { assertNoBarberBookingConflict } from "@/src/features/booking/_lib/booking-conflict"
+import {
+  assertNoBarberBookingConflict,
+  assertNoOrganizationScheduleConflict,
+} from "@/src/features/booking/_lib/booking-conflict"
 import { bookingRepository } from "@/src/features/booking/booking.repository"
 import type { CreateBookingInput } from "@/src/features/booking/booking.schema"
 import type {
@@ -78,6 +81,13 @@ export const bookingService = {
       if (!barberMember) {
         throw new Error("Barbeiro inválido para este serviço")
       }
+
+      await assertNoOrganizationScheduleConflict(
+        tx,
+        service.organizationId,
+        date,
+        service.durationMinutes,
+      )
 
       await assertNoBarberBookingConflict(
         tx,
@@ -260,6 +270,13 @@ export const bookingService = {
     }
 
     await bookingRepository.transaction(async (tx) => {
+      await assertNoOrganizationScheduleConflict(
+        tx,
+        booking.service.organizationId,
+        newDate,
+        booking.service.durationMinutes,
+      )
+
       await assertNoBarberBookingConflict(
         tx,
         targetMemberId,

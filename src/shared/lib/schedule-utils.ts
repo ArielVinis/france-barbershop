@@ -1,3 +1,5 @@
+import { addMinutes } from "date-fns"
+
 /** Horário de um dia: usado por BarbershopSchedule e BarberSchedule */
 export type DaySchedule = {
   startTime: string
@@ -8,9 +10,66 @@ export type DaySchedule = {
 /**
  * Converte horário "HH:mm" em minutos desde meia-noite
  */
-function timeToMinutes(time: string): number {
+export function timeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number)
   return h * 60 + m
+}
+
+export function minuteRangesOverlap(
+  startA: number,
+  endA: number,
+  startB: number,
+  endB: number,
+): boolean {
+  return startA < endB && endA > startB
+}
+
+export function getBookingMinuteRange(
+  date: Date,
+  durationMinutes: number,
+): { startMin: number; endMin: number } {
+  const startMin = date.getHours() * 60 + date.getMinutes()
+  return { startMin, endMin: startMin + durationMinutes }
+}
+
+export function isBookingWithinDaySchedule(
+  date: Date,
+  durationMinutes: number,
+  schedule: DaySchedule | null | undefined,
+): boolean {
+  if (!schedule?.isActive) return false
+
+  const { startMin, endMin } = getBookingMinuteRange(date, durationMinutes)
+  const scheduleStart = timeToMinutes(schedule.startTime)
+  const scheduleEnd = timeToMinutes(schedule.endTime)
+
+  return startMin >= scheduleStart && endMin <= scheduleEnd
+}
+
+export function bookingOverlapsBreak(
+  date: Date,
+  durationMinutes: number,
+  breaks: BreakSlot[],
+): boolean {
+  const { startMin, endMin } = getBookingMinuteRange(date, durationMinutes)
+
+  return breaks.some((b) =>
+    minuteRangesOverlap(
+      startMin,
+      endMin,
+      timeToMinutes(b.startTime),
+      timeToMinutes(b.endTime),
+    ),
+  )
+}
+
+export function bookingOverlapsBlockedSlot(
+  start: Date,
+  durationMinutes: number,
+  blockedSlot: BlockedSlot,
+): boolean {
+  const end = addMinutes(start, durationMinutes)
+  return start < blockedSlot.endAt && end > blockedSlot.startAt
 }
 
 /**
