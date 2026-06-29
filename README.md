@@ -47,7 +47,7 @@ Plataforma multi-tenant onde cada barbearia é uma **Organization** (plugin orga
 | E-mail                | Resend + React Email                      |
 | Gráficos / calendário | Recharts, react-big-calendar              |
 | Testes                | Vitest (unit), Playwright (E2E)           |
-| Qualidade             | ESLint, Prettier, Husky, lint-staged      |
+| Qualidade             | ESLint, Prettier, git-commit-msg-linter   |
 
 ## Arquitetura
 
@@ -97,7 +97,8 @@ flowchart TB
 
 ### Proteção de rotas
 
-- `src/app/proxy.ts` — matcher em `/panel/*` e `/dev/*`; só OWNER, MANAGER e MEMBER entram no painel.
+- `src/proxy.ts` — matcher em `/panel/:path*`; exige sessão e `User.role` OWNER, MANAGER ou MEMBER; CLIENT vai para `/not-authorized`.
+- `/dev` não passa pelo proxy: a página em `(authenticated)/dev` só renderiza com `NODE_ENV=development`.
 - Rotas exclusivas de dono/gestor redirecionam barbeiros (MEMBER) quando necessário.
 - Várias telas de gestão exigem assinatura Stripe ativa do dono.
 
@@ -105,26 +106,33 @@ flowchart TB
 
 ```
 src/
+├── proxy.ts                         # Proteção de rotas do painel (/panel/*)
 ├── app/
-│   ├── (authenticated)/panel/     # Painel interno (owner, manager, barbeiro)
-│   │   ├── page.tsx                 # Dashboard → /panel
-│   │   ├── schedule/                # Agendamentos → /panel/schedule
-│   │   ├── organization/            # Gestão de org → /panel/organization
-│   │   ├── barbers/                 # Barbeiros → /panel/barbers
-│   │   ├── services/                # Serviços → /panel/services
-│   │   ├── worked-hours/            # Horários → /panel/worked-hours
-│   │   ├── subscription/            # Assinatura Stripe → /panel/subscription
-│   │   └── layout.tsx               # Sidebar + header por papel
-│   ├── (not-authenticated)/
+│   ├── page.tsx                     # Home → /
+│   ├── (authenticated)/
+│   │   ├── panel/                   # Painel interno (owner, manager, barbeiro)
+│   │   │   ├── page.tsx             # Dashboard → /panel
+│   │   │   ├── schedule/            # Agendamentos → /panel/schedule
+│   │   │   ├── organization/        # Gestão de org → /panel/organization
+│   │   │   ├── barbers/             # Barbeiros → /panel/barbers
+│   │   │   ├── services/            # Serviços → /panel/services
+│   │   │   ├── worked-hours/        # Horários → /panel/worked-hours
+│   │   │   ├── subscription/        # Assinatura Stripe → /panel/subscription
+│   │   │   ├── _components/         # Componentes partilhados do painel
+│   │   │   ├── dashboard/used/      # Gráficos e tabelas do dashboard
+│   │   │   └── layout.tsx           # Sidebar + header por papel
+│   │   └── dev/                     # Ferramentas de dev (NODE_ENV=development)
+│   │       └── page.tsx             # /dev — vincular usuário como OWNER
+│   ├── (public)/
 │   │   ├── auth/                    # login, signup, forgot/reset password
-│   │   └── (main)/                  # home pública, barbershops, bookings, [slug]
-│   ├── (stripe)/                    # checkout e confirmação de pagamento (UI)
-│   ├── api/
-│   │   ├── auth/[...nextauth]/      # Handler Better Auth (rota legada)
-│   │   └── accept-invitation/       # Aceite de convites
-│   ├── (authenticated)/dev/         # Ferramentas de dev (só NODE_ENV=development)
-│   ├── proxy.ts                     # Proteção de rotas do painel
-│   └── page.tsx                     # Home → /
+│   │   ├── (main)/                  # barbershops, bookings, [slug]
+│   │   ├── not-authenticated/       # Falha de convite / sessão
+│   │   └── not-authorized/          # Papel sem acesso (ex.: CLIENT no painel)
+│   ├── (stripe)/                    # checkout e payment-confirmation
+│   └── api/
+│       ├── auth/[...nextauth]/      # Handler Better Auth (nome de rota legado)
+│       ├── accept-invitation/[invitationId]/
+│       └── stripe/webhook/
 ├── components/                      # UI, auth, layout, templates
 ├── features/                        # Domínios (repository / service / actions)
 │   ├── booking/                     # Agendamentos (cliente, barbeiro, owner)
@@ -207,10 +215,11 @@ Domínios só de leitura (`public`, `dashboard`) usam `service` + `repository`; 
 
 ### Sidebar do painel (por papel)
 
-Definida em `src/resources/sidebar-items.ts`:
+Definida em `src/resources/sidebar-items.ts` (itens principais) e `nav-user.tsx` (menu do utilizador):
 
 - **MEMBER** (barbeiro): Dashboard, Agendamentos
 - **OWNER / MANAGER**: Dashboard, Agendamentos, Organização, Barbeiros, Serviços, Horários de trabalho
+- **Assinatura** (`/panel/subscription`): link no menu do utilizador (dropdown no rodapé da sidebar), não nos itens principais
 
 ## Como Rodar
 
@@ -359,7 +368,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] Status de pagamento: PENDING, PAID, REFUNDED, CANCELLED
 - [x] Dark mode (ThemeSwitcher)
 - [x] Testes unitários e E2E (parcial)
-- [x] Husky + lint-staged no pre-commit
+- [x] git-commit-msg-linter (validação de mensagens de commit)
 
 ## Roadmap
 
@@ -367,7 +376,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 - [x] Webhook Stripe para sincronizar status de assinatura automaticamente
 - [x] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
-- [ ] Validação robusta de conflitos de horário no agendamento
+- [ ] Validação completa de conflitos de horário (parcial: sobreposição por barbeiro em create/reschedule; falta horários da org, pausas e bloqueios)
 - [ ] Verificar velocidade das requisições e tempo de resposta
 
 ### Média prioridade
@@ -391,20 +400,20 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 ### Modelos principais
 
-| Modelo                                 | Descrição                                                |
-| -------------------------------------- | -------------------------------------------------------- |
-| `User`                                 | Usuários do sistema                                      |
-| `Session` / `Account` / `Verification` | Sessões e credenciais (Better Auth)                      |
-| `Organization`                         | Barbearia (tenant): nome, slug, endereço, telefones      |
-| `Member`                               | Vínculo usuário ↔ organização (barbeiro, gestor ou dono) |
-| `Team` / `TeamMember`                  | Times dentro da organização                              |
-| `Invitation`                           | Convites pendentes para a organização                    |
-| `OrganizationService`                  | Serviços oferecidos                                      |
-| `Booking`                              | Agendamentos (cliente, serviço, barbeiro opcional)       |
-| `OrganizationSchedule`                 | Horário de funcionamento por dia da semana               |
-| `OrganizationBreak`                    | Pausas recorrentes (ex.: almoço)                         |
-| `OrganizationBlockedSlot`              | Bloqueios por período (feriados, férias)                 |
-| `Rating`                               | Avaliações da organização                                |
+| Modelo                                 | Descrição                                                 |
+| -------------------------------------- | --------------------------------------------------------- |
+| `User`                                 | Usuários do sistema                                       |
+| `Session` / `Account` / `Verification` | Sessões e credenciais (Better Auth)                       |
+| `Organization`                         | Barbearia (tenant): nome, slug, endereço, telefones       |
+| `Member`                               | Vínculo usuário ↔ organização (barbeiro, gestor ou dono)  |
+| `Team` / `TeamMember`                  | Times dentro da organização                               |
+| `Invitation`                           | Convites pendentes para a organização                     |
+| `OrganizationService`                  | Serviços oferecidos                                       |
+| `Booking`                              | Agendamentos (cliente, serviço, barbeiro opcional)        |
+| `OrganizationSchedule`                 | Horário de funcionamento por dia da semana                |
+| `OrganizationBreak`                    | Pausas recorrentes (ex.: almoço)                          |
+| `OrganizationBlockedSlot`              | Bloqueios por período (feriados, férias)                  |
+| `Rating`                               | Avaliações da organização (schema presente; sem UI ainda) |
 
 ### Relacionamentos
 
@@ -436,7 +445,7 @@ npx prisma generate
 npx prisma db seed
 
 # Qualidade
-npm run lint
+npx eslint .
 npm run format
 
 # Testes
@@ -450,7 +459,7 @@ npm run test:e2e:ui
 
 ### Unitários (Vitest)
 
-Localizados em `tests/unit/`. Cobrem autorização e actions do painel do dono.
+Localizados em `tests/unit/`. Cobrem guards, conflitos de agendamento, convites, webhook Stripe e actions do painel.
 
 ```bash
 npm test
