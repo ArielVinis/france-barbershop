@@ -376,7 +376,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 - [x] Webhook Stripe para sincronizar status de assinatura automaticamente
 - [x] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
-- [ ] Validação completa de conflitos de horário (parcial: sobreposição por barbeiro em create/reschedule; falta horários da org, pausas e bloqueios)
+- [x] Validação completa de conflitos de horário (sobreposição por barbeiro + horários, pausas e bloqueios da organização em create/reschedule)
 - [ ] Verificar velocidade das requisições e tempo de resposta
 
 ### Média prioridade
