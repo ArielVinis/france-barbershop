@@ -66,9 +66,10 @@ O schema Prisma inclui `Team` e `TeamMember` (legado do plugin), mas **teams nã
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `src/features/organization/_actions/create-organization-with-profile.ts` | Cria `Organization` + `Member` (OWNER) em transação; promove `CLIENT` → `OWNER`; define org ativa na sessão |
-| `src/features/organization/_data/organizations.ts` | `getOrganizations`, `getActiveOrganization`, `getOrganizationBySlug/Id` |
-| `src/features/member/_actions/member.ts` | `addMember`, `removeMember`, `sendInvitationMember` |
+| `src/features/organization/organization.actions.ts` | `createOrganizationWithProfile`, `getOrganizations`, `getOwnerByUserId`, etc. |
+| `src/features/organization/organization.service.ts` | Regras de negócio de organizações |
+| `src/features/member/member.actions.ts` | `addMember`, `sendInvitationMember` |
+| `src/features/member/member.panel.actions.ts` | `createBarberOwner` e actions do painel |
 | `src/app/api/accept-invitation/[invitationId]/route.ts` | Aceite de convite por GET → redirect para `/panel` |
 
 ### Autorização no domínio
@@ -89,7 +90,7 @@ O schema Prisma inclui `Team` e `TeamMember` (legado do plugin), mas **teams nã
 | `src/components/emails/organization-invitation.tsx` | Template de e-mail de convite |
 | `src/app/(authenticated)/panel/organization/page.tsx` | Gestão de organizações e membros |
 | `src/app/(authenticated)/panel/layout.tsx` | Layout do painel por papel (OWNER/MANAGER vs MEMBER) |
-| `src/app/proxy.ts` | Proteção de `/panel/*` — só OWNER, MANAGER e MEMBER |
+| `src/proxy.ts` | Proteção de `/panel/:path*` — sessão + OWNER, MANAGER ou MEMBER |
 
 ### Schema
 
@@ -123,7 +124,7 @@ O convidado precisa estar autenticado (ou autenticar-se) ao clicar no link. Em s
 
 ### 3. Adicionar barbeiro existente
 
-Fluxo alternativo em `createBarberOwner()` (`src/features/member/_actions/create-barber-owner.ts`):
+Fluxo alternativo em `createBarberOwner()` (`src/features/member/member.panel.actions.ts`):
 
 1. Owner informa e-mail de um usuário já cadastrado.
 2. Sistema valida que o usuário não é barbeiro em outra org.
@@ -225,7 +226,8 @@ Em `NODE_ENV=development`, a rota `/dev` permite vincular o usuário logado como
 
 ## Roadmap
 
-- [ ] Fluxo completo de convite → cadastro → primeiro acesso do barbeiro
+- [x] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
+- [x] Webhook Stripe para sincronizar status de assinatura
 - [ ] Suporte consistente a `MANAGER` nas queries de organização do painel
 - [ ] Habilitar teams no plugin (se necessário para segmentação interna)
 - [ ] Auditoria de isolamento: todas as actions filtram por `organizationId`
