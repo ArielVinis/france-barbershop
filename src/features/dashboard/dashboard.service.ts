@@ -1,9 +1,19 @@
+import {
+  buildBookingsChart,
+  buildDistributionByBarber,
+  buildDistributionByService,
+  buildOwnerStats,
+  buildRevenueChart,
+  buildTopServices,
+  EMPTY_OWNER_DASHBOARD_BUNDLE,
+} from "@/src/features/dashboard/_lib/dashboard-aggregates"
 import { dashboardRepository } from "@/src/features/dashboard/dashboard.repository"
 import type {
   BookingsChartPoint,
   DistributionByBarber,
   DistributionByService,
   OwnerChartPeriod,
+  OwnerDashboardBundle,
   OwnerDashboardStats,
   OwnerStatsPeriod,
   RevenueChartPoint,
@@ -11,104 +21,85 @@ import type {
 import { resolveOwnerOrganizationIdsForQueries } from "@/src/shared/guards/panel/resolve-owner-organization-ids"
 import type { OwnerOrganizationIdList } from "@/src/shared/types/panel-data-scope"
 
-function buildTopServices(
-  servicesAgg: { serviceId: string; _count: { id: number } }[],
-) {
-  const serviceIds = servicesAgg.map((s) => s.serviceId)
-  return dashboardRepository.findServicesByIds(serviceIds).then((services) => {
-    const serviceNames = new Map(services.map((s) => [s.id, s.name]))
-    return servicesAgg
-      .sort((a, b) => b._count.id - a._count.id)
-      .slice(0, 5)
-      .map((s) => ({
-        serviceId: s.serviceId,
-        serviceName: serviceNames.get(s.serviceId) ?? "—",
-        count: s._count.id,
-      }))
-  })
+async function resolveServiceNames(serviceIds: string[]) {
+  if (serviceIds.length === 0) return new Map<string, string>()
+  const services = await dashboardRepository.findServicesByIds(serviceIds)
+  return new Map(services.map((s) => [s.id, s.name]))
+}
+
+async function resolveMemberNames(memberIds: string[]) {
+  if (memberIds.length === 0) return new Map<string, string>()
+  const members = await dashboardRepository.findMembersByIds(memberIds)
+  return new Map(members.map((m) => [m.id, m.user?.name ?? "—"]))
 }
 
 export const dashboardService = {
-  async getOwnerDashboardStats(
+  async getOwnerDashboardBundle(
     organizationIds: OwnerOrganizationIdList,
     options: {
       organizationId?: string | null
       period: OwnerStatsPeriod
       date: Date
     },
-  ): Promise<OwnerDashboardStats> {
+  ): Promise<OwnerDashboardBundle> {
     const { period, date, organizationId } = options
     const shopIds = resolveOwnerOrganizationIdsForQueries(
       organizationIds,
       organizationId,
     )
     if (shopIds.length === 0) {
-      return {
-        revenue: 0,
-        revenueBreakdown: [],
-        bookingsCount: 0,
-        activeBarbersCount: 0,
-        topServices: [],
-      }
+      return EMPTY_OWNER_DASHBOARD_BUNDLE
     }
 
     const { start, end } = dashboardRepository.periodBounds(period, date)
+    const days = dashboardRepository.eachDayOfInterval({ start, end })
 
-    const [paidBookings, allBookingsForCount, barbersCount, servicesAgg] =
+    const [paidBookings, allBookings, barbersCount, servicesAgg, byMemberAgg] =
       await Promise.all([
         dashboardRepository.findPaidBookingsForShops(shopIds, start, end),
         dashboardRepository.findBookingsForShops(shopIds, start, end),
         dashboardRepository.countActiveBarbers(shopIds),
         dashboardRepository.groupBookingsByService(shopIds, start, end),
+        dashboardRepository.groupBookingsByMember(shopIds, start, end),
       ])
 
-    const revenue = paidBookings.reduce(
-      (sum, b) => sum + Number(b.service.price),
-      0,
-    )
+    const serviceIds = servicesAgg.map((s) => s.serviceId).filter(Boolean)
+    const memberIds = byMemberAgg
+      .map((b) => b.memberId)
+      .filter(Boolean) as string[]
 
-    const revenueByShop = new Map<
-      string,
-      { barbershopName: string; revenue: number }
-    >()
-    for (const b of paidBookings) {
-      const id = b.service.organizationId
-      const name = b.service.organization.name
-      const prev = revenueByShop.get(id)
-      const add = Number(b.service.price)
-      revenueByShop.set(id, {
-        barbershopName: name,
-        revenue: (prev?.revenue ?? 0) + add,
-      })
-    }
-    const revenueBreakdown = Array.from(revenueByShop.entries()).map(
-      ([organizationId, v]) => ({
-        organizationId,
-        barbershopName: v.barbershopName,
-        revenue: v.revenue,
-      }),
-    )
-
-    const topServices = await buildTopServices(servicesAgg)
+    const [serviceNames, memberNames] = await Promise.all([
+      resolveServiceNames(serviceIds),
+      resolveMemberNames(memberIds),
+    ])
 
     return {
-      revenue,
-      revenueBreakdown,
-      bookingsCount: allBookingsForCount.length,
-      activeBarbersCount: barbersCount,
-      topServices,
+      stats: buildOwnerStats({
+        paidBookings,
+        bookingsCount: allBookings.length,
+        activeBarbersCount: barbersCount,
+        servicesAgg,
+        serviceNames,
+      }),
+      chartRevenue: buildRevenueChart(paidBookings, days),
+      chartBookings: buildBookingsChart(allBookings, days),
+      chartDistribution: {
+        byService: buildDistributionByService(servicesAgg, serviceNames),
+        byBarber: buildDistributionByBarber(byMemberAgg, memberNames),
+      },
     }
   },
 
-  async getBarberDashboardStats(
+  async getBarberDashboardBundle(
     scope: { organizationId: string; memberId: string },
     options: { period: OwnerStatsPeriod; date: Date },
-  ): Promise<OwnerDashboardStats> {
+  ): Promise<OwnerDashboardBundle> {
     const { organizationId, memberId } = scope
     const { period, date } = options
     const { start, end } = dashboardRepository.periodBounds(period, date)
+    const days = dashboardRepository.eachDayOfInterval({ start, end })
 
-    const [paidBookings, allBookingsForCount, shopNameRow, servicesAgg] =
+    const [paidBookings, allBookings, shopNameRow, servicesAgg, selfName] =
       await Promise.all([
         dashboardRepository.findBarberPaidBookings(
           organizationId,
@@ -129,31 +120,68 @@ export const dashboardService = {
           start,
           end,
         ),
+        dashboardRepository.findMemberName(memberId),
       ])
 
     const revenue = paidBookings.reduce(
       (sum, b) => sum + Number(b.service.price),
       0,
     )
-
     const shopName = shopNameRow?.name ?? "Barbearia"
-    const revenueBreakdown = [
-      {
-        organizationId,
-        barbershopName: shopName,
-        revenue,
-      },
-    ]
+    const serviceIds = servicesAgg.map((s) => s.serviceId).filter(Boolean)
+    const serviceNames = await resolveServiceNames(serviceIds)
 
-    const topServices = await buildTopServices(servicesAgg)
+    const byService = buildDistributionByService(servicesAgg, serviceNames)
+    const total = byService.reduce((a, s) => a + s.count, 0)
+    const byBarber: DistributionByBarber[] =
+      total > 0
+        ? [{ name: selfName?.user?.name ?? "Você", count: total }]
+        : []
 
     return {
-      revenue,
-      revenueBreakdown,
-      bookingsCount: allBookingsForCount.length,
-      activeBarbersCount: 1,
-      topServices,
+      stats: {
+        revenue,
+        revenueBreakdown: [
+          {
+            organizationId,
+            barbershopName: shopName,
+            revenue,
+          },
+        ],
+        bookingsCount: allBookings.length,
+        activeBarbersCount: 1,
+        topServices: buildTopServices(servicesAgg, serviceNames),
+      },
+      chartRevenue: buildRevenueChart(paidBookings, days),
+      chartBookings: buildBookingsChart(allBookings, days),
+      chartDistribution: { byService, byBarber },
     }
+  },
+
+  async getOwnerDashboardStats(
+    organizationIds: OwnerOrganizationIdList,
+    options: {
+      organizationId?: string | null
+      period: OwnerStatsPeriod
+      date: Date
+    },
+  ): Promise<OwnerDashboardStats> {
+    const bundle = await dashboardService.getOwnerDashboardBundle(
+      organizationIds,
+      options,
+    )
+    return bundle.stats
+  },
+
+  async getBarberDashboardStats(
+    scope: { organizationId: string; memberId: string },
+    options: { period: OwnerStatsPeriod; date: Date },
+  ): Promise<OwnerDashboardStats> {
+    const bundle = await dashboardService.getBarberDashboardBundle(
+      scope,
+      options,
+    )
+    return bundle.stats
   },
 
   async getOwnerChartDataRevenue(
@@ -164,34 +192,11 @@ export const dashboardService = {
       date: Date
     },
   ): Promise<RevenueChartPoint[]> {
-    const { period, date, organizationId } = options
-    const shopIds = resolveOwnerOrganizationIdsForQueries(
+    const bundle = await dashboardService.getOwnerDashboardBundle(
       organizationIds,
-      organizationId,
+      options,
     )
-    if (shopIds.length === 0) return []
-
-    const { start, end } = dashboardRepository.periodBounds(period, date)
-    const days = dashboardRepository.eachDayOfInterval({ start, end })
-    const bookings = await dashboardRepository.findPaidBookingsForShops(
-      shopIds,
-      start,
-      end,
-    )
-
-    const byDay = new Map<string, number>()
-    for (const d of days) {
-      byDay.set(dashboardRepository.format(d, "yyyy-MM-dd"), 0)
-    }
-    for (const b of bookings) {
-      const key = dashboardRepository.format(b.date, "yyyy-MM-dd")
-      const current = byDay.get(key) ?? 0
-      byDay.set(key, current + Number(b.service.price))
-    }
-
-    return Array.from(byDay.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, revenue]) => ({ date, revenue }))
+    return bundle.chartRevenue
   },
 
   async getOwnerChartDataBookings(
@@ -202,31 +207,11 @@ export const dashboardService = {
       date: Date
     },
   ): Promise<BookingsChartPoint[]> {
-    const { period, date, organizationId } = options
-    const shopIds = resolveOwnerOrganizationIdsForQueries(
+    const bundle = await dashboardService.getOwnerDashboardBundle(
       organizationIds,
-      organizationId,
+      options,
     )
-    if (shopIds.length === 0) return []
-
-    const { start, end } = dashboardRepository.periodBounds(period, date)
-    const bookings = await dashboardRepository.findBookingsForShops(
-      shopIds,
-      start,
-      end,
-    )
-
-    const byDay = new Map<string, number>()
-    for (const b of bookings) {
-      const key = dashboardRepository.format(b.date, "yyyy-MM-dd")
-      byDay.set(key, (byDay.get(key) ?? 0) + 1)
-    }
-
-    const days = dashboardRepository.eachDayOfInterval({ start, end })
-    return days.map((d) => {
-      const key = dashboardRepository.format(d, "yyyy-MM-dd")
-      return { date: key, count: byDay.get(key) ?? 0 }
-    })
+    return bundle.chartBookings
   },
 
   async getOwnerChartDataDistribution(
@@ -240,115 +225,33 @@ export const dashboardService = {
     byService: DistributionByService[]
     byBarber: DistributionByBarber[]
   }> {
-    const { period, date, organizationId } = options
-    const shopIds = resolveOwnerOrganizationIdsForQueries(
+    const bundle = await dashboardService.getOwnerDashboardBundle(
       organizationIds,
-      organizationId,
+      options,
     )
-    if (shopIds.length === 0) {
-      return { byService: [], byBarber: [] }
-    }
-
-    const { start, end } = dashboardRepository.periodBounds(period, date)
-
-    const [byServiceAgg, byMemberAgg] = await Promise.all([
-      dashboardRepository.groupBookingsByService(shopIds, start, end),
-      dashboardRepository.groupBookingsByMember(shopIds, start, end),
-    ])
-
-    const serviceIds = byServiceAgg.map((s) => s.serviceId).filter(Boolean)
-    const memberIds = byMemberAgg
-      .map((b) => b.memberId)
-      .filter(Boolean) as string[]
-
-    const [services, members] = await Promise.all([
-      serviceIds.length > 0
-        ? dashboardRepository.findServicesByIds(serviceIds)
-        : [],
-      memberIds.length > 0
-        ? dashboardRepository.findMembersByIds(memberIds)
-        : [],
-    ])
-
-    const serviceNames = new Map(services.map((s) => [s.id, s.name]))
-    const memberNames = new Map(
-      members.map((m) => [m.id, m.user?.name ?? "—"]),
-    )
-
-    const byService = byServiceAgg
-      .map((s) => ({
-        name: serviceNames.get(s.serviceId) ?? "—",
-        count: s._count.id,
-      }))
-      .sort((a, b) => b.count - a.count)
-
-    const byBarber = byMemberAgg
-      .map((b) => ({
-        name: memberNames.get(b.memberId!) ?? "—",
-        count: b._count.id,
-      }))
-      .sort((a, b) => b.count - a.count)
-
-    return { byService, byBarber }
+    return bundle.chartDistribution
   },
 
   async getBarberChartDataRevenue(
     scope: { organizationId: string; memberId: string },
     options: { period: OwnerChartPeriod; date: Date },
   ): Promise<RevenueChartPoint[]> {
-    const { organizationId, memberId } = scope
-    const { period, date } = options
-    const { start, end } = dashboardRepository.periodBounds(period, date)
-
-    const days = dashboardRepository.eachDayOfInterval({ start, end })
-    const bookings = await dashboardRepository.findBarberPaidBookings(
-      organizationId,
-      memberId,
-      start,
-      end,
+    const bundle = await dashboardService.getBarberDashboardBundle(
+      scope,
+      options,
     )
-
-    const byDay = new Map<string, number>()
-    for (const d of days) {
-      byDay.set(dashboardRepository.format(d, "yyyy-MM-dd"), 0)
-    }
-    for (const b of bookings) {
-      const key = dashboardRepository.format(b.date, "yyyy-MM-dd")
-      const current = byDay.get(key) ?? 0
-      byDay.set(key, current + Number(b.service.price))
-    }
-
-    return Array.from(byDay.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, revenue]) => ({ date, revenue }))
+    return bundle.chartRevenue
   },
 
   async getBarberChartDataBookings(
     scope: { organizationId: string; memberId: string },
     options: { period: OwnerChartPeriod; date: Date },
   ): Promise<BookingsChartPoint[]> {
-    const { organizationId, memberId } = scope
-    const { period, date } = options
-    const { start, end } = dashboardRepository.periodBounds(period, date)
-
-    const bookings = await dashboardRepository.findBarberBookings(
-      organizationId,
-      memberId,
-      start,
-      end,
+    const bundle = await dashboardService.getBarberDashboardBundle(
+      scope,
+      options,
     )
-
-    const byDay = new Map<string, number>()
-    for (const b of bookings) {
-      const key = dashboardRepository.format(b.date, "yyyy-MM-dd")
-      byDay.set(key, (byDay.get(key) ?? 0) + 1)
-    }
-
-    const days = dashboardRepository.eachDayOfInterval({ start, end })
-    return days.map((d) => {
-      const key = dashboardRepository.format(d, "yyyy-MM-dd")
-      return { date: key, count: byDay.get(key) ?? 0 }
-    })
+    return bundle.chartBookings
   },
 
   async getBarberChartDataDistribution(
@@ -358,49 +261,18 @@ export const dashboardService = {
     byService: DistributionByService[]
     byBarber: DistributionByBarber[]
   }> {
-    const { organizationId, memberId } = scope
-    const { period, date } = options
-    const { start, end } = dashboardRepository.periodBounds(period, date)
-
-    const [byServiceAgg, selfName] = await Promise.all([
-      dashboardRepository.groupBarberBookingsByService(
-        organizationId,
-        memberId,
-        start,
-        end,
-      ),
-      dashboardRepository.findMemberName(memberId),
-    ])
-
-    const serviceIds = byServiceAgg.map((s) => s.serviceId).filter(Boolean)
-    const services =
-      serviceIds.length > 0
-        ? await dashboardRepository.findServicesByIds(serviceIds)
-        : []
-    const serviceNames = new Map(services.map((s) => [s.id, s.name]))
-
-    const byService = byServiceAgg
-      .map((s) => ({
-        name: serviceNames.get(s.serviceId) ?? "—",
-        count: s._count.id,
-      }))
-      .sort((a, b) => b.count - a.count)
-
-    const total = byService.reduce((a, s) => a + s.count, 0)
-    const byBarber: DistributionByBarber[] =
-      total > 0
-        ? [
-            {
-              name: selfName?.user?.name ?? "Você",
-              count: total,
-            },
-          ]
-        : []
-
-    return { byService, byBarber }
+    const bundle = await dashboardService.getBarberDashboardBundle(
+      scope,
+      options,
+    )
+    return bundle.chartDistribution
   },
 }
 
+export const getOwnerDashboardBundle =
+  dashboardService.getOwnerDashboardBundle.bind(dashboardService)
+export const getBarberDashboardBundle =
+  dashboardService.getBarberDashboardBundle.bind(dashboardService)
 export const getOwnerDashboardStats = dashboardService.getOwnerDashboardStats.bind(
   dashboardService,
 )

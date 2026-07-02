@@ -125,7 +125,9 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([memberId])
+  @@index([memberId, date, status])
+  @@index([serviceId, date])
+  @@index([userId, date, status])
 }
 
 model Organization {

@@ -12,6 +12,7 @@ import type {
   PaymentMethod,
   PaymentStatus,
 } from "@/prisma/generated/prisma/client"
+import { BLOCKING_BOOKING_STATUSES } from "@/src/features/booking/_lib/booking-conflict"
 import { db } from "@/src/shared/lib/prisma"
 import type { OwnerBookingsPeriod } from "@/src/features/booking/booking.types"
 
@@ -87,10 +88,17 @@ export const bookingRepository = {
       where: {
         serviceId,
         ...(memberId ? { memberId } : {}),
+        status: { in: BLOCKING_BOOKING_STATUSES },
         date: {
           lte: endOfDay(date),
           gte: startOfDay(date),
         },
+      },
+      select: {
+        id: true,
+        date: true,
+        memberId: true,
+        status: true,
       },
     })
   },
@@ -147,6 +155,18 @@ export const bookingRepository = {
   ) {
     const { period, date, memberId } = options
     const { start, end } = periodBounds(period, date)
+    return this.findOwnerBookingsInRange(shopIds, { memberId, start, end })
+  },
+
+  findOwnerBookingsInRange(
+    shopIds: string[],
+    options: {
+      memberId?: string | null
+      start: Date
+      end: Date
+    },
+  ) {
+    const { memberId, start, end } = options
 
     return db.booking.findMany({
       where: {
@@ -190,7 +210,10 @@ export const bookingRepository = {
     date: Date,
   ) {
     const { start, end } = periodBounds(period, date)
+    return this.findBarberBookingsInRange(memberId, start, end)
+  },
 
+  findBarberBookingsInRange(memberId: string, start: Date, end: Date) {
     return db.booking.findMany({
       where: {
         memberId,

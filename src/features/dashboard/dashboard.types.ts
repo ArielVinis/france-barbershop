@@ -19,3 +19,13 @@ export type RevenueChartPoint = { date: string; revenue: number }
 export type BookingsChartPoint = { date: string; count: number }
 export type DistributionByService = { name: string; count: number }
 export type DistributionByBarber = { name: string; count: number }
+
+export type OwnerDashboardBundle = {
+  stats: OwnerDashboardStats
+  chartRevenue: RevenueChartPoint[]
+  chartBookings: BookingsChartPoint[]
+  chartDistribution: {
+    byService: DistributionByService[]
+    byBarber: DistributionByBarber[]
+  }
+}

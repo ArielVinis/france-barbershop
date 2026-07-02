@@ -8,6 +8,7 @@ import type {
 } from "@/src/features/schedule/schedule.schema"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { PATHS } from "@/src/shared/constants/PATHS"
+import { invalidateOrganizationCache } from "@/src/shared/lib/invalidate-organization-cache"
 
 export async function upsertBarbershopSchedulesOwner(
   organizationId: string,
@@ -22,6 +23,7 @@ export async function upsertBarbershopSchedulesOwner(
 
   revalidatePath(PATHS.PANEL.WORKED_HOURS)
   revalidatePath(PATHS.BARBERSHOP.ROOT(shop.slug))
+  invalidateOrganizationCache({ slug: shop.slug, organizationId: shop.id })
 }
 
 export async function createBarbershopBreakOwner(
@@ -37,6 +39,7 @@ export async function createBarbershopBreakOwner(
 
   revalidatePath(PATHS.PANEL.WORKED_HOURS)
   revalidatePath(PATHS.BARBERSHOP.ROOT(shop.slug))
+  invalidateOrganizationCache({ slug: shop.slug, organizationId: shop.id })
 
   return created
 }
@@ -47,6 +50,7 @@ export async function deleteBarbershopBreakOwner(breakId: string) {
 
   revalidatePath(PATHS.PANEL.WORKED_HOURS)
   revalidatePath(PATHS.BARBERSHOP.ROOT(shop.slug))
+  invalidateOrganizationCache({ slug: shop.slug, organizationId: shop.id })
 }
 
 export async function createBarbershopBlockedSlotOwner(
@@ -63,6 +67,7 @@ export async function createBarbershopBlockedSlotOwner(
 
   revalidatePath(PATHS.PANEL.WORKED_HOURS)
   revalidatePath(PATHS.BARBERSHOP.ROOT(shop.slug))
+  invalidateOrganizationCache({ slug: shop.slug, organizationId: shop.id })
 
   return created
 }
@@ -76,6 +81,7 @@ export async function deleteBarbershopBlockedSlotOwner(slotId: string) {
 
   revalidatePath(PATHS.PANEL.WORKED_HOURS)
   revalidatePath(PATHS.BARBERSHOP.ROOT(shop.slug))
+  invalidateOrganizationCache({ slug: shop.slug, organizationId: shop.id })
 }
 
 export async function getOwnerOrganizationHours(
