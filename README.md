@@ -147,10 +147,10 @@ src/
 ├── resources/                       # Itens da sidebar do painel
 ├── server/                          # Auth HTTP (users, permissions)
 └── shared/                          # Código transversal
-    ├── constants/                   # PATHS, NUMBERS, search
+    ├── constants/                   # PATHS, cache-tags, NUMBERS, search
     ├── errors/                      # ValidationError, ForbiddenError, NotFoundError
     ├── guards/                      # Authz, panel query helpers
-    ├── lib/                         # prisma, auth, stripe, utils, schedule-utils
+    ├── lib/                         # prisma, auth, stripe, utils, schedule-utils, invalidate-organization-cache
     └── types/                       # Tipos compartilhados do painel
 
 prisma/
@@ -183,9 +183,36 @@ Cada domínio em `features/[nome]/` segue o padrão **repository / service / act
 Exemplo (`booking/`):
 
 - `booking.actions.ts` — `createBooking`, `deleteBooking`, `getBookings`, `getConfirmedBookings`, `getConcludedBookings`
-- `booking.panel.actions.ts` — `updateBookingStatus`, `updateBookingStatusOwner`, `rescheduleBookingOwner`, `getOwnerBookings`, `getBarberBookings`
+- `booking.panel.actions.ts` — `updateBookingStatus`, `rescheduleBookingOwner`, `getOwnerScheduleBookings`, `getBarberScheduleBookings`, etc.
 
 Domínios só de leitura (`public`, `dashboard`) usam `service` + `repository`; páginas podem importar `*.service.ts` em Server Components ou `*.actions.ts` quando precisam de `'use server'`.
+
+Helpers internos em `_lib/` (exemplos):
+
+| Domínio | Ficheiro | Uso |
+| ------- | -------- | --- |
+| `dashboard/` | `_lib/dashboard-aggregates.ts` | Agregações em memória a partir de um bundle de queries |
+| `public/` | `_lib/serialize-barbershop-page.ts` | Serialização plana para página pública e cache |
+| `schedule/` | `_lib/schedule-bookings-range.ts` | Intervalos unificados para agenda (tabela + calendário) |
+| `booking/` | `_lib/booking-conflict.ts` | Validação de conflitos de horário |
+
+### Server Components → Client Components
+
+Tipos Prisma (`Decimal`, `Date`) **não** podem ser passados directamente a Client Components. Padrão do projeto:
+
+1. Tipos planos em `features/[nome]/[nome].types.ts` (ex.: `PublicServiceForBooking`)
+2. Serialização no service (`serializeBarbershopPageData`) ou no boundary da página com `JSON.parse(JSON.stringify(...))`
+3. Client Components (`components/`) consomem apenas tipos planos
+
+### Cache (`unstable_cache`)
+
+| Tag | Invalidação |
+| --- | ----------- |
+| `org-slug-{slug}` | Página pública `/[slug]` |
+| `org-id-{organizationId}` | Dados da organização |
+| `dashboard-{organizationId}` | Dashboard do painel |
+
+Invalidação centralizada em `shared/lib/invalidate-organization-cache.ts`, chamada após mutações de booking, horários, serviços, etc.
 
 ### Regras de importação
 
@@ -320,6 +347,8 @@ O seed cria:
 > 2. Em desenvolvimento, acesse `/dev` e vincule-se como OWNER a uma barbearia.
 > 3. Para Stripe em dev, use chaves de teste e assine via `/panel/subscription`.
 
+> **Reserva pública:** cada barbearia precisa de pelo menos um `Member` com `role: MEMBER` e `isActive: true`. Se `/[slug]` abrir o calendário mas não mostrar barbeiros, execute `npx prisma db seed` ou crie barbeiros pelo painel.
+
 ### 5. Servidor de desenvolvimento
 
 ```bash
@@ -369,6 +398,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] Dark mode (ThemeSwitcher)
 - [x] Testes unitários e E2E (parcial)
 - [x] git-commit-msg-linter (validação de mensagens de commit)
+- [x] Otimização de queries e cache (dashboard bundle, índices em `Booking`, agenda unificada, página pública com `unstable_cache`)
 
 ## Roadmap
 
@@ -377,7 +407,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] Webhook Stripe para sincronizar status de assinatura automaticamente
 - [x] Fluxo completo de convite → aceite → primeiro acesso do barbeiro
 - [x] Validação completa de conflitos de horário (sobreposição por barbeiro + horários, pausas e bloqueios da organização em create/reschedule)
-- [ ] Verificar velocidade das requisições e tempo de resposta
+- [x] Verificar velocidade das requisições e tempo de resposta
 
 ### Média prioridade
 
@@ -392,7 +422,6 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [ ] Alterar o calendario para o "FullCalendar"
 - [ ] Melhorias de UX (skeletons em mais telas, animações, responsividade)
 - [ ] Ampliar cobertura de testes (unit, integração, E2E)
-- [ ] Otimização de queries e cache
 - [ ] CI/CD e deploy em produção
 - [ ] Documentação de componentes e guia de contribuição
 
@@ -409,7 +438,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 | `Team` / `TeamMember`                  | Times dentro da organização                               |
 | `Invitation`                           | Convites pendentes para a organização                     |
 | `OrganizationService`                  | Serviços oferecidos                                       |
-| `Booking`                              | Agendamentos (cliente, serviço, barbeiro opcional)        |
+| `Booking`                              | Agendamentos (cliente, serviço, barbeiro). Índices: `(memberId, date, status)`, `(serviceId, date)`, `(userId, date, status)` |
 | `OrganizationSchedule`                 | Horário de funcionamento por dia da semana                |
 | `OrganizationBreak`                    | Pausas recorrentes (ex.: almoço)                          |
 | `OrganizationBlockedSlot`              | Bloqueios por período (feriados, férias)                  |
@@ -476,15 +505,16 @@ npm run test:e2e
 ## Documentação Adicional
 
 - [Better Auth — Organizations e Teams](docs/better-auth-organizations-teams-playbook.md)
-- Regras do projeto em `.cursor/rules/` (actions, UI, middleware, testes)
+- Regras do projeto em `.cursor/rules/` — **`project-core.mdc`** (sempre ativo: stack, arquitetura, padrão de estrutura); demais por área (actions, UI, middleware, testes)
 
 ## Contribuindo
 
 1. Fork o projeto
 2. Crie uma branch (`git checkout -b feature/minha-feature`)
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
+3. Siga a estrutura existente em `features/` e as regras em `.cursor/rules/`
+4. Commit suas mudanças
+5. Push para a branch
+6. Abra um Pull Request
 
 ## Licença
 
