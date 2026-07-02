@@ -1,18 +1,10 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { getBarberDashboardStats } from "@/src/features/dashboard/dashboard.service"
 import {
-  getBarberChartDataBookings,
-  getBarberChartDataDistribution,
-  getBarberChartDataRevenue,
+  getBarberDashboardBundle,
+  getOwnerDashboardBundle,
 } from "@/src/features/dashboard/dashboard.service"
 import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
-import {
-  getOwnerChartDataBookings,
-  getOwnerChartDataDistribution,
-  getOwnerChartDataRevenue,
-} from "@/src/features/dashboard/dashboard.service"
-import { getOwnerDashboardStats } from "@/src/features/dashboard/dashboard.service"
 import { hasBarbershopSubscriptionAccess } from "@/src/features/subscription/subscription.actions"
 import { hasOwnerSubscriptionAccess } from "@/src/features/subscription/subscription.actions"
 import { DashboardContent } from "@/src/app/(authenticated)/panel/dashboard/used/dashboard-content"
@@ -105,21 +97,11 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
     const organizationId =
       shopResolved === "all" || shopResolved === null ? null : shopResolved
 
-    const [stats, chartRevenue, chartBookings, chartDistribution] =
-      await Promise.all([
-        getOwnerDashboardStats(organizationIds, { period, organizationId, date }),
-        getOwnerChartDataRevenue(organizationIds, { period, organizationId, date }),
-        getOwnerChartDataBookings(organizationIds, {
-          period,
-          organizationId,
-          date,
-        }),
-        getOwnerChartDataDistribution(organizationIds, {
-          period,
-          organizationId,
-          date,
-        }),
-      ])
+    const dashboard = await getOwnerDashboardBundle(organizationIds, {
+      period,
+      organizationId,
+      date,
+    })
 
     return (
       <div className="flex flex-1 flex-col">
@@ -127,11 +109,11 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <DashboardContent
               viewerRole={Role.OWNER}
-              stats={mapDashboardStats(stats)}
+              stats={mapDashboardStats(dashboard.stats)}
               periodLabel={periodLabel}
-              chartRevenue={chartRevenue}
-              chartBookings={chartBookings}
-              chartDistribution={chartDistribution}
+              chartRevenue={dashboard.chartRevenue}
+              chartBookings={dashboard.chartBookings}
+              chartDistribution={dashboard.chartDistribution}
             />
           </div>
         </div>
@@ -164,13 +146,7 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
       memberId: barber.id,
     } as const
 
-    const [stats, chartRevenue, chartBookings, chartDistribution] =
-      await Promise.all([
-        getBarberDashboardStats(scope, { period, date }),
-        getBarberChartDataRevenue(scope, { period, date }),
-        getBarberChartDataBookings(scope, { period, date }),
-        getBarberChartDataDistribution(scope, { period, date }),
-      ])
+    const dashboard = await getBarberDashboardBundle(scope, { period, date })
 
     return (
       <div className="flex flex-1 flex-col">
@@ -178,11 +154,11 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <DashboardContent
               viewerRole={Role.MEMBER}
-              stats={mapDashboardStats(stats)}
+              stats={mapDashboardStats(dashboard.stats)}
               periodLabel={periodLabel}
-              chartRevenue={chartRevenue}
-              chartBookings={chartBookings}
-              chartDistribution={chartDistribution}
+              chartRevenue={dashboard.chartRevenue}
+              chartBookings={dashboard.chartBookings}
+              chartDistribution={dashboard.chartDistribution}
             />
           </div>
         </div>

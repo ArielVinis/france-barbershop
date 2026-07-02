@@ -10,6 +10,7 @@ import {
 } from "@/src/features/booking/booking.schema"
 import { auth } from "@/src/shared/lib/auth"
 import { PATHS } from "@/src/shared/constants/PATHS"
+import { invalidateOrganizationCache } from "@/src/shared/lib/invalidate-organization-cache"
 
 export const createBooking = async (
   input: z.infer<typeof CreateBookingSchema>,
@@ -26,10 +27,14 @@ export const createBooking = async (
     throw new Error("Usuário não autenticado")
   }
 
-  await bookingService.createBooking(parsed.data, session.user.id)
+  const created = await bookingService.createBooking(parsed.data, session.user.id)
 
-  revalidatePath("/barbershops/[slug]", "page")
+  revalidatePath(PATHS.BARBERSHOP.ROOT(created.slug))
   revalidatePath("/bookings")
+  invalidateOrganizationCache({
+    slug: created.slug,
+    organizationId: created.organizationId,
+  })
 }
 
 export const deleteBooking = async (bookingId: string) => {

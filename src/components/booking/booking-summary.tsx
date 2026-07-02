@@ -1,10 +1,9 @@
 import { format } from "date-fns"
 import { Card, CardContent } from "../ui/card"
-import type { OrganizationService } from "@/prisma/generated/prisma/client"
 import { ptBR } from "date-fns/locale"
 
 interface BookingSummaryProps {
-  service: Pick<OrganizationService, "name" | "price">
+  service: { name: string; price: number | string }
   organization: { name: string }
   selectedDate: Date
   barber?: { name: string }

@@ -41,6 +41,30 @@ export const publicRepository = {
     })
   },
 
+  findBarbershopPageBySlug(slug: string) {
+    return db.organization.findFirst({
+      where: { slug },
+      include: {
+        services: { orderBy: { name: "asc" } },
+        schedules: true,
+        breaks: true,
+        blockedSlots: {
+          where: { endAt: { gte: new Date() } },
+        },
+        members: {
+          where: {
+            role: Role.MEMBER,
+            isActive: true,
+          },
+          select: {
+            id: true,
+            user: { select: { name: true } },
+          },
+        },
+      },
+    })
+  },
+
   findBarbershopBySlug(slug: string) {
     return db.organization.findFirst({
       where: { slug },
@@ -48,7 +72,9 @@ export const publicRepository = {
         services: true,
         schedules: true,
         breaks: true,
-        blockedSlots: true,
+        blockedSlots: {
+          where: { endAt: { gte: new Date() } },
+        },
       },
     })
   },

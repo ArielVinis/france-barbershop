@@ -5,8 +5,7 @@ import { Button, buttonVariants } from "@/src/components/ui/button"
 import { Sheet, SheetTrigger } from "@/src/components/ui/sheet"
 import { cn } from "@/src/shared/lib/utils"
 import { PATHS } from "@/src/shared/constants/PATHS"
-import { getBarbershopBySlug } from "@/src/features/public/public.actions"
-import { getBarbershopBarbers } from "@/src/features/public/public.actions"
+import { getBarbershopPageData } from "@/src/features/public/public.actions"
 import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -20,14 +19,19 @@ interface BarbershopPageProps {
 
 const BarbershopPage = async ({ params }: BarbershopPageProps) => {
   const { slug } = await params
+  const pageData = await getBarbershopPageData(slug)
 
-  const organization = await getBarbershopBySlug(slug)
-
-  if (!organization) {
+  if (!pageData) {
     return notFound()
   }
 
-  const barbers = await getBarbershopBarbers(organization.id)
+  const { organization, barbers } = pageData
+  const organizationForBooking = {
+    name: organization.name,
+    schedules: organization.schedules,
+    breaks: organization.breaks,
+    blockedSlots: organization.blockedSlots,
+  }
 
   return (
     <div>
@@ -89,9 +93,9 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
           {organization.services.map((service) => (
             <ServiceItem
               key={service.id}
-              organization={JSON.parse(JSON.stringify(organization))}
+              organization={JSON.parse(JSON.stringify(organizationForBooking))}
               service={JSON.parse(JSON.stringify(service))}
-              barbers={barbers}
+              barbers={JSON.parse(JSON.stringify(barbers))}
             />
           ))}
         </div>

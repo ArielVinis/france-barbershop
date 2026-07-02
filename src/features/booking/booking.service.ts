@@ -13,10 +13,19 @@ import type {
   OwnerBookingsPeriod,
   UpdateBookingStatusOptions,
 } from "@/src/features/booking/booking.types"
-import { ForbiddenError, NotFoundError } from "@/src/shared/errors/errors"
+import {
+  filterBookingsByPeriod,
+  mergeScheduleFetchBounds,
+} from "@/src/features/schedule/_lib/schedule-bookings-range"
 import { resolveOwnerOrganizationIdsForQueries } from "@/src/shared/guards/panel/resolve-owner-organization-ids"
 import { requireOrganizationForOwner } from "@/src/shared/guards/require-organization-for-owner"
+import { ForbiddenError, NotFoundError } from "@/src/shared/errors/errors"
 import type { OwnerOrganizationIdList } from "@/src/shared/types/panel-data-scope"
+
+export type CreateBookingResult = {
+  organizationId: string
+  slug: string
+}
 
 const STATUS_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
   CONFIRMED: ["IN_PROGRESS", "CANCELLED", "NO_SHOW"],
@@ -58,8 +67,13 @@ function assertStatusTransition(
 }
 
 export const bookingService = {
-  async createBooking(input: CreateBookingInput, userId: string) {
+  async createBooking(
+    input: CreateBookingInput,
+    userId: string,
+  ): Promise<CreateBookingResult> {
     const { serviceId, memberId, date } = input
+    let organizationId = ""
+    let slug = ""
 
     await bookingRepository.transaction(async (tx) => {
       const service = await tx.organizationService.findUnique({
@@ -69,6 +83,17 @@ export const bookingService = {
       if (!service) {
         throw new Error("Serviço não encontrado")
       }
+
+      const organization = await tx.organization.findUnique({
+        where: { id: service.organizationId },
+        select: { id: true, slug: true },
+      })
+      if (!organization) {
+        throw new Error("Organização não encontrada")
+      }
+
+      organizationId = organization.id
+      slug = organization.slug
 
       const barberMember = await tx.member.findFirst({
         where: {
@@ -105,6 +130,8 @@ export const bookingService = {
         },
       })
     })
+
+    return { organizationId, slug }
   },
 
   async deleteBooking(bookingId: string, userId: string) {
@@ -169,6 +196,84 @@ export const bookingService = {
     date: Date,
   ) {
     return bookingRepository.findBarberBookings(memberId, period, date)
+  },
+
+  async getOwnerScheduleBookings(
+    organizationIds: OwnerOrganizationIdList,
+    options: {
+      organizationId?: string | null
+      memberId?: string | null
+      tablePeriod: OwnerBookingsPeriod
+      tableDate: Date
+      calendarDate: Date
+    },
+  ) {
+    const shopIds = resolveOwnerOrganizationIdsForQueries(
+      organizationIds,
+      options.organizationId,
+    )
+    if (shopIds.length === 0) {
+      return { forTable: [], forCalendar: [] }
+    }
+
+    const { start, end } = mergeScheduleFetchBounds(
+      options.tablePeriod,
+      options.tableDate,
+      options.calendarDate,
+    )
+
+    const bookings = await bookingRepository.findOwnerBookingsInRange(shopIds, {
+      memberId: options.memberId,
+      start,
+      end,
+    })
+
+    return {
+      forTable: filterBookingsByPeriod(
+        bookings,
+        options.tablePeriod,
+        options.tableDate,
+      ),
+      forCalendar: filterBookingsByPeriod(
+        bookings,
+        "month",
+        options.calendarDate,
+      ),
+    }
+  },
+
+  async getBarberScheduleBookings(
+    memberId: string,
+    options: {
+      tablePeriod: OwnerBookingsPeriod
+      tableDate: Date
+      calendarDate: Date
+    },
+  ) {
+    const { start, end } = mergeScheduleFetchBounds(
+      options.tablePeriod,
+      options.tableDate,
+      options.calendarDate,
+    )
+
+    const bookings = await bookingRepository.findBarberBookingsInRange(
+      memberId,
+      start,
+      end,
+    )
+
+    return {
+      forTable: filterBookingsByPeriod(
+        bookings,
+        options.tablePeriod,
+        options.tableDate,
+      ),
+      forCalendar: filterBookingsByPeriod(
+        bookings,
+        "month",
+        options.calendarDate,
+      ),
+    }
   },
 
   async updateBookingStatus(

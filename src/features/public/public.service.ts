@@ -1,5 +1,21 @@
+import { unstable_cache } from "next/cache"
+import { serializeBarbershopPageData } from "@/src/features/public/_lib/serialize-barbershop-page"
 import { publicRepository } from "@/src/features/public/public.repository"
-import type { PublicBarberForBooking } from "@/src/features/public/public.types"
+import type {
+  PublicBarberForBooking,
+  PublicBarbershopPageData,
+} from "@/src/features/public/public.types"
+
+import { cacheTags } from "@/src/shared/constants/cache-tags"
+
+async function fetchBarbershopPageData(
+  slug: string,
+): Promise<PublicBarbershopPageData | null> {
+  const organization = await publicRepository.findBarbershopPageBySlug(slug)
+  if (!organization) return null
+
+  return serializeBarbershopPageData(organization)
+}
 
 export const publicService = {
   async getBarbershops(params: { title?: string; service?: string }) {
@@ -15,7 +31,27 @@ export const publicService = {
   },
 
   getBarbershopBySlug(slug: string) {
-    return publicRepository.findBarbershopBySlug(slug)
+    return unstable_cache(
+      () => publicRepository.findBarbershopBySlug(slug),
+      ["barbershop-by-slug", slug],
+      {
+        revalidate: 300,
+        tags: [cacheTags.orgSlug(slug)],
+      },
+    )()
+  },
+
+  getBarbershopPageData(
+    slug: string,
+  ): Promise<PublicBarbershopPageData | null> {
+    return unstable_cache(
+      () => fetchBarbershopPageData(slug),
+      ["barbershop-page", slug],
+      {
+        revalidate: 300,
+        tags: [cacheTags.orgSlug(slug)],
+      },
+    )()
   },
 
   async getBarbershopBarbers(

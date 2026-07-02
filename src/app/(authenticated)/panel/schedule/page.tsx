@@ -3,10 +3,10 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { getBarberMemberForUser } from "@/src/shared/guards"
-import { getBarberBookings } from "@/src/features/booking/booking.panel.actions"
+import { getBarberScheduleBookings } from "@/src/features/booking/booking.panel.actions"
 import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
 import { getOwnerBarbers } from "@/src/features/member/member.panel.actions"
-import { getOwnerBookings } from "@/src/features/booking/booking.panel.actions"
+import { getOwnerScheduleBookings } from "@/src/features/booking/booking.panel.actions"
 import {
   bookingsToCalendarEvents,
   type BookingForCalendarEvent,
@@ -74,10 +74,12 @@ export default async function OwnerSchedulePage({
       : new Date()
     const dateForTable = new Date()
 
-    const [bookingsForTable, bookingsForCalendar] = await Promise.all([
-      getBarberBookings(barber.id, period, dateForTable),
-      getBarberBookings(barber.id, "month", viewDate),
-    ])
+    const { forTable: bookingsForTable, forCalendar: bookingsForCalendar } =
+      await getBarberScheduleBookings(barber.id, {
+        tablePeriod: period,
+        tableDate: dateForTable,
+        calendarDate: viewDate,
+      })
 
     const calendarEvents = bookingsToCalendarEvents(
       bookingsForCalendar as unknown as BookingForCalendarEvent[],
@@ -174,20 +176,14 @@ export default async function OwnerSchedulePage({
 
   const dateForTable = new Date()
 
-  const [bookingsForTable, bookingsForCalendar] = await Promise.all([
-    getOwnerBookings(organizationIds, {
-      period,
+  const { forTable: bookingsForTable, forCalendar: bookingsForCalendar } =
+    await getOwnerScheduleBookings(organizationIds, {
+      tablePeriod: period,
       organizationId,
       memberId: barberId,
-      date: dateForTable,
-    }),
-    getOwnerBookings(organizationIds, {
-      period: "month",
-      organizationId,
-      memberId: barberId,
-      date: viewDate,
-    }),
-  ])
+      tableDate: dateForTable,
+      calendarDate: viewDate,
+    })
 
   const barbersForFilter = barbers.map((b) => ({
     id: b.id,

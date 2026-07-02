@@ -139,7 +139,10 @@ const BookingItem = ({ booking }: BookingItemProps) => {
           <div className="mb-3 mt-6">
             <BookingSummary
               organization={organization}
-              service={booking.service}
+              service={{
+                name: booking.service.name,
+                price: Number(booking.service.price),
+              }}
               selectedDate={booking.date}
             />
           </div>

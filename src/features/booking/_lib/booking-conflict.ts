@@ -1,6 +1,7 @@
 import { addMinutes, endOfDay, startOfDay } from "date-fns"
 import type { BookingStatus } from "@/prisma/generated/prisma/client"
 import type { Prisma } from "@/prisma/generated/prisma/client"
+import { Prisma as PrismaNamespace } from "@/prisma/generated/prisma/client"
 import {
   bookingOverlapsBlockedSlot,
   bookingOverlapsBreak,
@@ -113,6 +114,11 @@ export async function assertNoOrganizationScheduleConflict(
   }
 }
 
+type LockedBookingRow = {
+  date: Date
+  durationMinutes: number
+}
+
 export async function assertNoBarberBookingConflict(
   tx: TransactionClient,
   memberId: string,
@@ -123,35 +129,29 @@ export async function assertNoBarberBookingConflict(
   const dayStart = startOfDay(date)
   const dayEnd = endOfDay(date)
 
-  await tx.$queryRaw`
-    SELECT id FROM "Booking"
-    WHERE "memberId" = ${memberId}
-      AND status IN ('CONFIRMED', 'IN_PROGRESS')
-      AND date >= ${dayStart}
-      AND date <= ${dayEnd}
-    FOR UPDATE
+  const existingBookings = await tx.$queryRaw<LockedBookingRow[]>`
+    SELECT b.date, s."durationMinutes" AS "durationMinutes"
+    FROM "Booking" b
+    INNER JOIN "OrganizationService" s ON b."serviceId" = s.id
+    WHERE b."memberId" = ${memberId}
+      AND b.status IN ('CONFIRMED', 'IN_PROGRESS')
+      AND b.date >= ${dayStart}
+      AND b.date <= ${dayEnd}
+      ${
+        excludeBookingId
+          ? PrismaNamespace.sql`AND b.id <> ${excludeBookingId}`
+          : PrismaNamespace.empty
+      }
+    FOR UPDATE OF b
   `
-
-  const existingBookings = await tx.booking.findMany({
-    where: {
-      memberId,
-      status: { in: BLOCKING_BOOKING_STATUSES },
-      ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
-      date: {
-        gte: dayStart,
-        lte: dayEnd,
-      },
-    },
-    select: {
-      date: true,
-      service: { select: { durationMinutes: true } },
-    },
-  })
 
   const conflict = findOverlappingBooking(
     date,
     durationMinutes,
-    existingBookings,
+    existingBookings.map((booking) => ({
+      date: booking.date,
+      service: { durationMinutes: booking.durationMinutes },
+    })),
   )
 
   if (conflict) {

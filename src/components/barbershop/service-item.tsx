@@ -1,10 +1,5 @@
 "use client"
 
-import type {
-  OrganizationService,
-  Booking,
-  OrganizationSchedule,
-} from "@/prisma/generated/prisma/browser"
 import Image from "next/image"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
@@ -27,6 +22,12 @@ import BookingSummary from "../booking/booking-summary"
 import { useRouter } from "next/navigation"
 import { getBookings } from "@/src/features/booking/booking.actions"
 import { createBooking } from "@/src/features/booking/booking.actions"
+import type { ServiceDayBooking } from "@/src/features/booking/booking.types"
+import type {
+  PublicBarberForBooking,
+  PublicOrganizationForBooking,
+  PublicServiceForBooking,
+} from "@/src/features/public/public.types"
 import {
   generateTimeSlots,
   filterAvailableTimes,
@@ -36,29 +37,14 @@ import {
   type DaySchedule,
 } from "@/src/shared/lib/schedule-utils"
 
-type BarberWithAgenda = {
-  id: string
-  user: { name: string }
-  schedules: Array<{
-    dayOfWeek: number
-    startTime: string
-    endTime: string
-    isActive: boolean
-  }>
-  breaks: Array<{ dayOfWeek: number; startTime: string; endTime: string }>
-  /** Datas podem vir como string após serialização (JSON) do server */
-  blockedSlots: Array<{ startAt: Date | string; endAt: Date | string }>
+interface ServiceItemProps {
+  service: PublicServiceForBooking
+  organization: PublicOrganizationForBooking
+  barbers: PublicBarberForBooking[]
 }
 
-interface ServiceItemProps {
-  service: OrganizationService
-  organization: {
-    schedules: OrganizationSchedule[]
-    breaks?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>
-    blockedSlots?: Array<{ startAt: Date | string; endAt: Date | string }>
-    name: string
-  }
-  barbers: BarberWithAgenda[]
+function toDate(value: Date | string) {
+  return value instanceof Date ? value : new Date(value)
 }
 
 const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
@@ -72,7 +58,7 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
   const [selectedBarberId, setSelectedBarberId] = useState<string | undefined>(
     undefined,
   )
-  const [dayBookings, setDayBookings] = useState<Booking[]>([])
+  const [dayBookings, setDayBookings] = useState<ServiceDayBooking[]>([])
   const [bookingSheetIsOpen, setBookingSheetIsOpen] = useState(false)
 
   useEffect(() => {
@@ -112,16 +98,22 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
     return setSignInDialogIsOpen(true)
   }
 
-  const handleBookingSheetOpenChange = () => {
-    setSelectedDay(undefined)
-    setSelectedTime(undefined)
-    setSelectedBarberId(undefined)
-    setDayBookings([])
-    setBookingSheetIsOpen(false)
+  const handleBookingSheetOpenChange = (open: boolean) => {
+    if (!open) {
+      setSelectedDay(undefined)
+      setSelectedTime(undefined)
+      setSelectedBarberId(undefined)
+      setDayBookings([])
+    }
+    setBookingSheetIsOpen(open)
   }
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDay(date)
+    setSelectedTime(undefined)
+    setSelectedBarberId(
+      date && barbers.length === 1 ? barbers[0]?.id : undefined,
+    )
   }
 
   const handleTimeSelect = (time: string) => {
@@ -130,6 +122,7 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
 
   const handleBarberSelect = (barberId: string) => {
     setSelectedBarberId(barberId)
+    setSelectedTime(undefined)
   }
 
   const handleCreateBooking = async () => {
@@ -140,7 +133,7 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
         memberId: selectedBarberId,
         date: selectedDate,
       })
-      handleBookingSheetOpenChange()
+      handleBookingSheetOpenChange(false)
       toast.success("Reserva criada com sucesso!", {
         action: {
           label: "Ver agendamentos",
@@ -175,7 +168,7 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
 
     let timeSlots = generateTimeSlots(schedule, 30)
 
-    const shopBreaksForDay = (organization.breaks ?? []).filter(
+    const shopBreaksForDay = organization.breaks.filter(
       (b) => b.dayOfWeek === dayOfWeek,
     )
     timeSlots = filterTimesByBreaks(
@@ -197,9 +190,9 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
     timeSlots = filterTimesByBlockedSlots(
       timeSlots,
       selectedDay,
-      (organization.blockedSlots ?? []).map((s) => ({
-        startAt: new Date(s.startAt),
-        endAt: new Date(s.endAt),
+      organization.blockedSlots.map((s) => ({
+        startAt: toDate(s.startAt),
+        endAt: toDate(s.endAt),
       })),
     )
 
@@ -207,14 +200,15 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
       timeSlots,
       selectedDay,
       selectedBarber.blockedSlots.map((s) => ({
-        startAt: new Date(s.startAt),
-        endAt: new Date(s.endAt),
+        startAt: toDate(s.startAt),
+        endAt: toDate(s.endAt),
       })),
     )
 
-    const barberBookings = dayBookings.filter(
-      (b) => b.memberId === selectedBarberId,
-    )
+    const barberBookings = dayBookings
+      .filter((b) => b.memberId === selectedBarberId)
+      .map((booking) => ({ date: toDate(booking.date) }))
+
     return filterAvailableTimes(timeSlots, barberBookings, selectedDay)
   }, [
     dayBookings,
@@ -230,7 +224,6 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
     <>
       <Card>
         <CardContent className="flex items-center gap-3 p-3">
-          {/* IMAGE */}
           <div className="relative max-h-[110px] min-h-[110px] min-w-[110px] max-w-[110px]">
             <Image
               alt={service.name}
@@ -240,137 +233,128 @@ const ServiceItem = ({ service, organization, barbers }: ServiceItemProps) => {
               sizes="100dvw"
             />
           </div>
-          {/* DIREITA */}
-          <div className="space-y-2">
+
+          <div className="flex flex-1 flex-col gap-2 space-y-2">
             <h3 className="text-sm font-semibold">{service.name}</h3>
             <p className="text-sm text-gray-400">{service.description}</p>
-            {/* PREÇO E BOTÃO */}
+
             <div className="flex items-center justify-between">
               <p className="text-sm font-bold text-primary">
                 {Intl.NumberFormat("pt-BR", {
                   style: "currency",
                   currency: "BRL",
-                }).format(Number(service.price))}
+                }).format(service.price)}
               </p>
 
-              <Sheet
-                open={bookingSheetIsOpen}
-                onOpenChange={handleBookingSheetOpenChange}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleBookingClick}
               >
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleBookingClick}
-                >
-                  Reservar
-                </Button>
-
-                <SheetContent className="hide-scrollbar overflow-y-auto px-0">
-                  <SheetHeader>
-                    <SheetTitle className="text-center">
-                      Fazer Reserva
-                    </SheetTitle>
-                  </SheetHeader>
-
-                  <div className="border-b border-solid py-5">
-                    <Calendar
-                      mode="single"
-                      locale={ptBR}
-                      selected={selectedDay}
-                      onSelect={handleDateSelect}
-                      fromDate={new Date()}
-                      styles={{
-                        head_cell: {
-                          width: "100%",
-                          textTransform: "capitalize",
-                        },
-                        cell: {
-                          width: "100%",
-                        },
-                        button: {
-                          width: "100%",
-                        },
-                        nav_button_previous: {
-                          width: "32px",
-                          height: "32px",
-                        },
-                        nav_button_next: {
-                          width: "32px",
-                          height: "32px",
-                        },
-                        caption: {
-                          textTransform: "capitalize",
-                        },
-                      }}
-                    />
-                  </div>
-
-                  {barbers.length > 0 && selectedDay && (
-                    <div className="hide-scrollbar flex gap-3 overflow-x-auto border-b border-solid p-5">
-                      {barbers.map((barber) => (
-                        <Button
-                          key={barber.id}
-                          variant={
-                            selectedBarberId === barber.id
-                              ? "default"
-                              : "outline"
-                          }
-                          className="rounded-full"
-                          onClick={() => handleBarberSelect(barber.id)}
-                        >
-                          {barber.user.name}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-
-                  {selectedDay && selectedBarberId && (
-                    <div className="hide-scrollbar flex flex-wrap justify-center gap-3 border-b border-solid p-5">
-                      {timeList.length > 0 ? (
-                        timeList.map((time) => (
-                          <Button
-                            key={time}
-                            variant={
-                              selectedTime === time ? "default" : "outline"
-                            }
-                            className="rounded-full"
-                            onClick={() => handleTimeSelect(time)}
-                          >
-                            {time}
-                          </Button>
-                        ))
-                      ) : (
-                        <p className="text-xs">
-                          Não há horários disponíveis para este dia.
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedDate && selectedBarberId && (
-                    <div className="p-5">
-                      <BookingSummary
-                        organization={organization}
-                        service={service}
-                        selectedDate={selectedDate}
-                        barber={selectedBarber}
-                      />
-                    </div>
-                  )}
-                  <SheetFooter className="mt-5 px-5">
-                    <Button
-                      onClick={handleCreateBooking}
-                      disabled={!selectedDay || !selectedTime}
-                    >
-                      Confirmar
-                    </Button>
-                  </SheetFooter>
-                </SheetContent>
-              </Sheet>
+                Reservar
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      <Sheet
+        open={bookingSheetIsOpen}
+        onOpenChange={handleBookingSheetOpenChange}
+      >
+        <SheetContent className="hide-scrollbar flex w-[85%] flex-col gap-0 overflow-y-auto px-0 sm:max-w-md">
+          <SheetHeader className="px-5 pt-2">
+            <SheetTitle className="text-center">Fazer Reserva</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex justify-center border-b border-solid px-3 py-4">
+            <Calendar
+              mode="single"
+              locale={ptBR}
+              selected={selectedDay}
+              onSelect={handleDateSelect}
+              fromDate={new Date()}
+            />
+          </div>
+
+          {selectedDay && barbers.length === 0 && (
+            <div className="border-b border-solid p-5">
+              <p className="text-sm text-muted-foreground">
+                Nenhum barbeiro disponível nesta barbearia no momento.
+              </p>
+            </div>
+          )}
+
+          {selectedDay && barbers.length > 0 && (
+            <div className="space-y-3 border-b border-solid p-5">
+              <h3 className="text-xs font-bold uppercase text-gray-400">
+                Barbeiro
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                {barbers.map((barber) => (
+                  <Button
+                    key={barber.id}
+                    variant={
+                      selectedBarberId === barber.id ? "default" : "outline"
+                    }
+                    className="rounded-full"
+                    onClick={() => handleBarberSelect(barber.id)}
+                  >
+                    {barber.user.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedDay && selectedBarberId && (
+            <div className="space-y-3 border-b border-solid p-5">
+              <h3 className="text-xs font-bold uppercase text-gray-400">
+                Horário
+              </h3>
+              <div className="grid grid-cols-4 gap-3">
+                {timeList.length > 0 ? (
+                  timeList.map((time) => (
+                    <Button
+                      key={time}
+                      variant={selectedTime === time ? "default" : "outline"}
+                      className="rounded-full"
+                      onClick={() => handleTimeSelect(time)}
+                    >
+                      {time}
+                    </Button>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Não há horários disponíveis para este dia.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {selectedDate && selectedBarberId && (
+            <div className="p-5">
+              <BookingSummary
+                organization={organization}
+                service={service}
+                selectedDate={selectedDate}
+                barber={selectedBarber}
+              />
+            </div>
+          )}
+
+          <SheetFooter className="mt-auto px-5 pb-5">
+            <Button
+              className="w-full"
+              onClick={handleCreateBooking}
+              disabled={!selectedDay || !selectedTime || !selectedBarberId}
+            >
+              Confirmar
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Dialog
         open={signInDialogIsOpen}

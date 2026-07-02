@@ -20,6 +20,10 @@ export async function getBarbershopBySlug(slug: string) {
   return publicService.getBarbershopBySlug(slug)
 }
 
+export async function getBarbershopPageData(slug: string) {
+  return publicService.getBarbershopPageData(slug)
+}
+
 export async function getBarbershopBarbers(organizationId: string) {
   return publicService.getBarbershopBarbers(organizationId)
 }

@@ -83,3 +83,27 @@ export async function getBarberBookings(
 ) {
   return bookingService.getBarberBookings(memberId, period, date)
 }
+
+export async function getOwnerScheduleBookings(
+  organizationIds: OwnerOrganizationIdList,
+  options: {
+    organizationId?: string | null
+    memberId?: string | null
+    tablePeriod: OwnerBookingsPeriod
+    tableDate: Date
+    calendarDate: Date
+  },
+) {
+  return bookingService.getOwnerScheduleBookings(organizationIds, options)
+}
+
+export async function getBarberScheduleBookings(
+  memberId: string,
+  options: {
+    tablePeriod: OwnerBookingsPeriod
+    tableDate: Date
+    calendarDate: Date
+  },
+) {
+  return bookingService.getBarberScheduleBookings(memberId, options)
+}

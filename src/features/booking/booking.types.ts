@@ -7,6 +7,13 @@ import type { PanelPeriod } from "@/src/shared/types/panel-data-scope"
 
 export type OwnerBookingsPeriod = PanelPeriod
 
+export type ServiceDayBooking = {
+  id: string
+  date: Date | string
+  memberId: string | null
+  status: BookingStatus
+}
+
 /**
  * Forma de um agendamento listado para o dono (`getOwnerBookings` + include).
  */
