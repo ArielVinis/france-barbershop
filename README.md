@@ -46,6 +46,7 @@ Plataforma multi-tenant onde cada barbearia é uma **Organization** (plugin orga
 | Pagamentos            | Stripe (Checkout + Customer Portal)       |
 | E-mail                | Resend + React Email                      |
 | Gráficos / calendário | Recharts, react-big-calendar              |
+| Datas / fuso horário  | date-fns, date-fns-tz (America/Sao_Paulo) |
 | Testes                | Vitest (unit), Playwright (E2E)           |
 | Qualidade             | ESLint, Prettier, git-commit-msg-linter   |
 
@@ -147,10 +148,10 @@ src/
 ├── resources/                       # Itens da sidebar do painel
 ├── server/                          # Auth HTTP (users, permissions)
 └── shared/                          # Código transversal
-    ├── constants/                   # PATHS, cache-tags, NUMBERS, search
+    ├── constants/                   # PATHS, cache-tags, NUMBERS, search, timezone
     ├── errors/                      # ValidationError, ForbiddenError, NotFoundError
     ├── guards/                      # Authz, panel query helpers
-    ├── lib/                         # prisma, auth, stripe, utils, schedule-utils, invalidate-organization-cache
+    ├── lib/                         # prisma, auth, stripe, utils, schedule-utils, timezone-utils, invalidate-organization-cache
     └── types/                       # Tipos compartilhados do painel
 
 prisma/
@@ -211,8 +212,13 @@ Tipos Prisma (`Decimal`, `Date`) **não** podem ser passados directamente a Clie
 | `org-slug-{slug}` | Página pública `/[slug]` |
 | `org-id-{organizationId}` | Dados da organização |
 | `dashboard-{organizationId}` | Dashboard do painel |
+| `org-list` | Listas públicas (recomendados, populares, busca em `/` e `/barbershops`) |
 
-Invalidação centralizada em `shared/lib/invalidate-organization-cache.ts`, chamada após mutações de booking, horários, serviços, etc.
+Invalidação centralizada em `shared/lib/invalidate-organization-cache.ts`, chamada após mutações de booking, horários, serviços, etc. As chamadas a `revalidateTag` usam o perfil `"max"` (Next.js 16: revalidação _stale-while-revalidate_).
+
+### Fuso horário
+
+Agendamentos são gravados como instantes UTC, mas as regras de negócio (horário de funcionamento, pausas, bloqueios e conflitos) são interpretadas no fuso da barbearia — `APP_TIMEZONE` em `shared/constants/timezone.ts` (`America/Sao_Paulo`). Os helpers em `shared/lib/timezone-utils.ts` (`getZonedDayBounds`, `getZonedDayOfWeek`, `getZonedMinutesSinceMidnight`, `buildAppZonedDateTime`, …) garantem o mesmo resultado em dev (máquina local) e em produção (Vercel corre em UTC).
 
 ### Regras de importação
 
@@ -398,7 +404,8 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] Dark mode (ThemeSwitcher)
 - [x] Testes unitários e E2E (parcial)
 - [x] git-commit-msg-linter (validação de mensagens de commit)
-- [x] Otimização de queries e cache (dashboard bundle, índices em `Booking`, agenda unificada, página pública com `unstable_cache`)
+- [x] Otimização de queries e cache (dashboard bundle, índices em `Booking`, agenda unificada, páginas e listas públicas com `unstable_cache`)
+- [x] Regras de agendamento com fuso horário fixo (`America/Sao_Paulo`) consistente entre dev e produção
 
 ## Roadmap
 
