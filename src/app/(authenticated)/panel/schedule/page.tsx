@@ -22,6 +22,7 @@ import { hasBarbershopSubscriptionAccess } from "@/src/features/subscription/sub
 import { PATHS } from "@/src/shared/constants/PATHS"
 import { resolveOrganizationIdForAggregate } from "@/src/shared/guards/panel/organization-query"
 import { ensureBarberShopIdMatchesUrl } from "@/src/shared/guards/panel/ensure-barber-shop-query"
+import { parseAppZonedDateParam } from "@/src/shared/lib/timezone-utils"
 import { Role } from "@/prisma/generated/prisma/enums"
 
 export default async function OwnerSchedulePage({
@@ -67,10 +68,7 @@ export default async function OwnerSchedulePage({
         : "week"
     const viewDateParam = params.viewDate
     const viewDate = viewDateParam
-      ? (() => {
-          const d = new Date(viewDateParam)
-          return Number.isNaN(d.getTime()) ? new Date() : d
-        })()
+      ? (parseAppZonedDateParam(viewDateParam) ?? new Date())
       : new Date()
     const dateForTable = new Date()
 
@@ -96,7 +94,11 @@ export default async function OwnerSchedulePage({
           <p className="mb-3 text-sm text-muted-foreground">
             Os seus agendamentos no mês visível.
           </p>
-          <OwnerScheduleCalendar events={calendarEvents} viewDate={viewDate} />
+          <OwnerScheduleCalendar
+            events={calendarEvents}
+            viewDate={viewDate}
+            canReschedule={false}
+          />
         </div>
 
         <div className="px-4 lg:px-6">
@@ -168,10 +170,7 @@ export default async function OwnerSchedulePage({
 
   const viewDateParam = params.viewDate
   const viewDate = viewDateParam
-    ? (() => {
-        const d = new Date(viewDateParam)
-        return Number.isNaN(d.getTime()) ? new Date() : d
-      })()
+    ? (parseAppZonedDateParam(viewDateParam) ?? new Date())
     : new Date()
 
   const dateForTable = new Date()
@@ -195,6 +194,11 @@ export default async function OwnerSchedulePage({
     bookingsForCalendar as unknown as BookingForCalendarEvent[],
   )
 
+  const calendarResources = barbersForFilter.map((b) => ({
+    id: b.id,
+    title: b.name,
+  }))
+
   return (
     <div className="flex flex-1 flex-col gap-6">
       <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
@@ -204,9 +208,15 @@ export default async function OwnerSchedulePage({
       <div className="px-4 lg:px-6">
         <h2 className="mb-1 text-lg font-semibold">Calendário</h2>
         <p className="mb-3 text-sm text-muted-foreground">
-          Navegue pelos meses para ver os agendamentos.
+          Vista por dia com colunas por barbeiro. Arraste um agendamento para
+          mudar o horário ou o barbeiro.
         </p>
-        <OwnerScheduleCalendar events={calendarEvents} viewDate={viewDate} />
+        <OwnerScheduleCalendar
+          events={calendarEvents}
+          viewDate={viewDate}
+          resources={calendarResources}
+          canReschedule
+        />
       </div>
 
       <div className="px-4 lg:px-6">

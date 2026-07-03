@@ -1,18 +1,53 @@
-/* Overrides do react-big-calendar para seguir o design system do projeto */
+/* =========================================================================
+   Agenda do painel — visual moderno (estilo Cal.com) sobre react-big-calendar
+   Usa os tokens do design system (hsl(var(--...))).
+   ========================================================================= */
 
-/* ---- Toolbar: botões no padrão do projeto (secondary / primary para ativo) ---- */
+.owner-schedule-calendar {
+  --rbc-radius: calc(var(--radius) + 2px);
+}
+
+.owner-schedule-calendar .rbc-calendar {
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+}
+
+/* ---------------------------------------------------------------- Toolbar */
+
+.owner-schedule-calendar .rbc-toolbar {
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.owner-schedule-calendar .rbc-toolbar .rbc-toolbar-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  text-transform: capitalize;
+}
+
+.owner-schedule-calendar .rbc-btn-group {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
 .owner-schedule-calendar .rbc-toolbar button {
-  color: hsl(var(--secondary-foreground));
-  background-color: hsl(var(--secondary));
+  color: hsl(var(--muted-foreground));
+  background-color: transparent;
   border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  padding: 0.375rem 1rem;
-  transition: background-color 0.2s, border-color 0.2s;
+  border-radius: 9999px;
+  padding: 0.375rem 0.9rem;
+  font-weight: 500;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .owner-schedule-calendar .rbc-toolbar button:hover {
-  color: hsl(var(--secondary-foreground));
-  background-color: hsl(var(--secondary) / 0.8);
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--accent));
   border-color: hsl(var(--border));
 }
 
@@ -22,134 +57,191 @@
 }
 
 .owner-schedule-calendar .rbc-toolbar button:active,
-.owner-schedule-calendar .rbc-toolbar button.rbc-active {
+.owner-schedule-calendar .rbc-toolbar button.rbc-active,
+.owner-schedule-calendar .rbc-toolbar button.rbc-active:hover,
+.owner-schedule-calendar .rbc-toolbar button.rbc-active:focus {
   color: hsl(var(--primary-foreground));
   background-color: hsl(var(--primary));
   border-color: hsl(var(--primary));
   box-shadow: none;
 }
 
-.owner-schedule-calendar .rbc-toolbar button.rbc-active:hover,
-.owner-schedule-calendar .rbc-toolbar button.rbc-active:focus {
-  color: hsl(var(--primary-foreground));
-  background-color: hsl(var(--primary) / 0.9);
-  border-color: hsl(var(--primary));
+/* ------------------------------------------------------------ Grade geral */
+
+.owner-schedule-calendar .rbc-month-view,
+.owner-schedule-calendar .rbc-time-view,
+.owner-schedule-calendar .rbc-agenda-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--rbc-radius);
+  overflow: hidden;
+  background-color: hsl(var(--card));
 }
 
-.owner-schedule-calendar .rbc-toolbar .rbc-toolbar-label {
-  color: hsl(var(--foreground));
-  font-weight: 600;
+.owner-schedule-calendar .rbc-header,
+.owner-schedule-calendar .rbc-time-header-content,
+.owner-schedule-calendar .rbc-time-header.rbc-overflowing,
+.owner-schedule-calendar .rbc-header + .rbc-header,
+.owner-schedule-calendar .rbc-month-row + .rbc-month-row,
+.owner-schedule-calendar .rbc-day-bg + .rbc-day-bg,
+.owner-schedule-calendar .rbc-timeslot-group,
+.owner-schedule-calendar .rbc-time-content,
+.owner-schedule-calendar .rbc-time-content > * + * > *,
+.owner-schedule-calendar .rbc-time-view .rbc-allday-cell + .rbc-allday-cell {
+  border-color: hsl(var(--border));
 }
 
-/* ---- Dia atual: contraste legível com tokens do tema ---- */
-.owner-schedule-calendar .rbc-today {
-  background-color: hsl(var(--primary) / 0.2) !important;
-}
-
-.owner-schedule-calendar .rbc-today .rbc-date-cell>a,
-.owner-schedule-calendar .rbc-today .rbc-date-cell>span,
-.owner-schedule-calendar .rbc-today .rbc-button-link {
-  color: hsl(var(--foreground)) !important;
-  font-weight: 600;
-}
-
-.owner-schedule-calendar .rbc-today .rbc-row-content {
-  color: hsl(var(--foreground));
-}
-
-.owner-schedule-calendar .rbc-today .rbc-event {
-  /* eventos no dia atual mantêm legibilidade */
-  color: hsl(var(--primary-foreground));
-  background-color: hsl(var(--primary));
-}
-
-/* ---- Linhas suaves (estilo Teams): bordas sutis na grade ---- */
-.owner-schedule-calendar .rbc-month-view {
-  border-color: hsl(var(--border) / 1);
-}
-
+/* Cabeçalho dos dias / colunas */
 .owner-schedule-calendar .rbc-header {
-  border-bottom-color: hsl(var(--border) / 1);
+  padding: 0.6rem 0.25rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+  text-transform: capitalize;
+  background-color: hsl(var(--muted) / 0.4);
 }
 
-.owner-schedule-calendar .rbc-header+.rbc-header {
-  border-left-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-header a,
+.owner-schedule-calendar .rbc-button-link {
+  color: inherit;
 }
 
-.owner-schedule-calendar .rbc-rtl .rbc-header+.rbc-header {
-  border-right-color: hsl(var(--border) / 1);
-}
-
-.owner-schedule-calendar .rbc-month-row+.rbc-month-row {
-  border-top-color: hsl(var(--border) / 1);
-}
-
-.owner-schedule-calendar .rbc-day-bg+.rbc-day-bg {
-  border-left-color: hsl(var(--border) / 1);
-}
-
-.owner-schedule-calendar .rbc-rtl .rbc-day-bg+.rbc-day-bg {
-  border-right-color: hsl(var(--border) / 1);
-}
-
-/* Agenda view */
-.owner-schedule-calendar .rbc-agenda-view table.rbc-agenda-table {
-  border-color: hsl(var(--border) / 1);
-}
-
-.owner-schedule-calendar .rbc-agenda-view table.rbc-agenda-table tbody>tr>td+td,
-.owner-schedule-calendar .rbc-agenda-view table.rbc-agenda-table tbody>tr+tr,
-.owner-schedule-calendar .rbc-agenda-view table.rbc-agenda-table thead>tr>th {
-  border-color: hsl(var(--border) / 1);
-}
-
-.owner-schedule-calendar .rbc-rtl .rbc-agenda-view table.rbc-agenda-table tbody>tr>td+td {
-  border-right-color: hsl(var(--border) / 1);
-}
-
-/* Time / Week / Day view */
-.owner-schedule-calendar .rbc-time-view {
-  border-color: hsl(var(--border) / 1);
+/* Linhas suaves na grade de horas */
+.owner-schedule-calendar .rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid hsl(var(--border) / 0.4);
 }
 
 .owner-schedule-calendar .rbc-timeslot-group {
-  border-bottom-color: hsl(var(--border) / 1);
+  border-bottom: 1px solid hsl(var(--border));
+  min-height: 48px;
 }
 
-.owner-schedule-calendar .rbc-day-slot .rbc-time-slot {
-  border-top-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-time-gutter .rbc-timeslot-group {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
 }
 
-.owner-schedule-calendar .rbc-time-view .rbc-allday-cell+.rbc-allday-cell {
-  border-left-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-time-header-gutter,
+.owner-schedule-calendar .rbc-time-gutter {
+  background-color: hsl(var(--muted) / 0.25);
 }
 
-.owner-schedule-calendar .rbc-time-header-content {
-  border-left-color: hsl(var(--border) / 1);
+/* ---------------------------------------------------------------- Hoje */
+
+.owner-schedule-calendar .rbc-today {
+  background-color: hsl(var(--foreground) / 0.05);
 }
 
-.owner-schedule-calendar .rbc-rtl .rbc-time-header-content {
-  border-right-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-header.rbc-today {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--foreground) / 0.08);
 }
 
-.owner-schedule-calendar .rbc-time-header>.rbc-row:first-child,
-.owner-schedule-calendar .rbc-time-header>.rbc-row.rbc-row-resource,
-.owner-schedule-calendar .rbc-time-header-content>.rbc-row.rbc-row-resource {
-  border-bottom-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-current-time-indicator {
+  background-color: hsl(var(--primary));
+  height: 2px;
 }
 
-.owner-schedule-calendar .rbc-time-content {
-  border-top-color: hsl(var(--border) / 1);
+/* ---------------------------------------------------------------- Eventos */
+
+.owner-schedule-calendar .rbc-event {
+  border: none;
+  border-left: 3px solid rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  transition:
+    filter 0.15s ease,
+    transform 0.05s ease;
 }
 
-.owner-schedule-calendar .rbc-time-content>*+*>* {
-  border-left-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-event:hover {
+  filter: brightness(1.05);
 }
 
-.owner-schedule-calendar .rbc-rtl .rbc-time-content>*+*>* {
-  border-right-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-event:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
 }
 
-.owner-schedule-calendar .rbc-time-view-resources .rbc-time-gutter {
-  border-right-color: hsl(var(--border) / 1);
+.owner-schedule-calendar .rbc-event.rbc-selected {
+  filter: brightness(0.95);
+}
+
+.owner-schedule-calendar .rbc-event-label {
+  font-size: 0.68rem;
+  opacity: 0.85;
+}
+
+.owner-schedule-calendar .rbc-event-content {
+  font-weight: 500;
+}
+
+/* Chip "+N mais" no mês */
+.owner-schedule-calendar .rbc-show-more {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  background-color: transparent;
+}
+
+/* Feedback de arrasto */
+.owner-schedule-calendar .rbc-addons-dnd-dragged-event {
+  opacity: 0.75;
+}
+
+.owner-schedule-calendar
+  .rbc-addons-dnd-over
+  .rbc-day-slot,
+.owner-schedule-calendar .rbc-addons-dnd-over {
+  background-color: hsl(var(--primary) / 0.06);
+}
+
+/* ---------------------------------------------------------------- Agenda */
+
+.owner-schedule-calendar .rbc-agenda-view table.rbc-agenda-table {
+  border-color: hsl(var(--border));
+}
+
+.owner-schedule-calendar
+  .rbc-agenda-view
+  table.rbc-agenda-table
+  tbody
+  > tr
+  > td
+  + td,
+.owner-schedule-calendar
+  .rbc-agenda-view
+  table.rbc-agenda-table
+  tbody
+  > tr
+  + tr,
+.owner-schedule-calendar
+  .rbc-agenda-view
+  table.rbc-agenda-table
+  thead
+  > tr
+  > th {
+  border-color: hsl(var(--border));
+}
+
+.owner-schedule-calendar .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+  background-color: hsl(var(--muted) / 0.4);
+}
+
+.owner-schedule-calendar .rbc-agenda-event-cell .rbc-event {
+  color: #fff;
+}
+
+/* Fora do mês (dias de outro mês) */
+.owner-schedule-calendar .rbc-off-range-bg {
+  background-color: hsl(var(--muted) / 0.35);
+}
+
+.owner-schedule-calendar .rbc-date-cell {
+  padding: 0.3rem 0.4rem;
+  font-size: 0.8rem;
 }
