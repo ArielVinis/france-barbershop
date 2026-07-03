@@ -50,7 +50,7 @@ const BarbershopItem = ({
           <h3 className="truncate font-semibold">{barbershop.name}</h3>
           <p className="truncate text-sm text-gray-400">{barbershop.address}</p>
           <Button variant="secondary" className="mt-3 w-full" asChild>
-            <Link href={PATHS.BARBERSHOP.ROOT(barbershop.slug)}>Reservar</Link>
+            <Link href={PATHS.BARBERSHOP.ROOT(barbershop.slug)}>Acessar</Link>
           </Button>
         </div>
       </CardContent>
