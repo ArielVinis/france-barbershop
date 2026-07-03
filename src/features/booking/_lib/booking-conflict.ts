@@ -1,4 +1,4 @@
-import { addMinutes, endOfDay, startOfDay } from "date-fns"
+import { addMinutes } from "date-fns"
 import type { BookingStatus } from "@/prisma/generated/prisma/client"
 import type { Prisma } from "@/prisma/generated/prisma/client"
 import { Prisma as PrismaNamespace } from "@/prisma/generated/prisma/client"
@@ -7,6 +7,7 @@ import {
   bookingOverlapsBreak,
   isBookingWithinDaySchedule,
 } from "@/src/shared/lib/schedule-utils"
+import { getZonedDayBounds, getZonedDayOfWeek } from "@/src/shared/lib/timezone-utils"
 
 export const BLOCKING_BOOKING_STATUSES: BookingStatus[] = [
   "CONFIRMED",
@@ -56,9 +57,8 @@ export async function assertNoOrganizationScheduleConflict(
     throw new Error("Este horário já passou")
   }
 
-  const dayOfWeek = date.getDay()
-  const dayStart = startOfDay(date)
-  const dayEnd = endOfDay(date)
+  const dayOfWeek = getZonedDayOfWeek(date)
+  const { start: dayStart, end: dayEnd } = getZonedDayBounds(date)
 
   const organization = await tx.organization.findUnique({
     where: { id: organizationId },
@@ -126,8 +126,7 @@ export async function assertNoBarberBookingConflict(
   durationMinutes: number,
   excludeBookingId?: string,
 ): Promise<void> {
-  const dayStart = startOfDay(date)
-  const dayEnd = endOfDay(date)
+  const { start: dayStart, end: dayEnd } = getZonedDayBounds(date)
 
   const existingBookings = await tx.$queryRaw<LockedBookingRow[]>`
     SELECT b.date, s."durationMinutes" AS "durationMinutes"

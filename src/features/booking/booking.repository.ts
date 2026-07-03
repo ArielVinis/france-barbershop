@@ -15,6 +15,7 @@ import type {
 import { BLOCKING_BOOKING_STATUSES } from "@/src/features/booking/_lib/booking-conflict"
 import { db } from "@/src/shared/lib/prisma"
 import type { OwnerBookingsPeriod } from "@/src/features/booking/booking.types"
+import { getZonedDayBounds } from "@/src/shared/lib/timezone-utils"
 
 function periodBounds(period: OwnerBookingsPeriod, date: Date) {
   const start =
@@ -84,14 +85,15 @@ export const bookingRepository = {
     memberId?: string
   }) {
     const { serviceId, date, memberId } = params
+    const { start, end } = getZonedDayBounds(date)
     return db.booking.findMany({
       where: {
         serviceId,
         ...(memberId ? { memberId } : {}),
         status: { in: BLOCKING_BOOKING_STATUSES },
         date: {
-          lte: endOfDay(date),
-          gte: startOfDay(date),
+          lte: end,
+          gte: start,
         },
       },
       select: {
@@ -311,7 +313,7 @@ export const bookingRepository = {
     })
   },
 
-  transaction<T>(fn: Parameters<typeof db.$transaction>[0]) {
+  transaction(fn: Parameters<typeof db.$transaction>[0]) {
     return db.$transaction(fn)
   },
 }

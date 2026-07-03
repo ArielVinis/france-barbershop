@@ -1,4 +1,11 @@
 import { addMinutes } from "date-fns"
+import {
+  buildAppZonedDateTime,
+  getZonedDateParts,
+  getZonedDayOfWeek,
+  getZonedMinutesSinceMidnight,
+  isSameAppZonedDay,
+} from "@/src/shared/lib/timezone-utils"
 
 /** Horário de um dia: usado por BarbershopSchedule e BarberSchedule */
 export type DaySchedule = {
@@ -28,7 +35,7 @@ export function getBookingMinuteRange(
   date: Date,
   durationMinutes: number,
 ): { startMin: number; endMin: number } {
-  const startMin = date.getHours() * 60 + date.getMinutes()
+  const startMin = getZonedMinutesSinceMidnight(date)
   return { startMin, endMin: startMin + durationMinutes }
 }
 
@@ -104,7 +111,7 @@ export function generateTimeSlots(
 }
 
 export function getDayOfWeek(date: Date): number {
-  return date.getDay()
+  return getZonedDayOfWeek(date)
 }
 
 /** Pausa recorrente em um dia (ex.: almoço 12:00–13:00) */
@@ -143,15 +150,8 @@ export function filterTimesByBlockedSlots(
 ): string[] {
   if (blockedSlots.length === 0) return timeSlots
 
-  const dayStart = new Date(selectedDay)
-  dayStart.setHours(0, 0, 0, 0)
-  const dayEnd = new Date(selectedDay)
-  dayEnd.setHours(23, 59, 59, 999)
-
   return timeSlots.filter((time) => {
-    const [hour, minute] = time.split(":").map(Number)
-    const slotDate = new Date(selectedDay)
-    slotDate.setHours(hour, minute, 0, 0)
+    const slotDate = buildAppZonedDateTime(selectedDay, time)
 
     const isBlocked = blockedSlots.some(
       (b) => slotDate >= b.startAt && slotDate < b.endAt,
@@ -166,28 +166,23 @@ export function filterAvailableTimes(
   selectedDay: Date,
 ): string[] {
   const today = new Date()
-  const isToday =
-    selectedDay.getDate() === today.getDate() &&
-    selectedDay.getMonth() === today.getMonth() &&
-    selectedDay.getFullYear() === today.getFullYear()
+  const isToday = isSameAppZonedDay(selectedDay, today)
 
   return timeSlots.filter((time) => {
-    const [hour, minute] = time.split(":").map(Number)
-    const timeDate = new Date(selectedDay)
-    timeDate.setHours(hour, minute, 0, 0)
+    const timeDate = buildAppZonedDateTime(selectedDay, time)
 
     if (isToday && timeDate < today) {
       return false
     }
 
-    const hasBooking = bookings.some(
-      (booking) =>
-        booking.date.getHours() === hour &&
-        booking.date.getMinutes() === minute &&
-        booking.date.getDate() === selectedDay.getDate() &&
-        booking.date.getMonth() === selectedDay.getMonth() &&
-        booking.date.getFullYear() === selectedDay.getFullYear(),
-    )
+    const hasBooking = bookings.some((booking) => {
+      if (!isSameAppZonedDay(booking.date, selectedDay)) return false
+
+      const bookingParts = getZonedDateParts(booking.date)
+      const [hour, minute] = time.split(":").map(Number)
+
+      return bookingParts.hours === hour && bookingParts.minutes === minute
+    })
 
     return !hasBooking
   })
