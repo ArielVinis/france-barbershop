@@ -5,11 +5,12 @@ export function invalidateOrganizationCache(params: {
   slug?: string
   organizationId?: string
 }) {
+  revalidateTag(cacheTags.orgList, "max")
   if (params.slug) {
-    revalidateTag(cacheTags.orgSlug(params.slug), "slug")
+    revalidateTag(cacheTags.orgSlug(params.slug), "max")
   }
   if (params.organizationId) {
-    revalidateTag(cacheTags.orgId(params.organizationId), "organizationId")
-    revalidateTag(cacheTags.dashboard(params.organizationId), "organizationId")
+    revalidateTag(cacheTags.orgId(params.organizationId), "max")
+    revalidateTag(cacheTags.dashboard(params.organizationId), "max")
   }
 }

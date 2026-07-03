@@ -18,16 +18,39 @@ async function fetchBarbershopPageData(
 }
 
 export const publicService = {
-  async getBarbershops(params: { title?: string; service?: string }) {
-    return publicRepository.findBarbershops(params)
+  getBarbershops(params: { title?: string; service?: string }) {
+    const title = params.title ?? ""
+    const service = params.service ?? ""
+    return unstable_cache(
+      () => publicRepository.findBarbershops(params),
+      ["barbershops-search", title, service],
+      {
+        revalidate: 300,
+        tags: [cacheTags.orgList],
+      },
+    )()
   },
 
   getRecommendedBarbershops() {
-    return publicRepository.findRecommendedBarbershops()
+    return unstable_cache(
+      () => publicRepository.findRecommendedBarbershops(),
+      ["barbershops-recommended"],
+      {
+        revalidate: 300,
+        tags: [cacheTags.orgList],
+      },
+    )()
   },
 
   getPopularBarbershops() {
-    return publicRepository.findPopularBarbershops()
+    return unstable_cache(
+      () => publicRepository.findPopularBarbershops(),
+      ["barbershops-popular"],
+      {
+        revalidate: 300,
+        tags: [cacheTags.orgList],
+      },
+    )()
   },
 
   getBarbershopBySlug(slug: string) {
