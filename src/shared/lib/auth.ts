@@ -7,6 +7,7 @@ import { ac, ADMIN, OWNER, MANAGER, MEMBER, CLIENT } from "./permissions"
 import { OrganizationInvitationEmail } from "@/src/components/emails/organization-invitation"
 import { ResetPasswordEmail } from "@/src/components/emails/reset-password"
 import { VerifyEmail } from "@/src/components/emails/verify-email"
+import { ChangeEmailVerificationEmail } from "@/src/components/emails/change-email-verification"
 import { Resend } from "resend"
 import { organizationService } from "@/src/features/organization/organization.service"
 import { memberService } from "@/src/features/member/member.service"
@@ -25,12 +26,18 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
 
-  trustedOrigins: [baseUrl],
-
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+
+  trustedOrigins: [baseUrl],
+
+  user: {
+    changeEmail: {
+      enabled: true,
     },
   },
 
@@ -71,14 +78,23 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     async sendVerificationEmail({ user, url }: { user: User; url: string }) {
-      await resend.emails.send({
+      const isChangeEmail = user.emailVerified
+
+      void resend.emails.send({
         from: emailNoReply,
         to: user.email,
-        subject: "Verifique seu email",
-        react: VerifyEmail({
-          userName: user.name,
-          verificationUrl: url,
-        }),
+        subject: isChangeEmail
+          ? "Verifique seu novo e-mail"
+          : "Verifique seu email",
+        react: isChangeEmail
+          ? ChangeEmailVerificationEmail({
+              userName: user.name,
+              verificationUrl: url,
+            })
+          : VerifyEmail({
+              userName: user.name,
+              verificationUrl: url,
+            }),
       })
     },
   },

@@ -19,6 +19,10 @@ export const PATHS = Object.freeze({
     ROOT: "/bookings",
   },
 
+  PROFILE: {
+    ROOT: "/profile",
+  },
+
   STRIPE: {
     PAYMENT_CONFIRMATION:
       "/payment-confirmation?session_id={CHECKOUT_SESSION_ID}",
@@ -38,6 +42,7 @@ export const PATHS = Object.freeze({
     SERVICES: "/panel/services",
     SCHEDULE: "/panel/schedule",
     WORKED_HOURS: "/panel/worked-hours",
+    PROFILE: "/panel/profile",
   },
 
   API: {
