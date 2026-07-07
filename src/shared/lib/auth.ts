@@ -62,7 +62,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     async sendResetPassword({ user, url }) {
-      await resend.emails.send({
+      void resend.emails.send({
         from: emailNoReply,
         to: user.email,
         subject: "Redefina sua senha",
