@@ -1,3 +1,4 @@
+import { PanelPage } from "@/src/app/(authenticated)/panel/_components/panel-page"
 import { Suspense } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -84,7 +85,7 @@ export default async function OwnerSchedulePage({
     )
 
     return (
-      <div className="flex flex-1 flex-col gap-6">
+      <PanelPage title="Agenda" contentClassName="gap-6 py-0 md:py-0">
         <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
           <ScheduleFilters barbers={[]} variant="barber" />
         </Suspense>
@@ -110,7 +111,7 @@ export default async function OwnerSchedulePage({
             bookings={JSON.parse(JSON.stringify(bookingsForTable))}
           />
         </div>
-      </div>
+      </PanelPage>
     )
   }
 
@@ -200,7 +201,7 @@ export default async function OwnerSchedulePage({
   }))
 
   return (
-    <div className="flex flex-1 flex-col gap-6">
+    <PanelPage title="Agenda" contentClassName="gap-6 py-0 md:py-0">
       <Suspense fallback={<div className="h-10 px-4 lg:px-6" />}>
         <ScheduleFilters barbers={barbersForFilter} />
       </Suspense>
@@ -227,13 +228,11 @@ export default async function OwnerSchedulePage({
         </p>
         <OwnerBookingsTable
           bookings={
-            JSON.parse(
-              JSON.stringify(bookingsForTable),
-            ) as OwnerBookingRow[]
+            JSON.parse(JSON.stringify(bookingsForTable)) as OwnerBookingRow[]
           }
           barbers={barbersForFilter}
         />
       </div>
-    </div>
+    </PanelPage>
   )
 }

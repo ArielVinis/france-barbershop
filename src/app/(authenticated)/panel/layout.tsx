@@ -1,11 +1,8 @@
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { AppSidebar } from "@/src/components/templates/Sidebar/app-sidebar"
-import { SiteHeader } from "@/src/components/templates/SiteHeader/site-header"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
 import { getBarberByUserId } from "@/src/features/member/member.panel.actions"
-import { OrganizationSwitcher } from "@/src/components/auth/organization-switcher"
-import { getOrganizations } from "@/src/features/organization/organization.actions"
 import { Role } from "@/prisma/generated/prisma/enums"
 import { redirect } from "next/navigation"
 import { PATHS } from "@/src/shared/constants/PATHS"
@@ -42,7 +39,6 @@ export default async function PanelLayout({
   children: React.ReactNode
 }) {
   const { user } = await getCurrentUser()
-  const organizations = await getOrganizations()
 
   if (user.role === Role.OWNER || user.role === Role.MANAGER) {
     const owner = await getOwnerByUserId(user.id)
@@ -63,21 +59,15 @@ export default async function PanelLayout({
     }))
 
     return (
-      <SidebarProvider className="h-full !min-h-0">
+      <SidebarProvider className="!h-svh min-h-0 overflow-hidden">
         <AppSidebar
           variant="inset"
           userRole={user.role === Role.MANAGER ? Role.MANAGER : Role.OWNER}
           user={owner.user}
           barbershops={barbershopsForNav}
         />
-        <SidebarInset>
-          <SiteHeader
-            title="Painel interno"
-            rightContent={
-              <OrganizationSwitcher organizations={organizations} />
-            }
-          />
-          <div className="flex flex-1 flex-col">{children}</div>
+        <SidebarInset className="min-h-0 overflow-hidden">
+          <div className="flex h-full min-h-0 flex-col">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     )
@@ -104,16 +94,15 @@ export default async function PanelLayout({
     ]
 
     return (
-      <SidebarProvider className="h-full !min-h-0">
+      <SidebarProvider className="!h-svh min-h-0 overflow-hidden">
         <AppSidebar
           variant="inset"
           userRole={Role.MEMBER}
           user={barber.user}
           barbershops={barbershops}
         />
-        <SidebarInset>
-          <SiteHeader title="Painel do barbeiro" />
-          <div className="flex flex-1 flex-col">{children}</div>
+        <SidebarInset className="min-h-0 overflow-hidden">
+          <div className="flex h-full min-h-0 flex-col">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     )

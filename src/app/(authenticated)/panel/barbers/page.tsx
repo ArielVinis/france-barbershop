@@ -1,3 +1,4 @@
+import { PanelPage } from "@/src/app/(authenticated)/panel/_components/panel-page"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { redirect } from "next/navigation"
 import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
@@ -53,19 +54,15 @@ export default async function OwnerBarbersPage({
   const barbers = await getOwnerBarbers(user.id, shopId)
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <OwnerBarbersTable
-            barbers={JSON.parse(JSON.stringify(barbers))}
-            organizations={owner.organizations.map((org) => ({
-              id: org.id,
-              name: org.name,
-            }))}
-            selectedOrganizationId={shopId}
-          />
-        </div>
-      </div>
-    </div>
+    <PanelPage title="Barbeiros">
+      <OwnerBarbersTable
+        barbers={JSON.parse(JSON.stringify(barbers))}
+        organizations={owner.organizations.map((org) => ({
+          id: org.id,
+          name: org.name,
+        }))}
+        selectedOrganizationId={shopId}
+      />
+    </PanelPage>
   )
 }

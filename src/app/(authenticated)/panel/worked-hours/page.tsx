@@ -1,3 +1,4 @@
+import { PanelPage } from "@/src/app/(authenticated)/panel/_components/panel-page"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { redirect } from "next/navigation"
 import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
@@ -58,20 +59,18 @@ export default async function OwnerHorariosPage({
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <OwnerBarbershopHoursClient
-          key={organization.id}
-          organizationId={organization.id}
-          organizations={owner.organizations.map((org) => ({
-            id: org.id,
-            name: org.name,
-          }))}
-          initialSchedules={organization.schedules}
-          initialBreaks={organization.breaks}
-          initialBlockedSlots={organization.blockedSlots}
-        />
-      </div>
-    </div>
+    <PanelPage title="Horários" contentClassName="py-0 md:py-0">
+      <OwnerBarbershopHoursClient
+        key={organization.id}
+        organizationId={organization.id}
+        organizations={owner.organizations.map((org) => ({
+          id: org.id,
+          name: org.name,
+        }))}
+        initialSchedules={organization.schedules}
+        initialBreaks={organization.breaks}
+        initialBlockedSlots={organization.blockedSlots}
+      />
+    </PanelPage>
   )
 }

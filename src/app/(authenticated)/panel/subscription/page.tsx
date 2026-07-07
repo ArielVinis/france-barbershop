@@ -1,3 +1,4 @@
+import { PanelPage } from "@/src/app/(authenticated)/panel/_components/panel-page"
 import { getCurrentUser } from "@/src/server/auth/users"
 import { getBarberMemberForUser } from "@/src/shared/guards"
 import { getOwnerByUserId } from "@/src/features/organization/organization.actions"
@@ -52,7 +53,11 @@ export default async function OwnerSubscriptionPage({
       barber.organizationId,
     )
 
-    return <BarberSubscriptionPanel />
+    return (
+      <PanelPage title="Assinatura">
+        <BarberSubscriptionPanel />
+      </PanelPage>
+    )
   }
 
   const owner = await getOwnerByUserId(user.id)
@@ -72,89 +77,87 @@ export default async function OwnerSubscriptionPage({
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="grid gap-4 p-4 md:grid-cols-2 md:gap-6 md:p-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Minha assinatura</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>
-                <strong>Plano:</strong>{" "}
-                {isPaid ? (price?.nickname ?? "Plano Pro") : "-"}
-              </p>
-              <p>
-                <strong>Status:</strong>{" "}
-                {subscription
-                  ? translateSubscriptionStatus(subscription.status)
-                  : "Sem assinatura"}
-              </p>
-              <p>
-                <strong>Próxima cobrança:</strong>{" "}
-                {formatDate(item?.current_period_end ?? null)}
-              </p>
-              <p>
-                <strong>Valor:</strong>{" "}
-                {formatCurrency(price?.unit_amount, price?.currency)}
-              </p>
-              <p>
-                <strong>Ciclo:</strong>{" "}
-                {price?.recurring?.interval
-                  ? translateSubscriptionInterval(price.recurring.interval)
-                  : "-"}
-              </p>
-            </CardContent>
-          </Card>
+    <PanelPage title="Assinatura">
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Minha assinatura</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <p>
+              <strong>Plano:</strong>{" "}
+              {isPaid ? (price?.nickname ?? "Plano Pro") : "-"}
+            </p>
+            <p>
+              <strong>Status:</strong>{" "}
+              {subscription
+                ? translateSubscriptionStatus(subscription.status)
+                : "Sem assinatura"}
+            </p>
+            <p>
+              <strong>Próxima cobrança:</strong>{" "}
+              {formatDate(item?.current_period_end ?? null)}
+            </p>
+            <p>
+              <strong>Valor:</strong>{" "}
+              {formatCurrency(price?.unit_amount, price?.currency)}
+            </p>
+            <p>
+              <strong>Ciclo:</strong>{" "}
+              {price?.recurring?.interval
+                ? translateSubscriptionInterval(price.recurring.interval)
+                : "-"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações da assinatura</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isPaid ? (
-                <Button
-                  asChild
-                  className="w-full"
-                  type="button"
-                  variant="outline"
-                  disabled={!customerPortalUrl}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ações da assinatura</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isPaid ? (
+              <Button
+                asChild
+                className="w-full"
+                type="button"
+                variant="outline"
+                disabled={!customerPortalUrl}
+              >
+                <a
+                  href={customerPortalUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
                 >
-                  <a
-                    href={customerPortalUrl}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    Atualizar método de pagamento
-                  </a>
+                  Atualizar método de pagamento
+                </a>
+              </Button>
+            ) : (
+              <Checkout>
+                <Button className="w-full" type="button" variant="secondary">
+                  Assinar agora
                 </Button>
-              ) : (
-                <Checkout>
-                  <Button className="w-full" type="button" variant="secondary">
-                    Assinar agora
-                  </Button>
-                </Checkout>
-              )}
+              </Checkout>
+            )}
 
-              <form action={handleCancelSubscription}>
-                <input
-                  type="hidden"
-                  name="subscriptionId"
-                  value={subscription?.id ?? ""}
-                />
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  type="submit"
-                  disabled={!subscription || !isPaid}
-                >
-                  Cancelar assinatura
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+            <form action={handleCancelSubscription}>
+              <input
+                type="hidden"
+                name="subscriptionId"
+                value={subscription?.id ?? ""}
+              />
+              <Button
+                variant="destructive"
+                className="w-full"
+                type="submit"
+                disabled={!subscription || !isPaid}
+              >
+                Cancelar assinatura
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </PanelPage>
   )
 }

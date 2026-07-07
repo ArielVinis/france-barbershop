@@ -30,27 +30,23 @@ export async function BarberSubscriptionPanel() {
   })
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-6">
-        <Card className="max-w-lg">
-          <CardHeader>
-            <CardTitle>Assinatura inativa</CardTitle>
-            {shop?.name ? (
-              <CardDescription>Barbearia: {shop.name}</CardDescription>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <p>
-              O pagamento do plano desta barbearia está expirado ou inativo.
-              Após o dono regularizar a assinatura, você voltará a ter acesso ao
-              painel de gestão.
-            </p>
-            <Button asChild variant="outline">
-              <Link href={PATHS.PANEL.ROOT}>Voltar ao início do painel</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <Card className="max-w-lg">
+      <CardHeader>
+        <CardTitle>Assinatura inativa</CardTitle>
+        {shop?.name ? (
+          <CardDescription>Barbearia: {shop.name}</CardDescription>
+        ) : null}
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm text-muted-foreground">
+        <p>
+          O pagamento do plano desta barbearia está expirado ou inativo. Após o
+          dono regularizar a assinatura, você voltará a ter acesso ao painel de
+          gestão.
+        </p>
+        <Button asChild variant="outline">
+          <Link href={PATHS.PANEL.ROOT}>Voltar ao início do painel</Link>
+        </Button>
+      </CardContent>
+    </Card>
   )
 }

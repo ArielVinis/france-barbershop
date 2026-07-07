@@ -103,22 +103,14 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
       date,
     })
 
-    return (
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <DashboardContent
-              viewerRole={Role.OWNER}
-              stats={mapDashboardStats(dashboard.stats)}
-              periodLabel={periodLabel}
-              chartRevenue={dashboard.chartRevenue}
-              chartBookings={dashboard.chartBookings}
-              chartDistribution={dashboard.chartDistribution}
-            />
-          </div>
-        </div>
-      </div>
-    )
+    return <DashboardContent
+      viewerRole={Role.OWNER}
+      stats={mapDashboardStats(dashboard.stats)}
+      periodLabel={periodLabel}
+      chartRevenue={dashboard.chartRevenue}
+      chartBookings={dashboard.chartBookings}
+      chartDistribution={dashboard.chartDistribution}
+    />
   }
 
   if (user.role === Role.MEMBER) {
@@ -148,22 +140,14 @@ export async function PanelDashboardSection({ user, searchParams }: Props) {
 
     const dashboard = await getBarberDashboardBundle(scope, { period, date })
 
-    return (
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <DashboardContent
-              viewerRole={Role.MEMBER}
-              stats={mapDashboardStats(dashboard.stats)}
-              periodLabel={periodLabel}
-              chartRevenue={dashboard.chartRevenue}
-              chartBookings={dashboard.chartBookings}
-              chartDistribution={dashboard.chartDistribution}
-            />
-          </div>
-        </div>
-      </div>
-    )
+    return <DashboardContent
+      viewerRole={Role.MEMBER}
+      stats={mapDashboardStats(dashboard.stats)}
+      periodLabel={periodLabel}
+      chartRevenue={dashboard.chartRevenue}
+      chartBookings={dashboard.chartBookings}
+      chartDistribution={dashboard.chartDistribution}
+    />
   }
 
   return null
