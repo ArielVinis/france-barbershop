@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { Toaster } from "sonner"
-import Footer from "../components/layout/footer"
 
 export const metadata: Metadata = {
   title: "France Barber",
@@ -17,10 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body>
-        <div className="flex h-full flex-col">
-          <div className="flex-1">{children}</div>
-          <Footer />
-        </div>
+        {children}
         <Toaster />
       </body>
     </html>
