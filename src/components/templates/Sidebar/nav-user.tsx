@@ -1,6 +1,6 @@
 "use client"
 
-import { CreditCard, LogOutIcon, MoreVerticalIcon } from "lucide-react"
+import { CreditCard, LogOutIcon, MoreVerticalIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
 
 import { signOut } from "@/src/shared/lib/auth-client"
@@ -81,6 +81,12 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href={PATHS.PANEL.PROFILE}>
+                <UserIcon />
+                Perfil
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={PATHS.PANEL.SUBSCRIPTION}>
                 <CreditCard />

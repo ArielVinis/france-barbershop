@@ -190,12 +190,12 @@ Domínios só de leitura (`public`, `dashboard`) usam `service` + `repository`; 
 
 Helpers internos em `_lib/` (exemplos):
 
-| Domínio | Ficheiro | Uso |
-| ------- | -------- | --- |
-| `dashboard/` | `_lib/dashboard-aggregates.ts` | Agregações em memória a partir de um bundle de queries |
-| `public/` | `_lib/serialize-barbershop-page.ts` | Serialização plana para página pública e cache |
-| `schedule/` | `_lib/schedule-bookings-range.ts` | Intervalos unificados para agenda (tabela + calendário) |
-| `booking/` | `_lib/booking-conflict.ts` | Validação de conflitos de horário |
+| Domínio      | Ficheiro                            | Uso                                                     |
+| ------------ | ----------------------------------- | ------------------------------------------------------- |
+| `dashboard/` | `_lib/dashboard-aggregates.ts`      | Agregações em memória a partir de um bundle de queries  |
+| `public/`    | `_lib/serialize-barbershop-page.ts` | Serialização plana para página pública e cache          |
+| `schedule/`  | `_lib/schedule-bookings-range.ts`   | Intervalos unificados para agenda (tabela + calendário) |
+| `booking/`   | `_lib/booking-conflict.ts`          | Validação de conflitos de horário                       |
 
 ### Server Components → Client Components
 
@@ -207,12 +207,12 @@ Tipos Prisma (`Decimal`, `Date`) **não** podem ser passados directamente a Clie
 
 ### Cache (`unstable_cache`)
 
-| Tag | Invalidação |
-| --- | ----------- |
-| `org-slug-{slug}` | Página pública `/[slug]` |
-| `org-id-{organizationId}` | Dados da organização |
-| `dashboard-{organizationId}` | Dashboard do painel |
-| `org-list` | Listas públicas (recomendados, populares, busca em `/` e `/barbershops`) |
+| Tag                          | Invalidação                                                              |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| `org-slug-{slug}`            | Página pública `/[slug]`                                                 |
+| `org-id-{organizationId}`    | Dados da organização                                                     |
+| `dashboard-{organizationId}` | Dashboard do painel                                                      |
+| `org-list`                   | Listas públicas (recomendados, populares, busca em `/` e `/barbershops`) |
 
 Invalidação centralizada em `shared/lib/invalidate-organization-cache.ts`, chamada após mutações de booking, horários, serviços, etc. As chamadas a `revalidateTag` usam o perfil `"max"` (Next.js 16: revalidação _stale-while-revalidate_).
 
@@ -418,38 +418,41 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 ### Média prioridade
 
-- [ ] Sistema de avaliações
-  - [ ] Exibir avaliações na página pública da barbearia
-- [ ] Perfil do barbeiro (bio, foto, serviços que realiza)
+- [x] Perfil do cliente (nome, foto, e-mail, telefone)
+- [x] Editar proprio perfil no painel (nome, foto, e-mail, telefone)
 - [ ] Notificações por e-mail/SMS e lembretes de agendamento
 - [ ] Bloqueios de horário por barbeiro (hoje bloqueios são da organização)
 
 ### Baixa prioridade
 
-- [ ] Alterar o calendario para o "FullCalendar"
 - [ ] Melhorias de UX (skeletons em mais telas, animações, responsividade)
 - [ ] Ampliar cobertura de testes (unit, integração, E2E)
 - [ ] CI/CD e deploy em produção
 - [ ] Documentação de componentes e guia de contribuição
 
+### Em standby
+
+- [ ] Sistema de avaliações
+  - [ ] Exibir avaliações na página pública da barbearia
+
 ## Estrutura do Banco de Dados
 
 ### Modelos principais
 
-| Modelo                                 | Descrição                                                 |
-| -------------------------------------- | --------------------------------------------------------- |
-| `User`                                 | Usuários do sistema                                       |
-| `Session` / `Account` / `Verification` | Sessões e credenciais (Better Auth)                       |
-| `Organization`                         | Barbearia (tenant): nome, slug, endereço, telefones       |
-| `Member`                               | Vínculo usuário ↔ organização (barbeiro, gestor ou dono)  |
-| `Team` / `TeamMember`                  | Times dentro da organização                               |
-| `Invitation`                           | Convites pendentes para a organização                     |
-| `OrganizationService`                  | Serviços oferecidos                                       |
+| Modelo                                 | Descrição                                                                                                                     |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `User`                                 | Usuários do sistema                                                                                                           |
+| `Session` / `Account` / `Verification` | Sessões e credenciais (Better Auth)                                                                                           |
+| `Organization`                         | Barbearia (tenant): nome, slug, endereço, telefones                                                                           |
+| `Member`                               | Vínculo usuário ↔ organização (barbeiro, gestor ou dono)                                                                      |
+| `Team` / `TeamMember`                  | Times dentro da organização                                                                                                   |
+| `Invitation`                           | Convites pendentes para a organização                                                                                         |
+| `OrganizationService`                  | Serviços oferecidos                                                                                                           |
 | `Booking`                              | Agendamentos (cliente, serviço, barbeiro). Índices: `(memberId, date, status)`, `(serviceId, date)`, `(userId, date, status)` |
-| `OrganizationSchedule`                 | Horário de funcionamento por dia da semana                |
-| `OrganizationBreak`                    | Pausas recorrentes (ex.: almoço)                          |
-| `OrganizationBlockedSlot`              | Bloqueios por período (feriados, férias)                  |
-| `Rating`                               | Avaliações da organização (schema presente; sem UI ainda) |
+| `OrganizationSchedule`                 | Horário de funcionamento por dia da semana                                                                                    |
+| `OrganizationBreak`                    | Pausas recorrentes (ex.: almoço)                                                                                              |
+| `OrganizationBlockedSlot`              | Bloqueios por período (feriados, férias)                                                                                      |
+| `Rating`                               | Avaliações da organização (schema presente; sem UI ainda)                                                                     |
 
 ### Relacionamentos
 

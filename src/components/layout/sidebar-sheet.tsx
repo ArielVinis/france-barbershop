@@ -56,18 +56,23 @@ const SidebarSheet = () => {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex items-center justify-between gap-3 border-b border-solid py-5">
+        <div className="border-b border-solid py-5">
           {data?.user ? (
-            <div className="flex items-center gap-2">
-              <Avatar>
-                <AvatarImage src={data?.user?.image ?? ""} />
-              </Avatar>
+            <SheetClose asChild>
+              <Link
+                href={PATHS.PROFILE.ROOT}
+                className="flex w-full items-center gap-2 rounded-md text-left transition-colors hover:bg-muted"
+              >
+                <Avatar>
+                  <AvatarImage src={data?.user?.image ?? ""} />
+                </Avatar>
 
-              <div>
-                <p className="font-bold">{data?.user.name}</p>
-                <p className="text-xs">{data?.user.email}</p>
-              </div>
-            </div>
+                <div>
+                  <p className="font-bold">{data?.user.name}</p>
+                  <p className="text-xs">{data?.user.email}</p>
+                </div>
+              </Link>
+            </SheetClose>
           ) : (
             <>
               <h2 className="font-bold">Olá, faça seu login!</h2>
