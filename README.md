@@ -24,7 +24,7 @@ Plataforma multi-tenant onde cada barbearia é uma **Organization** (plugin orga
 
 | Papel       | Descrição                                                                                          |
 | ----------- | -------------------------------------------------------------------------------------------------- |
-| **CLIENT**  | Cliente final: navega barbearias, agenda serviços e acompanha reservas em `/bookings`.             |
+| **CLIENT**  | Cliente final: navega barbearias, agenda serviços, acompanha reservas em `/bookings` e edita o perfil em `/profile`. |
 | **MEMBER**  | Barbeiro: acessa o painel com dashboard, agendamentos e gestão de atendimentos.                    |
 | **MANAGER** | Gestor da barbearia: painel com permissões de gestão (barbeiros, serviços, horários, organização). |
 | **OWNER**   | Dono da barbearia: gestão completa + assinatura Stripe da plataforma.                              |
@@ -42,6 +42,7 @@ Plataforma multi-tenant onde cada barbearia é uma **Organization** (plugin orga
 | ORM                   | Prisma 7                                  |
 | Banco                 | PostgreSQL                                |
 | UI                    | Tailwind CSS, shadcn/ui, next-themes      |
+| Imagens (perfil)      | sharp (compressão WebP no upload)         |
 | Formulários           | react-hook-form + Zod                     |
 | Pagamentos            | Stripe (Checkout + Customer Portal)       |
 | E-mail                | Resend + React Email                      |
@@ -59,6 +60,7 @@ flowchart TB
     Lista["/barbershops"]
     Slug["/[slug]"]
     Bookings["/bookings"]
+    Profile["/profile"]
   end
 
   subgraph auth [Autenticação]
@@ -69,6 +71,7 @@ flowchart TB
 
   subgraph panel [Painel /panel]
     Dashboard["/panel"]
+    ProfilePanel["/panel/profile"]
     Schedule["/panel/schedule"]
     Org["/panel/organization"]
     Barbers["/panel/barbers"]
@@ -109,24 +112,29 @@ flowchart TB
 src/
 ├── proxy.ts                         # Proteção de rotas do painel (/panel/*)
 ├── app/
-│   ├── page.tsx                     # Home → /
+│   ├── layout.tsx                   # Layout raiz (Toaster)
 │   ├── (authenticated)/
 │   │   ├── panel/                   # Painel interno (owner, manager, barbeiro)
 │   │   │   ├── page.tsx             # Dashboard → /panel
+│   │   │   ├── profile/             # Perfil do utilizador → /panel/profile
 │   │   │   ├── schedule/            # Agendamentos → /panel/schedule
 │   │   │   ├── organization/        # Gestão de org → /panel/organization
 │   │   │   ├── barbers/             # Barbeiros → /panel/barbers
 │   │   │   ├── services/            # Serviços → /panel/services
 │   │   │   ├── worked-hours/        # Horários → /panel/worked-hours
 │   │   │   ├── subscription/        # Assinatura Stripe → /panel/subscription
-│   │   │   ├── _components/         # Componentes partilhados do painel
+│   │   │   ├── _components/         # PanelPage, dashboard, welcome toast
 │   │   │   ├── dashboard/used/      # Gráficos e tabelas do dashboard
-│   │   │   └── layout.tsx           # Sidebar + header por papel
+│   │   │   └── layout.tsx           # Sidebar por papel (scroll contido na viewport)
 │   │   └── dev/                     # Ferramentas de dev (NODE_ENV=development)
 │   │       └── page.tsx             # /dev — vincular usuário como OWNER
 │   ├── (public)/
-│   │   ├── auth/                    # login, signup, forgot/reset password
-│   │   ├── (main)/                  # barbershops, bookings, [slug]
+│   │   ├── (site)/                  # Header + Footer: home, barbershops, bookings, profile
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx             # Home → /
+│   │   ├── [slug]/                  # Página da barbearia (layout próprio, sem Header global)
+│   │   ├── auth/                    # login, signup, forgot/reset (layout partilhado)
+│   │   │   └── layout.tsx
 │   │   ├── not-authenticated/       # Falha de convite / sessão
 │   │   └── not-authorized/          # Papel sem acesso (ex.: CLIENT no painel)
 │   ├── (stripe)/                    # checkout e payment-confirmation
@@ -134,17 +142,20 @@ src/
 │       ├── auth/[...nextauth]/      # Handler Better Auth (nome de rota legado)
 │       ├── accept-invitation/[invitationId]/
 │       └── stripe/webhook/
-├── components/                      # UI, auth, layout, templates
-├── features/                        # Domínios (repository / service / actions)
-│   ├── booking/                     # Agendamentos (cliente, barbeiro, owner)
-│   ├── dashboard/                   # Stats e gráficos do painel
-│   ├── dev/                         # Actions de desenvolvimento
-│   ├── member/                      # Barbeiros e membros da org
-│   ├── organization/                # Organizações e contexto do owner
-│   ├── public/                      # Listagem e páginas públicas
-│   ├── schedule/                    # Horários, pausas e bloqueios
-│   ├── service/                     # Serviços da barbearia
-│   └── subscription/                # Assinatura Stripe e acesso ao plano
+├── components/
+│   ├── profile/                     # ProfileForm (partilhado entre /profile e /panel/profile)
+│   └── …                            # UI, auth, layout, templates
+├── features/
+│   ├── booking/
+│   ├── dashboard/
+│   ├── dev/
+│   ├── member/
+│   ├── organization/
+│   ├── public/
+│   ├── schedule/
+│   ├── service/
+│   ├── subscription/
+│   └── user/                        # Perfil: upload de avatar, telefone, troca de e-mail
 ├── resources/                       # Itens da sidebar do painel
 ├── server/                          # Auth HTTP (users, permissions)
 └── shared/                          # Código transversal
@@ -235,9 +246,11 @@ Agendamentos são gravados como instantes UTC, mas as regras de negócio (horár
 | `/barbershops`        | Listagem e busca de barbearias                                    |
 | `/[slug]`             | Página pública da barbearia (serviços, horários, agendamento)     |
 | `/bookings`           | Agendamentos do cliente autenticado                               |
+| `/profile`            | Perfil do cliente (nome, foto, telefone, troca de e-mail)         |
 | `/auth/login`         | Login (e-mail/senha ou Google)                                    |
 | `/auth/signup`        | Cadastro com verificação de e-mail                                |
 | `/panel`              | Dashboard do painel (cards e gráficos por papel)                  |
+| `/panel/profile`      | Perfil do utilizador (mesmo formulário de `/profile`)             |
 | `/panel/schedule`     | Agenda: tabela + calendário (owner) ou atendimentos (barbeiro)    |
 | `/panel/organization` | Gestão da organização e membros                                   |
 | `/panel/barbers`      | CRUD de barbeiros, ativar/desativar, ver agenda individual        |
@@ -246,13 +259,24 @@ Agendamentos são gravados como instantes UTC, mas as regras de negócio (horár
 | `/panel/subscription` | Assinatura Stripe (dono) ou bloqueio por plano inativo (barbeiro) |
 | `/dev`                | Em desenvolvimento: vincular usuário logado como OWNER            |
 
+### Layouts (App Router)
+
+| Grupo / ficheiro | O que envolve |
+| ---------------- | ------------- |
+| `app/layout.tsx` | HTML, body, Toaster |
+| `(public)/(site)/layout.tsx` | Header + Footer nas páginas públicas com navegação global |
+| `(public)/auth/layout.tsx` | Shell partilhado das páginas de autenticação |
+| `(public)/[slug]/` | Sem Header/Footer globais (hero próprio da barbearia) |
+| `(authenticated)/panel/layout.tsx` | Sidebar + área principal com scroll contido na viewport |
+| `panel/_components/panel-page.tsx` | `SiteHeader` + conteúdo com scroll por página |
+
 ### Sidebar do painel (por papel)
 
 Definida em `src/resources/sidebar-items.ts` (itens principais) e `nav-user.tsx` (menu do utilizador):
 
 - **MEMBER** (barbeiro): Dashboard, Agendamentos
 - **OWNER / MANAGER**: Dashboard, Agendamentos, Organização, Barbeiros, Serviços, Horários de trabalho
-- **Assinatura** (`/panel/subscription`): link no menu do utilizador (dropdown no rodapé da sidebar), não nos itens principais
+- **Assinatura** (`/panel/subscription`) e **Perfil** (`/panel/profile`): links no menu do utilizador (dropdown no rodapé da sidebar), não nos itens principais
 
 ## Como Rodar
 
@@ -372,18 +396,20 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] Página pública da barbearia em `/[slug]`
 - [x] Seleção de barbeiro e agendamento de serviços
 - [x] Agendamentos confirmados e concluídos em `/bookings`
+- [x] Perfil em `/profile` (nome, telefone, upload de foto com compressão WebP, troca de e-mail com verificação)
 - [x] Cancelamento de agendamentos
 - [x] Autenticação (e-mail/senha, Google, verificação de e-mail, reset de senha)
 
 ### Barbeiro (MEMBER)
 
-- [x] Painel unificado em `/panel` com sidebar
+- [x] Painel unificado em `/panel` com sidebar e scroll contido na viewport
 - [x] Dashboard com estatísticas
 - [x] Agendamentos em `/panel/schedule` (lista do dia/semana/mês)
 - [x] Iniciar, finalizar, cancelar e marcar não comparecimento
 - [x] Registrar método de pagamento ao finalizar
 - [x] Observações nos atendimentos
 - [x] Bloqueio de acesso quando a barbearia não tem assinatura ativa
+- [x] Perfil em `/panel/profile` (formulário partilhado com a área pública)
 
 ### Dono / Gestor (OWNER / MANAGER)
 
@@ -394,6 +420,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] Horários de funcionamento, pausas e bloqueios (feriados/dias especiais)
 - [x] Gestão de organização e membros (convites)
 - [x] Assinatura Stripe: plano, status, portal de pagamento, cancelamento
+- [x] Perfil em `/panel/profile` (formulário partilhado com a área pública)
 
 ### Sistema base
 
@@ -406,6 +433,8 @@ Acesse [http://localhost:3000](http://localhost:3000).
 - [x] git-commit-msg-linter (validação de mensagens de commit)
 - [x] Otimização de queries e cache (dashboard bundle, índices em `Booking`, agenda unificada, páginas e listas públicas com `unstable_cache`)
 - [x] Regras de agendamento com fuso horário fixo (`America/Sao_Paulo`) consistente entre dev e produção
+- [x] Layouts por grupo de rotas (`(site)`, `auth`, painel com `PanelPage`)
+- [x] Upload de avatar em `public/uploads/avatars/` (ignorado no git; em produção multi-instância considerar storage externo)
 
 ## Roadmap
 
@@ -419,7 +448,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 ### Média prioridade
 
 - [x] Perfil do cliente (nome, foto, e-mail, telefone)
-- [x] Editar proprio perfil no painel (nome, foto, e-mail, telefone)
+- [x] Editar próprio perfil no painel (mesma página `/panel/profile` e `ProfileForm` partilhado)
 - [ ] Notificações por e-mail/SMS e lembretes de agendamento
 - [ ] Bloqueios de horário por barbeiro (hoje bloqueios são da organização)
 
