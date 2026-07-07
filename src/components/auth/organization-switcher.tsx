@@ -45,7 +45,7 @@ export function OrganizationSwitcher({
       onValueChange={handleChangeOrganization}
       defaultValue={activeOrganization?.name}
     >
-      <SelectTrigger>
+      <SelectTrigger className="max-w-sm">
         <SelectValue placeholder="Barbearias" />
       </SelectTrigger>
       <SelectContent>
