@@ -89,7 +89,7 @@ export function ResetPasswordForm({
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nova senha</FormLabel>
+                  <FormLabel>Nova senha *</FormLabel>
                   <FormControl>
                     <Input
                       id="newPassword"
@@ -110,7 +110,7 @@ export function ResetPasswordForm({
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirmar senha</FormLabel>
+                  <FormLabel>Confirmar senha *</FormLabel>
                   <FormControl>
                     <Input
                       id="confirmPassword"
@@ -128,11 +128,8 @@ export function ResetPasswordForm({
         </div>
         <div className="grid gap-2">
           <Button type="submit" disabled={isPending}>
-            {isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              "Redefinir senha"
-            )}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Redefinir senha
           </Button>
         </div>
         <div className="text-center text-sm">

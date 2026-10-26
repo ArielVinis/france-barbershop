@@ -22,8 +22,8 @@ import { useRouter } from "next/navigation"
 import { useTransition, useEffect, useSyncExternalStore } from "react"
 import { Loader2 } from "lucide-react"
 import { authClient } from "@/src/shared/lib/auth-client"
-import Image from "next/image"
 import { Badge } from "../ui/badge"
+import { GoogleIcon } from "./google-icon"
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -41,11 +41,12 @@ export function LoginForm({
 }) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
-  const lastMethod = useSyncExternalStore(
+  const mounted = useSyncExternalStore(
     () => () => {},
-    () => authClient.getLastUsedLoginMethod(),
-    () => null,
+    () => true,
+    () => false,
   )
+  const lastMethod = mounted ? authClient.getLastUsedLoginMethod() : null
   const redirectTo = callbackUrl ?? PATHS.PANEL.ROOT
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export function LoginForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="relative">
-                    Endereço de e-mail
+                    Endereço de e-mail *
                     {lastMethod === "email" && (
                       <Badge
                         variant="secondary"
@@ -132,7 +133,7 @@ export function LoginForm({
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Senha</FormLabel>
+                  <FormLabel>Senha *</FormLabel>
                   <FormControl>
                     <Input
                       id="password"
@@ -153,7 +154,8 @@ export function LoginForm({
             </Link>
           </div>
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : "Login"}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Login
           </Button>
           <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -166,12 +168,7 @@ export function LoginForm({
             type="button"
             onClick={signInWithGoogle}
           >
-            <Image
-              alt="Fazer login com o Google"
-              src="/google.svg"
-              width={18}
-              height={18}
-            />
+            <GoogleIcon className="size-4" />
             Login com Google
             {lastMethod === "google" && (
               <Badge

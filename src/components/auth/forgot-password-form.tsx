@@ -76,7 +76,7 @@ export function ForgotPasswordForm({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Endereço de e-mail</FormLabel>
+                  <FormLabel>Endereço de e-mail *</FormLabel>
                   <FormControl>
                     <Input
                       id="email"
@@ -98,11 +98,8 @@ export function ForgotPasswordForm({
         </div>
         <div className="grid gap-2">
           <Button type="submit" disabled={isPending}>
-            {isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              "Enviar link de redefinição"
-            )}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Enviar link de redefinição
           </Button>
         </div>
         <div className="text-center text-sm">

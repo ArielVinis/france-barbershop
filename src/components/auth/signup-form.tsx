@@ -22,7 +22,7 @@ import { useTransition } from "react"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/src/shared/lib/auth-client"
-import Image from "next/image"
+import { GoogleIcon } from "./google-icon"
 
 const formSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").trim(),
@@ -102,7 +102,7 @@ export function SignupForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome Completo</FormLabel>
+                  <FormLabel>Nome Completo *</FormLabel>
                   <FormControl>
                     <Input
                       id="name"
@@ -124,7 +124,7 @@ export function SignupForm({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Endereço de e-mail</FormLabel>
+                <FormLabel>Endereço de e-mail *</FormLabel>
                 <FormControl>
                   <Input
                     id="email"
@@ -148,7 +148,7 @@ export function SignupForm({
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Senha</FormLabel>
+                <FormLabel>Senha *</FormLabel>
                 <FormControl>
                   <Input
                     id="password"
@@ -169,7 +169,7 @@ export function SignupForm({
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirmar Senha</FormLabel>
+                <FormLabel>Confirmar Senha *</FormLabel>
                 <FormControl>
                   <Input
                     id="confirmPassword"
@@ -186,11 +186,8 @@ export function SignupForm({
         </div>
         <div className="grid gap-2">
           <Button type="submit" disabled={isPending}>
-            {isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              "Criar Conta"
-            )}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Criar Conta
           </Button>
         </div>
         <div className="grid gap-2">
@@ -198,12 +195,7 @@ export function SignupForm({
         </div>
         <div className="grid gap-2">
           <Button variant="outline" type="button" onClick={signUpWithGoogle}>
-            <Image
-              alt="Fazer login com o Google"
-              src="/google.svg"
-              width={18}
-              height={18}
-            />
+            <GoogleIcon className="size-4" />
             Criar conta com Google
           </Button>
           <p className="text-center text-sm">
