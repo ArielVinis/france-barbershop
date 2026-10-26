@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
+import { ThemeProvider } from "next-themes"
+import { Toaster } from "@/src/components/ui/sonner"
 import "./globals.css"
-import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
   title: "France Barber",
@@ -14,10 +15,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body>
-        {children}
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
