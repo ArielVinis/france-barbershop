@@ -1,109 +1,87 @@
 "use client"
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select"
-import { Label } from "@/src/components/ui/label"
-import { ORGANIZATION_QUERY_PARAM } from "@/src/shared/guards/panel/organization-query"
+import { Button } from "@/src/components/ui/button"
+import { EntityMultiCombobox } from "@/src/components/entity-multi-combobox"
+import { BOOKING_STATUS_OPTIONS } from "@/src/features/booking/booking.types"
 
-export type PeriodValue = "day" | "week" | "month"
-
-const PERIOD_OPTIONS: { value: PeriodValue; label: string }[] = [
-  { value: "day", label: "Hoje" },
-  { value: "week", label: "Esta semana" },
-  { value: "month", label: "Este mês" },
-]
-
-type BarberOption = { id: string; name: string; organizationId: string }
-
-type ScheduleFiltersProps = {
-  barbers: BarberOption[]
-  /** Barbeiro logado: só período (sem filtro de loja/barbeiro). */
-  variant?: "owner" | "barber"
-}
+type BarberOption = { id: string; name: string }
 
 export function ScheduleFilters({
   barbers,
+  defaultMemberId,
   variant = "owner",
-}: ScheduleFiltersProps) {
+}: {
+  barbers: BarberOption[]
+  defaultMemberId?: string
+  variant?: "owner" | "barber"
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const period = (searchParams.get("period") as PeriodValue) ?? "week"
-  const shopId = searchParams.get(ORGANIZATION_QUERY_PARAM) ?? "all"
-  const barberId = searchParams.get("barber") ?? "all"
+  const barberFilter = (searchParams.get("barber") ?? "")
+    .split(",")
+    .filter(Boolean)
+  const statusFilter = (searchParams.get("status") ?? "")
+    .split(",")
+    .filter(Boolean)
+  const onlyMe =
+    Boolean(defaultMemberId) &&
+    barberFilter.length === 1 &&
+    barberFilter[0] === defaultMemberId
 
-  const setParams = (updates: {
-    period?: string
-    barber?: string
-    viewDate?: string
-  }) => {
+  function setParams(updates: Record<string, string | null>) {
     const next = new URLSearchParams(searchParams.toString())
-    if (updates.period != null) next.set("period", updates.period)
-    if (updates.barber != null) {
-      if (updates.barber === "all") next.delete("barber")
-      else next.set("barber", updates.barber)
+    for (const [key, value] of Object.entries(updates)) {
+      if (value == null || value === "") next.delete(key)
+      else next.set(key, value)
     }
-    if (updates.viewDate != null) next.set("viewDate", updates.viewDate)
     router.push(`${pathname}?${next.toString()}`)
   }
 
-  const barbersFiltered =
-    variant === "owner"
-      ? shopId === "all"
-        ? barbers
-        : barbers.filter((b) => b.organizationId === shopId)
-      : []
-  const barberValue =
-    variant === "owner" &&
-    barberId !== "all" &&
-    barbersFiltered.some((b) => b.id === barberId)
-      ? barberId
-      : "all"
-
   return (
-    <div className="flex flex-wrap items-end gap-4 px-4 lg:px-6">
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Período</Label>
-        <Select value={period} onValueChange={(v) => setParams({ period: v })}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PERIOD_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {variant === "owner" && (
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Barbeiro</Label>
-          <Select
-            value={barberValue}
-            onValueChange={(v) => setParams({ barber: v })}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {barbersFiltered.map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  {b.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+    <div className="flex flex-wrap items-center gap-2">
+      <EntityMultiCombobox
+        options={BOOKING_STATUS_OPTIONS.map((s) => ({
+          id: s.id,
+          name: s.label,
+        }))}
+        value={statusFilter}
+        onValueChange={(next) =>
+          setParams({ status: next.length ? next.join(",") : null })
+        }
+        placeholder="Status"
+        emptyText="Nenhum status"
+        className="w-full sm:w-44"
+        aria-label="Filtrar por status"
+      />
+      {variant === "owner" && barbers.length > 0 ? (
+        <EntityMultiCombobox
+          options={barbers}
+          value={barberFilter}
+          onValueChange={(next) =>
+            setParams({ barber: next.length ? next.join(",") : null, me: null })
+          }
+          placeholder="Barbeiros"
+          emptyText="Nenhum barbeiro"
+          className="w-full sm:w-56"
+          aria-label="Filtrar por barbeiro"
+        />
+      ) : null}
+      {variant === "owner" && defaultMemberId ? (
+        <Button
+          type="button"
+          size="sm"
+          variant={onlyMe ? "default" : "outline"}
+          onClick={() =>
+            onlyMe
+              ? setParams({ barber: null, me: null })
+              : setParams({ barber: defaultMemberId, me: "1" })
+          }
+        >
+          Só eu
+        </Button>
+      ) : null}
     </div>
   )
 }

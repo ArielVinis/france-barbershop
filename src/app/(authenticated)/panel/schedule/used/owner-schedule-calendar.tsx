@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css"
 import { PATHS } from "@/src/shared/constants/PATHS"
+import { useIsMobile } from "@/src/hooks/use-mobile"
 import { formatAppZonedDateParam } from "@/src/shared/lib/timezone-utils"
 import { rescheduleBookingOwner } from "@/src/features/booking/booking.panel.actions"
 import {
@@ -25,6 +26,7 @@ import {
   type CalendarEvent,
   type CalendarResource,
 } from "@/src/features/schedule/_lib/booking-calendar-utils"
+import { cn } from "@/src/shared/lib/utils"
 import "./owner-schedule-calendar.css"
 
 const locales = { "pt-BR": ptBR }
@@ -44,6 +46,8 @@ type OwnerScheduleCalendarProps = {
   resources?: CalendarResource[]
   /** Só o dono pode realocar via drag-drop. */
   canReschedule?: boolean
+  fillViewport?: boolean
+  onSelectEvent?: (event: CalendarEvent) => void
 }
 
 const CALENDAR_MESSAGES = {
@@ -66,10 +70,14 @@ export function OwnerScheduleCalendar({
   viewDate,
   resources = [],
   canReschedule = false,
+  fillViewport = false,
+  onSelectEvent,
 }: OwnerScheduleCalendarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const isMobile = useIsMobile()
   const [view, setView] = useState<View>(Views.DAY)
+  const displayView: View = isMobile ? Views.DAY : view
   const [isPending, startTransition] = useTransition()
   const [localEvents, setLocalEvents] = useState(events)
   const [prevEvents, setPrevEvents] = useState(events)
@@ -85,7 +93,7 @@ export function OwnerScheduleCalendar({
   )
 
   // Colunas por barbeiro só fazem sentido na vista Dia e quando há barbeiros.
-  const showResources = view === Views.DAY && resources.length > 0
+  const showResources = displayView === Views.DAY && resources.length > 0
 
   const onNavigate = useCallback(
     (newDate: Date) => {
@@ -154,7 +162,12 @@ export function OwnerScheduleCalendar({
   )
 
   return (
-    <div className="owner-schedule-calendar rounded-xl border bg-card p-3 shadow-sm lg:p-4">
+    <div
+      className={cn(
+        "owner-schedule-calendar rounded-xl border bg-card p-3 shadow-sm lg:p-4",
+        fillViewport && "flex min-h-0 flex-1 flex-col",
+      )}
+    >
       <DnDCalendar
         localizer={localizer}
         events={localEvents}
@@ -163,9 +176,15 @@ export function OwnerScheduleCalendar({
         titleAccessor="title"
         date={viewDate}
         onNavigate={onNavigate}
-        view={view}
-        onView={(v) => setView(v)}
-        views={[Views.DAY, Views.WEEK, Views.MONTH, Views.AGENDA]}
+        view={displayView}
+        onView={(v) => {
+          if (!isMobile) setView(v)
+        }}
+        views={
+          isMobile
+            ? [Views.DAY]
+            : [Views.DAY, Views.WEEK, Views.MONTH]
+        }
         step={30}
         timeslots={2}
         min={set(new Date(), { hours: 0, minutes: 0, seconds: 0 })}
@@ -173,13 +192,14 @@ export function OwnerScheduleCalendar({
         scrollToTime={set(new Date(), { hours: 8, minutes: 0, seconds: 0 })}
         popup
         culture="pt-BR"
-        style={{ height: "76dvh" }}
+        style={fillViewport ? { height: "100%" } : { height: "76dvh" }}
         resources={showResources ? resources : undefined}
         resourceIdAccessor={(r: CalendarResource) => r.id}
         resourceTitleAccessor={(r: CalendarResource) => r.title}
         eventPropGetter={eventPropGetter}
+        onSelectEvent={onSelectEvent}
         onEventDrop={moveEvent}
-        draggableAccessor={() => canReschedule && !isPending}
+        draggableAccessor={() => canReschedule && !isPending && !isMobile}
         resizable={false}
         selectable={false}
         messages={CALENDAR_MESSAGES}

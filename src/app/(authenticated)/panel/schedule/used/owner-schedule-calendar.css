@@ -12,6 +12,11 @@
   color: hsl(var(--foreground));
 }
 
+.owner-schedule-calendar.flex .rbc-calendar {
+  min-height: 0;
+  flex: 1;
+}
+
 /* ---------------------------------------------------------------- Toolbar */
 
 .owner-schedule-calendar .rbc-toolbar {

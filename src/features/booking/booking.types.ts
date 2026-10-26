@@ -53,3 +53,21 @@ export interface UpdateBookingStatusOptions {
   paymentMethod?: PaymentMethod
   paymentStatus?: PaymentStatus
 }
+
+export const BOOKING_STATUS_OPTIONS = [
+  { id: "CONFIRMED", label: "Confirmado" },
+  { id: "IN_PROGRESS", label: "Em andamento" },
+  { id: "FINISHED", label: "Finalizado" },
+  { id: "CANCELLED", label: "Cancelado" },
+  { id: "NO_SHOW", label: "Não compareceu" },
+] as const
+
+export const BOOKING_STATUS_LABEL: Record<string, string> = Object.fromEntries(
+  BOOKING_STATUS_OPTIONS.map((s) => [s.id, s.label]),
+)
+
+export type OrganizationClientOption = {
+  id: string
+  name: string
+  phone: string | null
+}

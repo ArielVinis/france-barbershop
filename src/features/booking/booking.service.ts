@@ -8,7 +8,11 @@ import {
   assertNoOrganizationScheduleConflict,
 } from "@/src/features/booking/_lib/booking-conflict"
 import { bookingRepository } from "@/src/features/booking/booking.repository"
-import type { CreateBookingInput } from "@/src/features/booking/booking.schema"
+import type {
+  CreateBookingInput,
+  CreatePanelBookingInput,
+  UpdatePanelBookingInput,
+} from "@/src/features/booking/booking.schema"
 import type {
   OwnerBookingsPeriod,
   UpdateBookingStatusOptions,
@@ -17,9 +21,9 @@ import {
   filterBookingsByPeriod,
   mergeScheduleFetchBounds,
 } from "@/src/features/schedule/_lib/schedule-bookings-range"
+import { ForbiddenError, NotFoundError } from "@/src/shared/errors/errors"
 import { resolveOwnerOrganizationIdsForQueries } from "@/src/shared/guards/panel/resolve-owner-organization-ids"
 import { requireOrganizationForOwner } from "@/src/shared/guards/require-organization-for-owner"
-import { ForbiddenError, NotFoundError } from "@/src/shared/errors/errors"
 import type { OwnerOrganizationIdList } from "@/src/shared/types/panel-data-scope"
 
 export type CreateBookingResult = {
@@ -46,7 +50,8 @@ function buildStatusUpdateData(
   } = { status }
 
   if (status === "FINISHED" && options) {
-    if (options.paymentMethod != null) data.paymentMethod = options.paymentMethod
+    if (options.paymentMethod != null)
+      data.paymentMethod = options.paymentMethod
     if (options.paymentStatus != null)
       data.paymentStatus = options.paymentStatus ?? "PAID"
   }
@@ -54,15 +59,10 @@ function buildStatusUpdateData(
   return data
 }
 
-function assertStatusTransition(
-  current: BookingStatus,
-  next: BookingStatus,
-) {
+function assertStatusTransition(current: BookingStatus, next: BookingStatus) {
   const allowed = STATUS_TRANSITIONS[current]
   if (!allowed?.includes(next)) {
-    throw new Error(
-      `Não é possível alterar de ${current} para ${next}`,
-    )
+    throw new Error(`Não é possível alterar de ${current} para ${next}`)
   }
 }
 
@@ -71,7 +71,7 @@ export const bookingService = {
     input: CreateBookingInput,
     userId: string,
   ): Promise<CreateBookingResult> {
-    const { serviceId, memberId, date } = input
+    const { serviceId, memberId, date, observations } = input
     let organizationId = ""
     let slug = ""
 
@@ -127,6 +127,7 @@ export const bookingService = {
           memberId,
           date,
           userId,
+          ...(observations ? { observations } : {}),
         },
       })
     })
@@ -153,15 +154,13 @@ export const bookingService = {
         )
       }
 
-      throw new Error("Só é possível cancelar agendamentos confirmados e futuros")
+      throw new Error(
+        "Só é possível cancelar agendamentos confirmados e futuros",
+      )
     }
   },
 
-  getBookings(params: {
-    serviceId: string
-    date: Date
-    memberId?: string
-  }) {
+  getBookings(params: { serviceId: string; date: Date; memberId?: string }) {
     return bookingRepository.findBookingsByServiceAndDate(params)
   },
 
@@ -190,11 +189,7 @@ export const bookingService = {
     return bookingRepository.findOwnerBookings(shopIds, options)
   },
 
-  getBarberBookings(
-    memberId: string,
-    period: OwnerBookingsPeriod,
-    date: Date,
-  ) {
+  getBarberBookings(memberId: string, period: OwnerBookingsPeriod, date: Date) {
     return bookingRepository.findBarberBookings(memberId, period, date)
   },
 
@@ -304,7 +299,8 @@ export const bookingService = {
     status: BookingStatus,
     options?: UpdateBookingStatusOptions,
   ) {
-    const booking = await bookingRepository.findBookingWithOrganization(bookingId)
+    const booking =
+      await bookingRepository.findBookingWithOrganization(bookingId)
     if (!booking) throw new NotFoundError("Agendamento não encontrado")
 
     try {
@@ -325,6 +321,132 @@ export const bookingService = {
       bookingId,
       buildStatusUpdateData(status, options),
     )
+  },
+
+  listOrganizationClients(organizationIds: OwnerOrganizationIdList) {
+    if (organizationIds.length === 0) return []
+    return bookingRepository.findOrganizationClients([...organizationIds])
+  },
+
+  async resolvePanelClientUserId(input: CreatePanelBookingInput) {
+    if (input.clientUserId) return input.clientUserId
+
+    const name = input.walkInName?.trim()
+    const phone = input.walkInPhone?.trim()
+    if (!name || !phone) {
+      throw new Error("Selecione um cliente ou preencha nome e telefone")
+    }
+
+    const existing = await bookingRepository.findUserByPhone(phone)
+    if (existing) return existing.id
+
+    const created = await bookingRepository.createWalkInClient(name, phone)
+    return created.id
+  },
+
+  async createBookingOwner(
+    ownerUserId: string,
+    input: CreatePanelBookingInput,
+  ): Promise<CreateBookingResult> {
+    const service = await bookingRepository.findServiceById(input.serviceId)
+    if (!service) throw new Error("Serviço não encontrado")
+    await requireOrganizationForOwner(ownerUserId, service.organizationId)
+
+    const clientUserId = await this.resolvePanelClientUserId(input)
+    return this.createBooking(
+      {
+        serviceId: input.serviceId,
+        memberId: input.memberId,
+        date: input.date,
+        observations: input.observations,
+      },
+      clientUserId,
+    )
+  },
+
+  async updateBookingOwner(
+    ownerUserId: string,
+    input: UpdatePanelBookingInput,
+  ) {
+    const booking = await bookingRepository.findBookingForReschedule(
+      input.bookingId,
+    )
+    if (!booking) throw new NotFoundError("Agendamento não encontrado")
+
+    try {
+      await requireOrganizationForOwner(
+        ownerUserId,
+        booking.service.organizationId,
+      )
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw new ForbiddenError("Você não tem acesso a este agendamento")
+      }
+      throw error
+    }
+
+    const allowedStatuses = ["CONFIRMED", "IN_PROGRESS"] as const
+    if (
+      !allowedStatuses.includes(
+        booking.status as (typeof allowedStatuses)[number],
+      )
+    ) {
+      throw new Error(
+        "Só é possível editar agendamentos confirmados ou em andamento",
+      )
+    }
+
+    const service =
+      input.serviceId === booking.service.id
+        ? booking.service
+        : await bookingRepository.findServiceById(input.serviceId)
+    if (!service) throw new Error("Serviço não encontrado")
+    if (service.organizationId !== booking.service.organizationId) {
+      throw new ForbiddenError("Serviço não pertence a esta barbearia")
+    }
+
+    const barber = await bookingRepository.findBarberMember(input.memberId)
+    if (!barber) throw new NotFoundError("Barbeiro não encontrado")
+    if (barber.organizationId !== booking.service.organizationId) {
+      throw new ForbiddenError(
+        "Você não tem acesso ao barbeiro informado para este agendamento",
+      )
+    }
+
+    await bookingRepository.transaction(async (tx) => {
+      await assertNoOrganizationScheduleConflict(
+        tx,
+        booking.service.organizationId,
+        input.date,
+        service.durationMinutes,
+      )
+
+      await assertNoBarberBookingConflict(
+        tx,
+        input.memberId,
+        input.date,
+        service.durationMinutes,
+        input.bookingId,
+      )
+
+      const result = await tx.booking.updateMany({
+        where: {
+          id: input.bookingId,
+          status: { in: [...allowedStatuses] },
+          service: { organizationId: booking.service.organizationId },
+        },
+        data: {
+          date: input.date,
+          memberId: input.memberId,
+          serviceId: input.serviceId,
+          observations: input.observations ?? null,
+        },
+      })
+
+      if (result.count === 0) {
+        throw new Error("Não foi possível atualizar este agendamento")
+      }
+    })
   },
 
   async rescheduleBookingOwner(

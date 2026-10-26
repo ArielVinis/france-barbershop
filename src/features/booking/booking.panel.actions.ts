@@ -1,7 +1,12 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import type { BookingStatus } from "@/prisma/generated/prisma/client"
+import {
+  CreatePanelBookingSchema,
+  UpdatePanelBookingSchema,
+  type CreatePanelBookingInput,
+  type UpdatePanelBookingInput,
+} from "@/src/features/booking/booking.schema"
 import { bookingService } from "@/src/features/booking/booking.service"
 import type {
   OwnerBookingsPeriod,
@@ -10,7 +15,9 @@ import type {
 import { getCurrentUser } from "@/src/server/auth/users"
 import { PATHS } from "@/src/shared/constants/PATHS"
 import { requireBarberForSession } from "@/src/shared/guards/require-barber-for-session"
+import { invalidateOrganizationCache } from "@/src/shared/lib/invalidate-organization-cache"
 import type { OwnerOrganizationIdList } from "@/src/shared/types/panel-data-scope"
+import { revalidatePath } from "next/cache"
 
 export async function updateBookingStatus(
   bookingId: string,
@@ -30,6 +37,42 @@ export async function updateBookingStatus(
   revalidatePath(PATHS.PANEL.ROOT)
 }
 
+export async function createBookingOwner(input: CreatePanelBookingInput) {
+  const parsed = CreatePanelBookingSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos")
+  }
+
+  const { user } = await getCurrentUser()
+  const created = await bookingService.createBookingOwner(user.id, parsed.data)
+
+  revalidatePath(PATHS.PANEL.SCHEDULE)
+  revalidatePath(PATHS.PANEL.ROOT)
+  invalidateOrganizationCache({
+    slug: created.slug,
+    organizationId: created.organizationId,
+  })
+}
+
+export async function updateBookingOwner(input: UpdatePanelBookingInput) {
+  const parsed = UpdatePanelBookingSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos")
+  }
+
+  const { user } = await getCurrentUser()
+  await bookingService.updateBookingOwner(user.id, parsed.data)
+
+  revalidatePath(PATHS.PANEL.SCHEDULE)
+  revalidatePath(PATHS.PANEL.ROOT)
+}
+
+export async function listOrganizationClients(
+  organizationIds: OwnerOrganizationIdList,
+) {
+  return bookingService.listOrganizationClients(organizationIds)
+}
+
 export async function updateBookingStatusOwner(
   bookingId: string,
   status: BookingStatus,
@@ -44,6 +87,7 @@ export async function updateBookingStatusOwner(
     options,
   )
 
+  revalidatePath(PATHS.PANEL.SCHEDULE)
   revalidatePath(PATHS.PANEL.ROOT)
 }
 
@@ -61,6 +105,7 @@ export async function rescheduleBookingOwner(
     barberId,
   )
 
+  revalidatePath(PATHS.PANEL.SCHEDULE)
   revalidatePath(PATHS.PANEL.ROOT)
 }
 

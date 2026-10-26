@@ -1,3 +1,13 @@
+import type {
+  BookingStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "@/prisma/generated/prisma/client"
+import { Role } from "@/prisma/generated/prisma/enums"
+import { BLOCKING_BOOKING_STATUSES } from "@/src/features/booking/_lib/booking-conflict"
+import type { OwnerBookingsPeriod } from "@/src/features/booking/booking.types"
+import { db } from "@/src/shared/lib/prisma"
+import { getZonedDayBounds } from "@/src/shared/lib/timezone-utils"
 import {
   endOfDay,
   endOfMonth,
@@ -6,16 +16,6 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns"
-import { Role } from "@/prisma/generated/prisma/enums"
-import type {
-  BookingStatus,
-  PaymentMethod,
-  PaymentStatus,
-} from "@/prisma/generated/prisma/client"
-import { BLOCKING_BOOKING_STATUSES } from "@/src/features/booking/_lib/booking-conflict"
-import { db } from "@/src/shared/lib/prisma"
-import type { OwnerBookingsPeriod } from "@/src/features/booking/booking.types"
-import { getZonedDayBounds } from "@/src/shared/lib/timezone-utils"
 
 function periodBounds(period: OwnerBookingsPeriod, date: Date) {
   const start =
@@ -57,8 +57,40 @@ export const bookingRepository = {
     memberId: string
     date: Date
     userId: string
+    observations?: string
   }) {
     return db.booking.create({ data })
+  },
+
+  findOrganizationClients(shopIds: string[]) {
+    return db.user.findMany({
+      where: {
+        bookings: {
+          some: { service: { organizationId: { in: shopIds } } },
+        },
+      },
+      select: { id: true, name: true, phone: true },
+      orderBy: { name: "asc" },
+    })
+  },
+
+  findUserByPhone(phone: string) {
+    return db.user.findUnique({
+      where: { phone },
+      select: { id: true },
+    })
+  },
+
+  createWalkInClient(name: string, phone: string) {
+    return db.user.create({
+      data: {
+        name,
+        phone,
+        emailVerified: false,
+        role: Role.CLIENT,
+      },
+      select: { id: true },
+    })
   },
 
   deleteConfirmedFutureBooking(bookingId: string, userId: string) {
@@ -240,6 +272,13 @@ export const bookingRepository = {
             name: true,
             durationMinutes: true,
             price: true,
+            organizationId: true,
+          },
+        },
+        member: {
+          select: {
+            id: true,
+            user: { select: { name: true } },
           },
         },
       },
@@ -264,7 +303,9 @@ export const bookingRepository = {
     return db.booking.findUnique({
       where: { id: bookingId },
       include: {
-        service: { select: { organizationId: true, durationMinutes: true } },
+        service: {
+          select: { id: true, organizationId: true, durationMinutes: true },
+        },
       },
     })
   },
@@ -308,7 +349,9 @@ export const bookingRepository = {
       },
       data: {
         date: data.date,
-        ...(data.memberId !== undefined ? { memberId: data.memberId || null } : {}),
+        ...(data.memberId !== undefined
+          ? { memberId: data.memberId || null }
+          : {}),
       },
     })
   },
