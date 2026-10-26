@@ -1,17 +1,20 @@
 import { mkdir, unlink, writeFile } from "fs/promises"
 import path from "path"
 
-import {
-  AVATAR_PUBLIC_PATH,
-  AVATAR_UPLOAD_DIR,
-} from "@/src/shared/constants/uploads"
+import { AVATAR_PUBLIC_PATH } from "@/src/shared/constants/uploads"
 
 export function isLocalAvatarUrl(image?: string | null) {
   return Boolean(image?.startsWith(`${AVATAR_PUBLIC_PATH}/`))
 }
 
 export function getAvatarFilePath(userId: string) {
-  return path.join(process.cwd(), AVATAR_UPLOAD_DIR, `${userId}.webp`)
+  return path.join(
+    process.cwd(),
+    "public",
+    "uploads",
+    "avatars",
+    `${userId}.webp`,
+  )
 }
 
 export function getAvatarPublicUrl(userId: string) {
@@ -19,7 +22,7 @@ export function getAvatarPublicUrl(userId: string) {
 }
 
 export async function saveAvatarFile(userId: string, buffer: Buffer) {
-  const directory = path.join(process.cwd(), AVATAR_UPLOAD_DIR)
+  const directory = path.join(process.cwd(), "public", "uploads", "avatars")
   await mkdir(directory, { recursive: true })
 
   const filePath = getAvatarFilePath(userId)
@@ -34,7 +37,13 @@ export async function deleteLocalAvatarIfExists(image?: string | null) {
   }
 
   const fileName = image!.replace(`${AVATAR_PUBLIC_PATH}/`, "")
-  const filePath = path.join(process.cwd(), AVATAR_UPLOAD_DIR, fileName)
+  const filePath = path.join(
+    process.cwd(),
+    "public",
+    "uploads",
+    "avatars",
+    fileName,
+  )
 
   try {
     await unlink(filePath)

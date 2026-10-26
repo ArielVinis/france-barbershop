@@ -96,7 +96,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
-                signOut({ query: { redirectTo: PATHS.ROOT } })
+                signOut({ callbackURL: PATHS.ROOT })
               }}
             >
               <LogOutIcon /> Sair
